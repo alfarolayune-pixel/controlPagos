@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopTap - Escuela de Basquetbol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f97316; /* Naranja Basquetbol */
+            --primary-hover: #ea580c;
+            --bg-body: #0f172a; /* Azul Marino Oscuro */
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-card);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ea580c, #c2410c);
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            color: #ffedd5;
+            font-weight: 400;
+        }
+
+        .nav {
+            display: flex;
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            flex: 1;
+            min-width: 90px;
+            padding: 15px 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(249, 115, 22, 0.05);
+        }
+
+        .content {
+            padding: 24px;
+            flex-grow: 1;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+        
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .status-msg {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: none;
+            text-align: center;
+        }
+        .status-msg.success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); display: block; }
+        .status-msg.error { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block; }
+        .status-msg.info { background: rgba(249, 115, 22, 0.1); color: var(--primary); border: 1px solid var(--primary); display: block; }
+
+        /* Pantalla Bloqueo */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 20px;
+        }
+        #lock-screen.hidden { display: none; }
+
+        /* Tarjeta de Status Alumno */
+        .student-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .student-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
+        .student-cat { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+        
+        .badge-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+        .badge-ok { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .badge-debt { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+
+    </style>
+</head>
+<body>
+
+<!-- PANTALLA DE AUTENTICACION -->
+<div id="lock-screen">
+    <div style="font-size: 4rem; margin-bottom: 20px;">🏀</div>
+    <h2 style="font-size: 2rem; margin: 0 0 10px;">HoopTap Admin</h2>
+    <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
+    
+    <div style="width: 100%; max-width: 250px;">
+        <input type="password" id="inp-pin" placeholder="PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 15px;">
+        <button class="btn" onclick="login()">Desbloquear</button>
+    </div>
+    <div id="status-login" class="status-msg"></div>
+</div>
+
+<div class="app-container">
+    <div class="header">
+        <h1>HoopTap</h1>
+        <p>Escuela de Basquetbol</p>
+    </div>
+    
+    <div class="nav">
+        <div class="nav-item active" onclick="switchTab('access')">🎯 Lector Acceso</div>
+        <div class="nav-item" onclick="switchTab('pay')">💰 Cobrar Mes</div>
+        <div class="nav-item" onclick="switchTab('reg')">📝 Alta Alumno</div>
+        <div class="nav-item" onclick="switchTab('reassign')">🔄 Re-asignar</div>
+    </div>
+
+    <div class="content">
+        
+        <!-- VISTA: LECTOR ACCESO -->
+        <div id="view-access" class="view active">
+            <div style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
+                <h3 style="margin:0 0 10px;">Control de Acceso</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.</p>
+                <button class="btn btn-outline" onclick="scanAccess()" style="margin-top: 20px;">🔴 Leer Pulsera (NFC)</button>
+            </div>
+            
+            <!-- Resultado del escaneo -->
+            <div id="access-result" style="display: none; margin-top: 20px;">
+                <div class="student-card">
+                    <div class="student-name" id="acc-name">Cargando...</div>
+                    <div class="student-cat" id="acc-cat">---</div>
+                    <div id="acc-badge" class="badge-status">---</div>
+                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-msg">
+                        Último pago: <strong id="acc-lastpay" style="color: white;">---</strong>
+                    </div>
+                </div>
+            </div>
+            <div id="status-access" class="status-msg"></div>
+        </div>
+
+        <!-- VISTA: COBRAR MES -->
+        <div id="view-pay" class="view">
+            <h3 style="margin-top: 0;">Registrar Mensualidad</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee la pulsera para identificar al alumno y cobrar el mes en curso.</p>
+            
+            <button class="btn btn-outline" onclick="scanForPayment()">📡 Identificar Alumno (NFC)</button>
+
+            <div id="pay-details" style="display: none; margin-top: 20px;">
+                <div class="student-card" style="box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                    <div class="student-name" id="pay-name">Nombre Alumno</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary); margin: 10px 0;">
+                        Mensualidad: $<span id="pay-amount">0.00</span>
+                    </div>
+                    <!-- Mes y año a pagar -->
+                    <div style="font-size: 1rem; color: #cbd5e1; margin-bottom: 15px;">
+                        Cobrando mes: <strong id="pay-month-lbl" style="color: white;">---</strong>
+                    </div>
+                    <button class="btn btn-success" onclick="executePayment()" id="btn-execute-pay">✅ Confirmar Pago</button>
+                    <input type="hidden" id="pay-uid">
+                    <input type="hidden" id="pay-st-id">
+                    <input type="hidden" id="pay-month">
+                    <input type="hidden" id="pay-year">
+                </div>
+            </div>
+            <div id="status-pay" class="status-msg"></div>
+        </div>
+
+        <!-- VISTA: ALTA ALUMNO -->
+        <div id="view-reg" class="view">
+            <div class="form-group">
+                <label>Nombre Completo</label>
+                <input type="text" id="reg-name" placeholder="Ej: Michael Jordan">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Edad</label>
+                    <input type="number" id="reg-age" placeholder="Años">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Nacimiento</label>
+                    <input type="date" id="reg-dob">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="reg-cat">
+                    <option value="">Cargando...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Costo de Mensualidad ($)</label>
+                <input type="number" id="reg-cost" placeholder="Ej: 500.00" step="0.01">
+            </div>
+            <button class="btn" onclick="registerStudent()">📡 Leer Pulsera y Guardar</button>
+            <div id="status-reg" class="status-msg"></div>
+        </div>
+
+        <!-- VISTA: RE-ASIGNAR -->
+        <div id="view-reassign" class="view">
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un alumno pierde su pulsera, búscalo en la lista y registra una nueva.</p>
+            <div class="form-group">
+                <label>Seleccionar Alumno</label>
+                <select id="reassign-student">
+                    <option value="">Cargando alumnos...</option>
+                </select>
+            </div>
+            <button class="btn btn-outline" onclick="reassignNfc()">🔄 Asignar Nueva Pulsera</button>
+            <div id="status-reassign" class="status-msg"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // URL base de n8n para comunicarse por Webhooks
+    // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
+    const N8N_URL = "https://joel-inadaptados.oph.st/webhook"; 
+    // const N8N_URL = "https://joel-inadaptados.oph.st/webhook-test"; // Para pruebas
+    const API_KEY = "hoop-tap-secret-v1"; 
+
+    // ==========================================
+    // AUDIO ENGINE (Sintetizador Web Audio API)
+    // ==========================================
+    let audioCtx;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, type, duration, vol=0.1) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Sonido lectura NFC
+    function soundRead() { playTone(880, 'sine', 0.1, 0.2); }
+    
+    // Sonido Al Corriente (Arpegio Feliz)
+    function soundSuccess() {
+        playTone(523.25, 'sine', 0.15, 0.2); // C5
+        setTimeout(() => playTone(659.25, 'sine', 0.15, 0.2), 100); // E5
+        setTimeout(() => playTone(783.99, 'sine', 0.3,  0.2), 200); // G5
+    }
+
+    // Sonido Adeuda (Zumbido Grave)
+    function soundError() {
+        playTone(150, 'sawtooth', 0.6, 0.3);
+    }
+
+    // ==========================================
+    // UI Y NAVEGACIÓN
+    // ==========================================
+    function switchTab(t) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        const activeTab = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(t));
+        if (activeTab) activeTab.classList.add('active');
+        const viewEl = document.getElementById('view-' + t);
+        if (viewEl) viewEl.classList.add('active');
+        
+        // Reset states
+        document.getElementById('access-result').style.display = 'none';
+        document.getElementById('pay-details').style.display = 'none';
+        showMsg('access', '', '');
+        showMsg('pay', '', '');
+        showMsg('reg', '', '');
+        showMsg('reassign', '', '');
+        
+        if (t === 'reassign' || t === 'reg') {
+            loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
+        }
+    }
+
+    function showMsg(view, type, text) {
+        const el = document.getElementById('status-' + view);
+        if (!text) { el.style.display = 'none'; return; }
+        el.className = 'status-msg ' + type;
+        el.innerText = text;
+    }
+
+    // Mapeo nombres de meses
+    const nMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    // ==========================================
+    // LOGIN
+    // ==========================================
+    async function login() {
+        const pin = document.getElementById('inp-pin').value;
+        if (!pin) { showMsg('login', 'error', 'Ingresa el PIN'); return; }
+        
+        showMsg('login', 'info', 'Validando...');
+        initAudio(); // Permiso de audio al click
+        try {
+            const res = await fetch(`${N8N_URL}/ht-auth?pin=${pin}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result.status === 'success') {
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('lock-screen').style.display = 'none';
+                // Llenar selects de categoríasy alumnos
+                loadInitialData();
+            } else {
+                showMsg('login', 'error', 'PIN Incorrecto o acceso denegado');
+            }
+        } catch(e) {
+            console.error(e);
+            showMsg('login', 'error', 'Error conectando con el servidor n8n');
+        }
+    }
+
+    // ==========================================
+    // NFC SCAN LÓGICA (Genérica)
+    // ==========================================
+    async function getUidFromNFC() {
+        if ("NDEFReader" in window) {
+            try {
+                const ndef = new NDEFReader();
+                await ndef.scan();
+                return await new Promise((resolve, reject) => {
+                    const timer = setTimeout(() => reject(new Error("Timeout")), 15000);
+                    ndef.onreading = event => { clearTimeout(timer); soundRead(); resolve(event.serialNumber); };
+                });
+            } catch (error) {
+                console.error("NFC Error", error);
+                return prompt("Simulador NFC: Ingrese UID (Ej: 04:A1:B2:C3)", "simul-1234");
+            }
+        } else {
+            soundRead();
+            return prompt("NFC No soportado/Protocolo no seguro (Usar HTTPS). UID Simulado:", "simul-1234");
+        }
+    }
+
+    // ==========================================
+    // CARGAR DATOS
+    // ==========================================
+    async function loadInitialData() {
+        try {
+            const res = await fetch(`${N8N_URL}/ht-categories`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            const catSelect = document.getElementById('reg-cat');
+            if(result.categorias) {
+                catSelect.innerHTML = result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+            }
+            
+            const alSelect = document.getElementById('reassign-student');
+            if(result.alumnos) {
+                alSelect.innerHTML = result.alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join("");
+            }
+        } catch(e) {
+            console.log("Aún no conectado a n8n o error:", e);
+        }
+    }
+
+    // ==========================================
+    // ACCESO (VALIDAR VIGENCIA)
+    // ==========================================
+    async function scanAccess() {
+        showMsg('access', 'info', 'Acerque la pulsera...');
+        const uid = await getUidFromNFC();
+        if(!uid) { showMsg('access', 'error', 'Lectura cancelada.'); return; }
+        
+        showMsg('access', 'info', 'Validando en servidor...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'not_found') {
+                showMsg('access', 'error', '⚠️ Pulsera NO registrada en el sistema.');
+                soundError();
+                return;
+            }
+
+            document.getElementById('access-result').style.display = 'block';
+            document.getElementById('acc-name').innerText = result.nombre;
+            document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
+            
+            showMsg('access', '', '');
+
+            if(result.al_corriente === true) {
+                soundSuccess();
+                document.getElementById('acc-badge').className = "badge-status badge-ok";
+                document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
+                document.getElementById('acc-msg').innerText = "El alumno está autorizado para entrenar.";
+            } else {
+                soundError();
+                document.getElementById('acc-badge').className = "badge-status badge-debt";
+                document.getElementById('acc-badge').innerText = "❌ ADEUDA";
+                document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
+            }
+        } catch(e) {
+            showMsg('access', 'error', 'Error de red.');
+        }
+    }
+
+    // ==========================================
+    // COBRO MENSUALIDAD
+    // ==========================================
+    async function scanForPayment() {
+        showMsg('pay', 'info', 'Acerque la pulsera...');
+        const uid = await getUidFromNFC();
+        if(!uid) return;
+        
+        showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'not_found') {
+                showMsg('pay', 'error', '⚠️ Pulsera no asociada a ningún alumno.');
+                soundError();
+                return;
+            }
+
+            document.getElementById('pay-details').style.display = 'block';
+            showMsg('pay', '', '');
+            
+            document.getElementById('pay-name').innerText = result.nombre;
+            document.getElementById('pay-amount').innerText = Number(result.costo_mensualidad).toFixed(2);
+            document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
+            
+            // Hidden fields
+            document.getElementById('pay-uid').value = uid;
+            document.getElementById('pay-st-id').value = result.alumno_id;
+            document.getElementById('pay-month').value = result.mes_cobro;
+            document.getElementById('pay-year').value = result.anio_cobro;
+
+            if(result.ya_pagado === true) {
+                showMsg('pay', 'warning', '⚠️ Este mes ya está pagado. No se recomienda volver a cobrar.');
+                document.getElementById('pay-month-lbl').innerText += " (YA PAGADO)";
+            }
+
+        } catch(e) {
+            showMsg('pay', 'error', 'Error al obtener datos');
+        }
+    }
+    
+    async function executePayment() {
+        const payload = {
+            alumno_id: document.getElementById('pay-st-id').value,
+            monto: document.getElementById('pay-amount').innerText,
+            mes: document.getElementById('pay-month').value,
+            anio: document.getElementById('pay-year').value,
+        };
+
+        const btn = document.getElementById('btn-execute-pay');
+        btn.disabled = true;
+        btn.innerText = "Procesando...";
+
+        try {
+            const res = await fetch(`${N8N_URL}/ht-execute-pay`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'success') {
+                showMsg('pay', 'success', `✅ Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
+                document.getElementById('pay-details').style.display = 'none';
+                soundSuccess();
+            } else {
+                showMsg('pay', 'error', '❌ Error: ' + (result.message || 'No se pudo registrar'));
+                soundError();
+            }
+        } catch(e) {
+            showMsg('pay', 'error', 'Error procesando pago.');
+            soundError();
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "✅ Confirmar Pago";
+        }
+    }
+
+    // ==========================================
+    // ALTA ALUMNO Y ASIGNAR BANDA
+    // ==========================================
+    async function registerStudent() {
+        const payload = {
+            nombre: document.getElementById('reg-name').value,
+            edad: document.getElementById('reg-age').value,
+            fecha_nacimiento: document.getElementById('reg-dob').value,
+            categoria_id: document.getElementById('reg-cat').value,
+            costo: document.getElementById('reg-cost').value
+        };
+
+        if(!payload.nombre || !payload.edad || !payload.categoria_id || !payload.costo) { 
+            showMsg('reg', 'error', 'Faltan datos obligatorios'); 
+            return; 
+        }
+        
+        showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
+        const uid = await getUidFromNFC();
+        if(!uid) { showMsg('reg', 'error', 'Cancelado.'); return; }
+        payload.nfc_uid = uid;
+
+        showMsg('reg', 'info', 'Guardando en Base de Datos...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'success') {
+                showMsg('reg', 'success', `✅ Alumno ${payload.nombre} registrado exitosamente.`);
+                soundSuccess();
+                // Limpiar form
+                document.getElementById('reg-name').value = '';
+                document.getElementById('reg-cost').value = '';
+            } else if (result.status === 'conflict') {
+                showMsg('reg', 'error', `❌ ${result.message}`);
+                soundError();
+            } else {
+                showMsg('reg', 'error', `❌ Hubo un error al registrar`);
+                soundError();
+            }
+        } catch(e) {
+            showMsg('reg', 'error', 'Error en conexíon con n8n');
+            soundError();
+        }
+    }
+
+    // ==========================================
+    // RE-ASIGNAR PULSERA
+    // ==========================================
+    async function reassignNfc() {
+        const studentId = document.getElementById('reassign-student').value;
+        if(!studentId) { showMsg('reassign', 'error', 'Seleccione un alumno.'); return; }
+
+        showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
+        const uid = await getUidFromNFC();
+        if(!uid) return;
+
+        showMsg('reassign', 'info', 'Asignando pulsera...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-reassign`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ alumno_id: studentId, nfc_uid: uid })
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'success') {
+                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
+                soundSuccess();
+            } else {
+                showMsg('reassign', 'error', `❌ ${result.message || 'Error al actualizar.'}`);
+                soundError();
+            }
+        } catch(e) {
+            showMsg('reassign', 'error', 'Error de red.');
+            soundError();
+        }
+    }
+
+</script>
+</body>
+</html>
