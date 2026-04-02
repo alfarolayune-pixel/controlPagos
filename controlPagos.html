@@ -244,6 +244,7 @@
     <div class="nav">
         <div class="nav-item active" onclick="switchTab('access')">🎯 Lector Acceso</div>
         <div class="nav-item" onclick="switchTab('pay')">💰 Cobrar Mes</div>
+        <div class="nav-item" onclick="switchTab('hist')">📊 Historial</div>
         <div class="nav-item" onclick="switchTab('reg')">📝 Alta Alumno</div>
         <div class="nav-item" onclick="switchTab('reassign')">🔄 Re-asignar</div>
     </div>
@@ -301,6 +302,21 @@
         </div>
 
         <!-- VISTA: ALTA ALUMNO -->
+        <div id="view-hist" class="view">
+            <button class="btn" onclick="startHistory()">📊 Leer Pulsera y Ver Pagos</button>
+            <div id="status-hist" class="status-msg"></div>
+
+            <div id="history-box" style="display:none; margin-top: 20px;">
+                <div class="student-card">
+                    <div id="hist-student-name" class="student-name">...</div>
+                    <div id="hist-student-cat" class="student-cat">...</div>
+                </div>
+                <div id="historial-list" style="max-height: 300px; overflow-y: auto; text-align: left;">
+                    <!-- items llenados via JS -->
+                </div>
+            </div>
+        </div>
+
         <div id="view-reg" class="view">
             <div class="form-group">
                 <label>Nombre Completo</label>
@@ -309,11 +325,11 @@
             <div style="display: flex; gap: 10px;">
                 <div class="form-group" style="flex: 1;">
                     <label>Edad</label>
-                    <input type="number" id="reg-age" placeholder="Años">
+                    <input type="number" id="reg-age" placeholder="Años" readonly style="background: rgba(255,255,255,0.05); color: #94a3b8; cursor: not-allowed;">
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label>Nacimiento</label>
-                    <input type="date" id="reg-dob">
+                    <input type="date" id="reg-dob" onchange="calcularEdad()">
                 </div>
             </div>
             <div class="form-group">
@@ -426,6 +442,22 @@
 
     // Mapeo nombres de meses
     const nMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    function calcularEdad() {
+        const dStr = document.getElementById('reg-dob').value;
+        if(dStr) {
+            const today = new Date();
+            const birthDate = new Date(dStr);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            document.getElementById('reg-age').value = age;
+        } else {
+            document.getElementById('reg-age').value = '';
+        }
+    }
 
     // ==========================================
     // LOGIN
@@ -624,6 +656,63 @@
             btn.innerText = "✅ Confirmar Pago";
         }
     }
+
+    // ==========================================
+    // LOGICA DE HISTORIAL
+    // ==========================================
+    async function startHistory() {
+        showMsg('hist', 'info', 'Acerque la pulsera NFC...', true);
+        document.getElementById('history-box').style.display = 'none';
+
+        const uid = await getUidFromNFC();
+        if(!uid) return;
+
+        showMsg('hist', 'info', 'Consultando historial de pagos...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result.status === 'not_found') {
+                showMsg('hist', 'error', 'Alumno no encontrado.');
+                soundError();
+                return;
+            }
+
+            document.getElementById('history-box').style.display = 'block';
+            document.getElementById('hist-student-name').textContent = result.nombre;
+            
+            let html = '';
+            if(!result.pagos || result.pagos.length === 0) {
+                document.getElementById('hist-student-cat').textContent = 'Sin historial de pagos';
+                html = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No hay pagos registrados.</div>';
+            } else {
+                document.getElementById('hist-student-cat').textContent = `${result.pagos.length} Pagos registrados`;
+                result.pagos.forEach(p => {
+                    const d = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
+                    html += `
+                    <div style="background:#1e293b; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:800; font-size:1.1rem; color:white;">${nMeses[p.mes-1]} ${p.anio}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">Pagado el: ${d}</div>
+                        </div>
+                        <div style="font-weight:800; color:var(--success); font-size:1.1rem;">
+                            $${p.monto}
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('historial-list').innerHTML = html;
+            showMsg('hist', 'success', 'Historial cargado.');
+            soundSuccess();
+
+        } catch (e) {
+            showMsg('hist', 'error', 'Error conectando con el servidor n8n.');
+            soundError();
+        }
+    }
+
 
     // ==========================================
     // ALTA ALUMNO Y ASIGNAR BANDA
