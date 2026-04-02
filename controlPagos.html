@@ -206,6 +206,17 @@
         .badge-ok { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
         .badge-debt { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        
+        @keyframes pulse-scan {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .anim-scanning {
+            animation: pulse-scan 1.2s infinite ease-in-out;
+            border: 1px solid var(--primary-light) !important;
+            background: rgba(59, 130, 246, 0.1) !important;
+        }
 
     </style>
 </head>
@@ -406,9 +417,11 @@
 
     function showMsg(view, type, text) {
         const el = document.getElementById('status-' + view);
-        if (!text) { el.style.display = 'none'; return; }
+        if (!text) { el.style.display = 'none'; el.classList.remove('anim-scanning'); return; }
         el.className = 'status-msg ' + type;
+        if(type === 'info') el.classList.add('anim-scanning');
         el.innerText = text;
+        el.style.display = 'block';
     }
 
     // Mapeo nombres de meses
