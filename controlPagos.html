@@ -51,24 +51,39 @@
 
         .header-logos {
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* En el centro y pegados */
             align-items: center;
             padding: 20px 20px 10px;
         }
 
-        .header-img-left, .header-img-right {
-            height: 45px;
+        .header-img-left {
+            height: 70px;
             width: auto;
-            border-radius: 8px;
+            border-radius: 50%;
             object-fit: contain;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            position: relative;
+            z-index: 3; /* Al frente */
+            margin-right: -25px; /* Empalma a la derecha */
         }
         
         .header-logo-center {
-            height: 55px;
+            height: 85px;
             width: auto;
             object-fit: contain;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+            border-radius: 8px;
+            position: relative;
+            z-index: 2; /* Capa media */
+        }
+
+        .header-img-right {
+            height: 65px;
+            width: auto;
+            object-fit: contain;
+            position: relative;
+            z-index: 1; /* Detrás del centro */
+            margin-left: -35px; /* Empalma por detrás del centro */
         }
 
         .header-text {
@@ -253,7 +268,7 @@
 
 <!-- PANTALLA DE AUTENTICACION -->
 <div id="lock-screen">
-    <img src="Logo_SporTapp.jpeg" alt="SporTapp" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <img src="./Logo_SporTapp.jpeg" alt="SporTapp" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <h2 style="font-size: 2rem; margin: 0 0 10px;">Castores Admin</h2>
     <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
     
@@ -265,16 +280,16 @@
     
     <div style="position: absolute; bottom: 20px; display: flex; align-items: center; gap: 10px; opacity: 0.6;">
         <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Powered by</span>
-        <img src="Logo_TechTap.jpeg" alt="TechTap" style="height: 25px; border-radius: 4px;">
+        <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height: 25px; border-radius: 4px;">
     </div>
 </div>
 
 <div class="app-container">
     <div class="header-container">
         <div class="header-logos">
-            <img src="colaCastores.jpeg" alt="Cola Castores" class="header-img-left">
-            <img src="Logo_SporTapp.jpeg" alt="SporTapp" class="header-logo-center">
-            <img src="Logo_Castores.jpeg" alt="Castores Nungaray" class="header-img-right">
+            <img src="./Logo_Castores.jpeg" alt="Castores Nungaray" class="header-img-left">
+            <img src="./Logo_SporTapp.jpeg" alt="SporTapp" class="header-logo-center">
+            <img src="./colaCastores.jpeg" alt="Cola Castores" class="header-img-right">
         </div>
         <div class="header-text">
             <h1>Castores Nungaray</h1>
