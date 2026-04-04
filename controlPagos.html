@@ -464,7 +464,7 @@
     // ==========================================
     async function login() {
         const pin = document.getElementById('inp-pin').value;
-        if (!pin) { showMsg('login', 'error', 'Ingresa el PIN'); return; }
+        if (!pin) { showMsg('login', 'error', 'Por favor, ingresa tu clave PIN.'); return; }
         
         showMsg('login', 'info', 'Validando...');
         initAudio(); // Permiso de audio al click
@@ -479,11 +479,11 @@
                 // Llenar selects de categoríasy alumnos
                 loadInitialData();
             } else {
-                showMsg('login', 'error', 'PIN Incorrecto o acceso denegado');
+                showMsg('login', 'error', 'La clave PIN es incorrecta. Intenta de nuevo.');
             }
         } catch(e) {
             console.error(e);
-            showMsg('login', 'error', 'Error conectando con el servidor n8n');
+            showMsg('login', 'error', 'No se pudo conectar al servidor. Revisa tu conexión a internet.');
         }
     }
 
@@ -538,7 +538,7 @@
     async function scanAccess() {
         showMsg('access', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'Lectura cancelada.'); return; }
+        if(!uid) { showMsg('access', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('access', 'info', 'Validando en servidor...');
         
@@ -548,7 +548,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result.status === 'not_found') {
-                showMsg('access', 'error', '⚠️ Pulsera NO registrada en el sistema.');
+                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
                 soundError();
                 return;
             }
@@ -571,7 +571,7 @@
                 document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
             }
         } catch(e) {
-            showMsg('access', 'error', 'Error de red.');
+            showMsg('access', 'error', 'Error de conexión. Verifica tu internet y vuelve a intentar.');
         }
     }
 
@@ -581,7 +581,7 @@
     async function scanForPayment() {
         showMsg('pay', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) return;
+        if(!uid) { showMsg('pay', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
         
@@ -591,7 +591,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result.status === 'not_found') {
-                showMsg('pay', 'error', '⚠️ Pulsera no asociada a ningún alumno.');
+                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
                 soundError();
                 return;
             }
@@ -615,7 +615,7 @@
             }
 
         } catch(e) {
-            showMsg('pay', 'error', 'Error al obtener datos');
+            showMsg('pay', 'error', 'Error de conexión al cargar los datos del alumno.');
         }
     }
     
@@ -645,11 +645,11 @@
                 document.getElementById('pay-details').style.display = 'none';
                 soundSuccess();
             } else {
-                showMsg('pay', 'error', '❌ Error: ' + (result.message || 'No se pudo registrar'));
+                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result.message || 'Error desconocido'));
                 soundError();
             }
         } catch(e) {
-            showMsg('pay', 'error', 'Error procesando pago.');
+            showMsg('pay', 'error', 'No se pudo procesar el pago por un error de conexión.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -665,7 +665,7 @@
         document.getElementById('history-box').style.display = 'none';
 
         const uid = await getUidFromNFC();
-        if(!uid) return;
+        if(!uid) { showMsg('hist', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
 
         showMsg('hist', 'info', 'Consultando historial de pagos...');
         
@@ -675,7 +675,7 @@
             const result = Array.isArray(data) ? data[0] : data;
             
             if(result.status === 'not_found') {
-                showMsg('hist', 'error', 'Alumno no encontrado.');
+                showMsg('hist', 'error', 'Esta pulsera no está asignada a ningún alumno.');
                 soundError();
                 return;
             }
@@ -690,7 +690,7 @@
             } else {
                 document.getElementById('hist-student-cat').textContent = `${result.pagos.length} Pagos registrados`;
                 result.pagos.forEach(p => {
-                    const d = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
+                    const d = p.fecha_pago ? new Date(p.fecha_pago).toLocaleDateString() : 'N/A';
                     html += `
                     <div style="background:#1e293b; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
                         <div>
@@ -708,7 +708,7 @@
             soundSuccess();
 
         } catch (e) {
-            showMsg('hist', 'error', 'Error conectando con el servidor n8n.');
+            showMsg('hist', 'error', 'Error de conexión al obtener el historial de pagos.');
             soundError();
         }
     }
@@ -727,15 +727,32 @@
         };
 
         if(!payload.nombre || !payload.edad || !payload.categoria_id || !payload.costo) { 
-            showMsg('reg', 'error', 'Faltan datos obligatorios'); 
+            showMsg('reg', 'error', 'Por favor, completa todos los campos del formulario.'); 
             return; 
         }
         
         showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'Cancelado.'); return; }
-        payload.nfc_uid = uid;
+        if(!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        
+        showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
+        try {
+            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
+            const valData = await valRes.json();
+            const valResult = Array.isArray(valData) ? valData[0] : valData;
+            
+            if (valResult.status !== 'not_found') {
+                showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
+                soundError();
+                return;
+            }
+        } catch(e) {
+             showMsg('reg', 'error', 'Error de conexión al validar la pulsera.');
+             soundError();
+             return;
+        }
 
+        payload.nfc_uid = uid;
         showMsg('reg', 'info', 'Guardando en Base de Datos...');
         
         try {
@@ -754,14 +771,14 @@
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-cost').value = '';
             } else if (result.status === 'conflict') {
-                showMsg('reg', 'error', `❌ ${result.message}`);
+                showMsg('reg', 'error', `❌ No se pudo registrar: ${result.message}`);
                 soundError();
             } else {
-                showMsg('reg', 'error', `❌ Hubo un error al registrar`);
+                showMsg('reg', 'error', `❌ Ocurrió un problema inesperado al registrar el alumno.`);
                 soundError();
             }
         } catch(e) {
-            showMsg('reg', 'error', 'Error en conexíon con n8n');
+            showMsg('reg', 'error', 'Error de conexión al guardar los datos del alumno.');
             soundError();
         }
     }
@@ -771,11 +788,28 @@
     // ==========================================
     async function reassignNfc() {
         const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Seleccione un alumno.'); return; }
+        if(!studentId) { showMsg('reassign', 'error', 'Por favor, selecciona un alumno de la lista.'); return; }
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
-        if(!uid) return;
+        if(!uid) { showMsg('reassign', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+
+        showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
+        try {
+            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
+            const valData = await valRes.json();
+            const valResult = Array.isArray(valData) ? valData[0] : valData;
+            
+            if (valResult.status !== 'not_found') {
+                showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
+                soundError();
+                return;
+            }
+        } catch(e) {
+             showMsg('reassign', 'error', 'Error de conexión al validar la pulsera.');
+             soundError();
+             return;
+        }
 
         showMsg('reassign', 'info', 'Asignando pulsera...');
         
@@ -792,11 +826,11 @@
                 showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
                 soundSuccess();
             } else {
-                showMsg('reassign', 'error', `❌ ${result.message || 'Error al actualizar.'}`);
+                showMsg('reassign', 'error', `❌ No se pudo reasignar: ${result.message || 'Error desconocido'}`);
                 soundError();
             }
         } catch(e) {
-            showMsg('reassign', 'error', 'Error de red.');
+            showMsg('reassign', 'error', 'Error de conexión al reasignar la pulsera.');
             soundError();
         }
     }
