@@ -49,44 +49,20 @@
             position: relative;
         }
 
-        .header-logos {
+        .header-banner {
+            padding: 20px 20px 10px;
             display: flex;
-            justify-content: center; /* En el centro y pegados */
+            justify-content: center;
             align-items: center;
-            padding: 25px 20px 15px;
         }
 
-        .header-img-left {
-            height: 90px;
-            width: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            background-color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            position: relative;
-            z-index: 3; /* Al frente */
-            margin-right: -20px; /* Empalma a la derecha */
-        }
-        
-        .header-logo-center {
-            height: 105px;
-            width: auto;
+        .header-banner-img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
             object-fit: contain;
-            border-radius: 14px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-            position: relative;
-            z-index: 2; /* Capa media */
-        }
-
-        .header-img-right {
-            height: 80px;
-            width: auto;
-            object-fit: cover;
-            border-radius: 0 16px 16px 0;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1; /* Detrás del centro */
-            margin-left: -30px; /* Empalma por detrás del centro */
+            border-radius: 8px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
         .header-text {
@@ -271,28 +247,33 @@
 
 <!-- PANTALLA DE AUTENTICACION -->
 <div id="lock-screen">
-    <img src="./Logo_SporTapp.jpeg" alt="SporTapp" style="height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-    <h2 style="font-size: 2rem; margin: 0 0 10px;">Castores Admin</h2>
+    <div style="text-align: center; margin-bottom: 25px;">
+        <img src="./Logo_SporTapp.jpeg" alt="SporTapp Logo" style="height: 160px; width: auto; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); object-fit: contain;">
+        <h1 style="font-size: 2.8rem; font-weight: 800; margin: 20px 0 5px; color: var(--primary); letter-spacing: -1px; text-shadow: 0 4px 6px rgba(0,0,0,0.5);">SporTapp</h1>
+    </div>
+    
+    <h2 style="font-size: 1.6rem; margin: 0 0 10px; color: #f5f5f4;">Castores Admin</h2>
     <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
     
     <div style="width: 100%; max-width: 250px;">
-        <input type="password" id="inp-pin" placeholder="PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 15px;">
-        <button class="btn" onclick="login()">Desbloquear</button>
+        <input type="password" id="inp-pin" placeholder="••••" style="text-align: center; font-size: 2rem; letter-spacing: 8px; margin-bottom: 15px; border-radius: 12px; padding: 12px;">
+        <button class="btn" style="font-size: 1.1rem; padding: 14px; border-radius: 12px;" onclick="login()">Desbloquear</button>
     </div>
     <div id="status-login" class="status-msg"></div>
     
-    <div style="position: absolute; bottom: 20px; display: flex; align-items: center; gap: 10px; opacity: 0.6;">
-        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Powered by</span>
-        <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height: 25px; border-radius: 4px;">
+    <div style="position: absolute; bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.9;">
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Desarrollado por</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height: 35px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
+            <strong style="font-size: 1.3rem; color: #f5f5f4; letter-spacing: 1px;">TechTap</strong>
+        </div>
     </div>
 </div>
 
 <div class="app-container">
     <div class="header-container">
-        <div class="header-logos">
-            <img src="./Logo_Castores.jpeg" alt="Castores Nungaray" class="header-img-left">
-            <img src="./Logo_SporTapp.jpeg" alt="SporTapp" class="header-logo-center">
-            <img src="./colaCastores.jpeg" alt="Cola Castores" class="header-img-right">
+        <div class="header-banner">
+            <img src="./Header.png" alt="Header Castores" class="header-banner-img">
         </div>
         <div class="header-text">
             <h1>Castores Nungaray</h1>
