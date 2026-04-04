@@ -738,18 +738,20 @@
         showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
         try {
             const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            const valData = await valRes.json();
-            const valResult = Array.isArray(valData) ? valData[0] : valData;
-            
-            if (valResult.status !== 'not_found') {
-                showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
-                soundError();
-                return;
+            if (valRes.ok) {
+                const valText = await valRes.text();
+                if (valText) {
+                    const valData = JSON.parse(valText);
+                    const valResult = Array.isArray(valData) ? valData[0] : valData;
+                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
+                        showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
+                        soundError();
+                        return;
+                    }
+                }
             }
         } catch(e) {
-             showMsg('reg', 'error', 'Error de conexión al validar la pulsera.');
-             soundError();
-             return;
+             console.warn('Validación de pulsera nueva generó error, continuando...', e);
         }
 
         payload.nfc_uid = uid;
@@ -797,18 +799,20 @@
         showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
         try {
             const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            const valData = await valRes.json();
-            const valResult = Array.isArray(valData) ? valData[0] : valData;
-            
-            if (valResult.status !== 'not_found') {
-                showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
-                soundError();
-                return;
+            if (valRes.ok) {
+                const valText = await valRes.text();
+                if (valText) {
+                    const valData = JSON.parse(valText);
+                    const valResult = Array.isArray(valData) ? valData[0] : valData;
+                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
+                        showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
+                        soundError();
+                        return;
+                    }
+                }
             }
         } catch(e) {
-             showMsg('reassign', 'error', 'Error de conexión al validar la pulsera.');
-             soundError();
-             return;
+             console.warn('Validación de pulsera nueva generó error, continuando...', e);
         }
 
         showMsg('reassign', 'info', 'Asignando pulsera...');
