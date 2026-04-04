@@ -53,37 +53,40 @@
             display: flex;
             justify-content: center; /* En el centro y pegados */
             align-items: center;
-            padding: 20px 20px 10px;
+            padding: 25px 20px 15px;
         }
 
         .header-img-left {
-            height: 70px;
-            width: auto;
+            height: 90px;
+            width: 90px;
             border-radius: 50%;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            object-fit: cover;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
             position: relative;
             z-index: 3; /* Al frente */
-            margin-right: -25px; /* Empalma a la derecha */
+            margin-right: -20px; /* Empalma a la derecha */
         }
         
         .header-logo-center {
-            height: 85px;
+            height: 105px;
             width: auto;
             object-fit: contain;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
-            border-radius: 8px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
             position: relative;
             z-index: 2; /* Capa media */
         }
 
         .header-img-right {
-            height: 65px;
+            height: 80px;
             width: auto;
-            object-fit: contain;
+            object-fit: cover;
+            border-radius: 0 16px 16px 0;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
             position: relative;
             z-index: 1; /* Detrás del centro */
-            margin-left: -35px; /* Empalma por detrás del centro */
+            margin-left: -30px; /* Empalma por detrás del centro */
         }
 
         .header-text {
