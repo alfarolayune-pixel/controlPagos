@@ -287,6 +287,7 @@
         <div class="nav-item" onclick="switchTab('hist')">📊 Historial</div>
         <div class="nav-item" onclick="switchTab('reg')">📝 Alta Alumno</div>
         <div class="nav-item" onclick="switchTab('reassign')">🔄 Re-asignar</div>
+        <div class="nav-item" onclick="switchTab('baja')">❌ Dar de Baja</div>
     </div>
 
     <div class="content">
@@ -399,6 +400,20 @@
             <div id="status-reassign" class="status-msg"></div>
         </div>
 
+        <!-- VISTA: BAJA ALUMNO -->
+        <div id="view-baja" class="view">
+            <h3 style="margin-top: 0;">Baja de Alumno</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Busca el alumno para darlo de baja del sistema. Su pulsera quedará libre.</p>
+            <div class="form-group">
+                <label>Seleccionar Alumno</label>
+                <select id="baja-student">
+                    <option value="">Cargando alumnos...</option>
+                </select>
+            </div>
+            <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="unsubscribeStudent()">❌ Dar de Baja</button>
+            <div id="status-baja" class="status-msg"></div>
+        </div>
+
     </div>
 </div>
 
@@ -465,8 +480,9 @@
         showMsg('pay', '', '');
         showMsg('reg', '', '');
         showMsg('reassign', '', '');
+        showMsg('baja', '', '');
         
-        if (t === 'reassign' || t === 'reg') {
+        if (t === 'reassign' || t === 'reg' || t === 'baja') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
         }
     }
@@ -564,8 +580,11 @@
             }
             
             const alSelect = document.getElementById('reassign-student');
+            const bajaSelect = document.getElementById('baja-student');
             if(result.alumnos) {
-                alSelect.innerHTML = result.alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join("");
+                const mapHTML = result.alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join("");
+                if(alSelect) alSelect.innerHTML = mapHTML;
+                if(bajaSelect) bajaSelect.innerHTML = mapHTML;
             }
         } catch(e) {
             console.log("Aún no conectado a n8n o error:", e);
@@ -876,6 +895,47 @@
         } catch(e) {
             showMsg('reassign', 'error', 'Error de conexión al reasignar la pulsera.');
             soundError();
+        }
+    }
+
+    // ==========================================
+    // DAR DE BAJA ALUMNO
+    // ==========================================
+    async function unsubscribeStudent() {
+        const studentId = document.getElementById('baja-student').value;
+        if(!studentId) { showMsg('baja', 'error', 'Por favor, selecciona un alumno de la lista.'); return; }
+
+        if(!confirm("¿Estás seguro de que deseas dar de baja a este alumno? Esto revocará su acceso y liberará su pulsera.")) {
+            return;
+        }
+
+        showMsg('baja', 'info', 'Procesando baja...');
+        const btn = document.querySelector('#view-baja button');
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-baja`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ alumno_id: studentId })
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result.status === 'success') {
+                showMsg('baja', 'success', `✅ Alumno dado de baja correctamente.`);
+                soundSuccess();
+                // Actualizar la lista de alumnos
+                loadInitialData();
+            } else {
+                showMsg('baja', 'error', `❌ No se pudo dar de baja: ${result.message || 'Error desconocido'}`);
+                soundError();
+            }
+        } catch(e) {
+            showMsg('baja', 'error', 'Error de conexión al procesar la baja.');
+            soundError();
+        } finally {
+            btn.disabled = false;
         }
     }
 
