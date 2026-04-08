@@ -604,10 +604,22 @@
         
         try {
             const res = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            const data = await res.json();
+            
+            // Parsear JSON de forma segura; si falla, la pulsera no está registrada o hay error del servidor
+            let data;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                console.warn('Respuesta no-JSON del servidor (HTTP ' + res.status + ')', parseErr);
+                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
+                soundError();
+                return;
+            }
+
             const result = Array.isArray(data) ? data[0] : data;
 
-            if(result.status === 'not_found') {
+            // Verificar explícitamente not_found o response HTTP no OK
+            if(!res.ok || !result || result.status === 'not_found') {
                 showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
                 soundError();
                 return;
@@ -631,7 +643,8 @@
                 document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
             }
         } catch(e) {
-            showMsg('access', 'error', 'Error de conexión. Verifica tu internet y vuelve a intentar.');
+            console.error('Error en scanAccess:', e);
+            showMsg('access', 'error', 'No se pudo conectar al servidor. Verifica tu internet.');
         }
     }
 
