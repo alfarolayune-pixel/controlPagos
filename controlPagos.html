@@ -262,7 +262,7 @@
     <div id="status-login" class="status-msg"></div>
     
     <div style="position: absolute; bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.9;">
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Desarrollado por</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Powered by</span>
         <div style="display: flex; align-items: center; gap: 10px;">
             <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height: 35px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
             <strong style="font-size: 1.3rem; color: #f5f5f4; letter-spacing: 1px;">TechTap</strong>
@@ -389,12 +389,13 @@
 
         <!-- VISTA: RE-ASIGNAR -->
         <div id="view-reassign" class="view">
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un alumno pierde su pulsera, búscalo en la lista y registra una nueva.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un alumno pierde su pulsera, búscalo y registra una nueva pulsera.</p>
             <div class="form-group">
-                <label>Seleccionar Alumno</label>
-                <select id="reassign-student">
-                    <option value="">Cargando alumnos...</option>
-                </select>
+                <label>Buscar Alumno</label>
+                <input type="text" id="reassign-search" placeholder="Escribe el nombre..." oninput="filterStudents('reassign')" autocomplete="off">
+                <div id="reassign-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                <input type="hidden" id="reassign-student">
+                <div id="reassign-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(249,115,22,0.1); border:1px solid var(--primary); border-radius:10px; font-weight:700; color:var(--primary);"></div>
             </div>
             <button class="btn btn-outline" onclick="reassignNfc()">🔄 Asignar Nueva Pulsera</button>
             <div id="status-reassign" class="status-msg"></div>
@@ -405,10 +406,11 @@
             <h3 style="margin-top: 0;">Baja de Alumno</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem;">Busca el alumno para darlo de baja del sistema. Su pulsera quedará libre.</p>
             <div class="form-group">
-                <label>Seleccionar Alumno</label>
-                <select id="baja-student">
-                    <option value="">Cargando alumnos...</option>
-                </select>
+                <label>Buscar Alumno</label>
+                <input type="text" id="baja-search" placeholder="Escribe el nombre..." oninput="filterStudents('baja')" autocomplete="off">
+                <div id="baja-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                <input type="hidden" id="baja-student">
+                <div id="baja-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(239,68,68,0.1); border:1px solid var(--danger); border-radius:10px; font-weight:700; color:var(--danger);"></div>
             </div>
             <button class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="unsubscribeStudent()">❌ Dar de Baja</button>
             <div id="status-baja" class="status-msg"></div>
@@ -580,16 +582,55 @@
                 catSelect.innerHTML = result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
             }
             
-            const alSelect = document.getElementById('reassign-student');
-            const bajaSelect = document.getElementById('baja-student');
+            // Guardar lista de alumnos en variable global para el buscador
             if(result.alumnos) {
-                const mapHTML = result.alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join("");
-                if(alSelect) alSelect.innerHTML = mapHTML;
-                if(bajaSelect) bajaSelect.innerHTML = mapHTML;
+                window._allStudents = result.alumnos; // [{id, nombre}, ...]
             }
         } catch(e) {
             console.log("Aún no conectado a n8n o error:", e);
         }
+    }
+
+    // ==========================================
+    // BUSCADOR INTELIGENTE DE ALUMNOS
+    // ==========================================
+    window._allStudents = [];
+
+    function filterStudents(prefix) {
+        const query = document.getElementById(prefix + '-search').value.trim().toLowerCase();
+        const dropdown = document.getElementById(prefix + '-dropdown');
+        const hiddenInput = document.getElementById(prefix + '-student');
+        const selectedBox = document.getElementById(prefix + '-selected');
+
+        // Limpiar selección anterior
+        hiddenInput.value = '';
+        selectedBox.style.display = 'none';
+
+        if (!query) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
+
+        const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+
+        dropdown.innerHTML = matches.map(a => `
+            <div onclick="selectStudent('${prefix}', ${a.id}, '${a.nombre.replace(/'/g, "\\'")}')"
+                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
+                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
+                ${a.nombre}
+            </div>`).join('');
+        dropdown.style.display = 'block';
+    }
+
+    function selectStudent(prefix, id, nombre) {
+        document.getElementById(prefix + '-student').value = id;
+        document.getElementById(prefix + '-search').value = nombre;
+        document.getElementById(prefix + '-dropdown').style.display = 'none';
+        const box = document.getElementById(prefix + '-selected');
+        box.textContent = '✔ Seleccionado: ' + nombre;
+        box.style.display = 'block';
     }
 
     // ==========================================
@@ -660,10 +701,20 @@
         
         try {
             const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-            const data = await res.json();
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
+                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
+                soundError();
+                return;
+            }
+
             const result = Array.isArray(data) ? data[0] : data;
 
-            if(result.status === 'not_found') {
+            if(!res.ok || !result || result.status === 'not_found') {
                 showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
                 soundError();
                 return;
@@ -688,7 +739,8 @@
             }
 
         } catch(e) {
-            showMsg('pay', 'error', 'Error de conexión al cargar los datos del alumno.');
+            console.error('Error en scanForPayment:', e);
+            showMsg('pay', 'error', 'No se pudo conectar al servidor. Verifica tu internet.');
         }
     }
     
@@ -744,11 +796,21 @@
         
         try {
             const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-            const data = await res.json();
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
+                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
+                soundError();
+                return;
+            }
+
             const result = Array.isArray(data) ? data[0] : data;
             
-            if(result.status === 'not_found') {
-                showMsg('hist', 'error', 'Esta pulsera no está asignada a ningún alumno.');
+            if(!res.ok || !result || result.status === 'not_found') {
+                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
                 soundError();
                 return;
             }
@@ -863,7 +925,7 @@
     // ==========================================
     async function reassignNfc() {
         const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Por favor, selecciona un alumno de la lista.'); return; }
+        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); return; }
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
@@ -917,7 +979,7 @@
     // ==========================================
     async function unsubscribeStudent() {
         const studentId = document.getElementById('baja-student').value;
-        if(!studentId) { showMsg('baja', 'error', 'Por favor, selecciona un alumno de la lista.'); return; }
+        if(!studentId) { showMsg('baja', 'error', 'Por favor, busca y selecciona un alumno primero.'); return; }
 
         if(!confirm("¿Estás seguro de que deseas dar de baja a este alumno? Esto revocará su acceso y liberará su pulsera.")) {
             return;
@@ -939,7 +1001,10 @@
             if(result.status === 'success') {
                 showMsg('baja', 'success', `✅ Alumno dado de baja correctamente.`);
                 soundSuccess();
-                // Actualizar la lista de alumnos
+                // Limpiar buscador y refrescar lista
+                document.getElementById('baja-search').value = '';
+                document.getElementById('baja-student').value = '';
+                document.getElementById('baja-selected').style.display = 'none';
                 loadInitialData();
             } else {
                 showMsg('baja', 'error', `❌ No se pudo dar de baja: ${result.message || 'Error desconocido'}`);
