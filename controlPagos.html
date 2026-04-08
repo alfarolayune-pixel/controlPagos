@@ -557,11 +557,12 @@
                 });
             } catch (error) {
                 console.error("NFC Error", error);
-                return prompt("Simulador NFC: Ingrese UID (Ej: 04:A1:B2:C3)", "simul-1234");
+                // NFC no disponible o apagado — retornar null para que el llamador muestre el error
+                return null;
             }
         } else {
-            soundRead();
-            return prompt("NFC No soportado/Protocolo no seguro (Usar HTTPS). UID Simulado:", "simul-1234");
+            // Dispositivo sin soporte NFC o protocolo no seguro
+            return null;
         }
     }
 
