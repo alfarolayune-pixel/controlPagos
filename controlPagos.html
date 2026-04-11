@@ -698,7 +698,7 @@
                 await ndef.scan();
                 return await new Promise((resolve, reject) => {
                     const timer = setTimeout(() => reject(new Error("Timeout")), 15000);
-                    ndef.onreading = event => { clearTimeout(timer); soundRead(); resolve(event.serialNumber); };
+                    ndef.onreading = event => { clearTimeout(timer); soundRead(); resolve(event.serialNumber.toUpperCase()); };
                 });
             } catch (error) {
                 console.error("NFC Error", error);
