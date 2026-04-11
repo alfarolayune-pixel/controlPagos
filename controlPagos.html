@@ -407,9 +407,13 @@
                 </div>
                 <div class="form-group" style="flex:1;">
                     <label>Padre de Familia (Opcional)</label>
-                    <select id="reg-padre">
-                        <option value="">-- Ninguno --</option>
-                    </select>
+                    <input type="text" id="reg-padre-search" placeholder="Buscar padre..." oninput="filterPadres()" autocomplete="off">
+                    <div id="reg-padre-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                    <input type="hidden" id="reg-padre">
+                    <div id="reg-padre-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(79,70,229,0.1); border:1px solid #4f46e5; border-radius:10px; font-weight:700; color:white; justify-content:space-between; align-items:center;">
+                        <span id="reg-padre-selected-name"></span>
+                        <span onclick="clearPadre()" style="color:#ef4444; cursor:pointer;" title="Quitar">❌</span>
+                    </div>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -729,6 +733,9 @@
             if(result.alumnos) {
                 window._allStudents = result.alumnos; // [{id, nombre}, ...]
             }
+            if(result.padres) {
+                window._allPadres = result.padres; 
+            }
         } catch(e) {
             console.log("Aún no conectado a n8n o error:", e);
         }
@@ -774,6 +781,40 @@
         const box = document.getElementById(prefix + '-selected');
         box.textContent = '✔ Seleccionado: ' + nombre;
         box.style.display = 'block';
+    }
+
+    window._allPadres = [];
+    function filterPadres() {
+        const query = document.getElementById('reg-padre-search').value.trim().toLowerCase();
+        const dropdown = document.getElementById('reg-padre-dropdown');
+        if (!query) { dropdown.style.display = 'none'; return; }
+        const matches = window._allPadres.filter(p => p.nombre.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+        dropdown.innerHTML = matches.map(p => `
+            <div onclick="selectPadre('${p.id}', '${p.nombre.replace(/'/g, "\\'")}')"
+                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
+                 onmouseover="this.style.background='rgba(79,70,229,0.15)'" onmouseout="this.style.background=''">
+                ${p.nombre}
+            </div>`).join('');
+        dropdown.style.display = 'block';
+    }
+    function selectPadre(id, nombre) {
+        document.getElementById('reg-padre').value = id;
+        document.getElementById('reg-padre-search').value = '';
+        document.getElementById('reg-padre-search').style.display = 'none';
+        document.getElementById('reg-padre-dropdown').style.display = 'none';
+        document.getElementById('reg-padre-selected-name').textContent = 'Vinculado a: ' + nombre;
+        document.getElementById('reg-padre-selected').style.display = 'flex';
+    }
+    function clearPadre() {
+        document.getElementById('reg-padre').value = '';
+        document.getElementById('reg-padre-selected').style.display = 'none';
+        document.getElementById('reg-padre-search').style.display = 'block';
+        document.getElementById('reg-padre-search').value = '';
     }
 
     let selectedChildren = [];
