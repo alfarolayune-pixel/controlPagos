@@ -1270,6 +1270,12 @@
         }
     }
 
+    function logout() {
+        if(confirm("¿Estás seguro que deseas cerrar sesión? Todos los datos temporalmente cacheados se cerrarán.")) {
+            window.location.reload();
+        }
+    }
+
 </script>
 </body>
 </html>
