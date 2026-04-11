@@ -263,8 +263,7 @@
     <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
     
     <div style="width: 100%; max-width: 250px;">
-        <input type="password" id="inp-pin" placeholder="••••" style="text-align: center; font-size: 2rem; letter-spacing: 8px; margin-bottom: 15px; border-radius: 12px; padding: 12px;">
-        <button class="btn" style="font-size: 1.1rem; padding: 14px; border-radius: 12px;" onclick="login()">Desbloquear</button>
+        <button class="btn btn-success" onclick="login()">📡 Leer Pulsera para Ingresar</button>
     </div>
     <div id="status-login" class="status-msg"></div>
     
@@ -290,13 +289,14 @@
     </div>
     
     <div class="nav">
-        <div class="nav-item active" onclick="switchTab('access')">🎯 Lector Acceso</div>
-        <div class="nav-item" onclick="switchTab('pay')">💰 Cobrar Mes</div>
-        <div class="nav-item" onclick="switchTab('hist')">📊 Historial</div>
-        <div class="nav-item" onclick="switchTab('reg')">📝 Alta Alumno</div>
-        <div class="nav-item" onclick="switchTab('users')" style="color: #7c3aed;">👥 Alta Usuario</div>
-        <div class="nav-item" onclick="switchTab('reassign')">🔄 Re-asignar</div>
-        <div class="nav-item" onclick="switchTab('baja')">❌ Dar de Baja</div>
+        <div class="nav-item active" id="nav-access" onclick="switchTab('access')">🎯 Lector Acceso</div>
+        <div class="nav-item" id="nav-pay" onclick="switchTab('pay')">💰 Cobrar Mes</div>
+        <div class="nav-item" id="nav-hist" onclick="switchTab('hist')">📊 Historial</div>
+        <div class="nav-item" id="nav-reg" onclick="switchTab('reg')" style="display:none;">📝 Alta Alumno</div>
+        <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👥 Alta Usuario</div>
+        <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja Usuario</div>
+        <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
+        <div class="nav-item" id="nav-baja" onclick="switchTab('baja')" style="display:none;">❌ Dar de Baja</div>
     </div>
 
     <div class="content">
@@ -444,8 +444,9 @@
                     </select>
                 </div>
                 <div class="form-group" style="flex:1;">
-                    <label>PIN (4 dígitos)</label>
-                    <input type="password" id="usr-pin" placeholder="Ej: 1234" maxlength="4">
+                    <label>Pulsera NFC de Usuario</label>
+                    <button class="btn btn-outline" style="width:100%; border-color:var(--primary); color:white;" id="btn-read-usr-nfc" onclick="readUsrNfc()">📡 Escanear Pulsera</button>
+                    <input type="hidden" id="usr-uid">
                 </div>
             </div>
             
@@ -459,6 +460,14 @@
 
             <button class="btn" style="background:#4f46e5;" onclick="registerUser()">👤 Crear Usuario</button>
             <div id="status-users" class="status-msg"></div>
+        </div>
+
+        <!-- VISTA: BAJA USUARIO -->
+        <div id="view-baja-user" class="view">
+            <h3 style="margin-top: 0;">Baja de Usuario</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del Padre, Instructor o Administrador que deseas eliminar del sistema.</p>
+            <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;" onclick="deleteUser()">🗑️ Leer Pulsera y Eliminar</button>
+            <div id="status-baja-user" class="status-msg"></div>
         </div>
 
         <!-- VISTA: RE-ASIGNAR -->
@@ -597,13 +606,14 @@
     // LOGIN
     // ==========================================
     async function login() {
-        const pin = document.getElementById('inp-pin').value;
-        if (!pin) { showMsg('login', 'error', 'Por favor, ingresa tu clave PIN.'); return; }
+        showMsg('login', 'info', 'Esperando NFC...');
+        initAudio(); // Permiso de audio al click
+        const uid = await getUidFromNFC();
+        if (!uid) { showMsg('login', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('login', 'info', 'Validando...');
-        initAudio(); // Permiso de audio al click
         try {
-            const res = await fetch(`${N8N_URL}/ht-auth?pin=${pin}`);
+            const res = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(uid)}`);
             const data = await res.json();
             const result = Array.isArray(data) ? data[0] : data;
             
@@ -623,6 +633,60 @@
             showMsg('login', 'error', 'No se pudo conectar al servidor. Revisa tu conexión a internet.');
         }
     }
+
+    function applyPermissions() {
+        document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'none');
+        
+        const r = currentUser.rol;
+        if(r === 'admin') {
+            document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
+            switchTab('access');
+        } else if(r === 'instructor') {
+            document.getElementById('nav-access').style.display = 'flex';
+            document.getElementById('nav-pay').style.display = 'flex';
+            document.getElementById('nav-hist').style.display = 'flex';
+            document.getElementById('nav-reg').style.display = 'flex';
+            switchTab('access');
+        } else if(r === 'padre') {
+            document.getElementById('nav-hist').style.display = 'flex';
+            switchTab('hist');
+        }
+    }
+
+    async function deleteUser() {
+        showMsg('baja-user', 'info', 'Acerque la pulsera...');
+        initAudio();
+        const uid = await getUidFromNFC();
+        if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); return; }
+        
+        if(!confirm('¿Estás seguro que deseas ELIMINAR a este usuario (Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
+            showMsg('baja-user', 'info', 'Operación cancelada.');
+            return;
+        }
+
+        showMsg('baja-user', 'info', 'Procesando baja...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-baja-user`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nfc_uid: uid })
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result && result.status === 'success') {
+                showMsg('baja-user', 'success', 'Usuario eliminado correctamente.');
+                soundSuccess();
+                loadInitialData(); // Para refrescar select de padres
+            } else {
+                showMsg('baja-user', 'error', 'No se pudo eliminar al usuario. ' + (result.message || 'Verifica que la pulsera fue registrada.'));
+                soundError();
+            }
+        } catch(e) {
+            showMsg('baja-user', 'error', 'Error de red.');
+            soundError();
+        }
+    }
+
 
     // ==========================================
     // NFC SCAN LÓGICA (Genérica)
@@ -759,23 +823,43 @@
             </div>`;
         }).join('');
     }
+    async function readUsrNfc() {
+        showMsg('users', 'info', 'Acerque la pulsera...');
+        initAudio();
+        const uid = await getUidFromNFC();
+        if (uid) {
+            document.getElementById('usr-uid').value = uid;
+            document.getElementById('btn-read-usr-nfc').innerText = "✅ Pulsera Vinculada";
+            document.getElementById('btn-read-usr-nfc').style.borderColor = "var(--success)";
+            document.getElementById('btn-read-usr-nfc').style.color = "var(--success)";
+            showMsg('users', 'success', 'ID de Pulsera capturado.');
+            soundSuccess();
+        } else {
+            showMsg('users', 'error', 'Error al leer pulsera.');
+            soundError();
+        }
+    }
+    
     async function registerUser() {
         const nombre = document.getElementById('usr-name').value;
         const rol = document.getElementById('usr-rol').value;
-        const pin = document.getElementById('usr-pin').value;
-        if(!nombre || !pin) { showMsg('users', 'error', 'Completa los campos.'); return; }
+        const uid = document.getElementById('usr-uid').value;
+        if(!nombre || !uid) { showMsg('users', 'error', 'Completa el nombre y escanea una pulsera.'); return; }
         showMsg('users', 'info', 'Creando usuario...');
         try {
             const res = await fetch(`${N8N_URL}/ht-register-user`, {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, rol, pin, hijos_ids: selectedChildren })
+                body: JSON.stringify({ nombre, rol, nfc_uid: uid, hijos_ids: selectedChildren })
             });
             const data = await res.json();
             const result = Array.isArray(data) ? data[0] : data;
             if(result.status === 'success') {
                 showMsg('users', 'success', 'Usuario creado correctamente.');
                 document.getElementById('usr-name').value = '';
-                document.getElementById('usr-pin').value = '';
+                document.getElementById('usr-uid').value = '';
+                document.getElementById('btn-read-usr-nfc').innerText = "📡 Escanear Pulsera";
+                document.getElementById('btn-read-usr-nfc').style.borderColor = "var(--primary)";
+                document.getElementById('btn-read-usr-nfc').style.color = "white";
                 selectedChildren = []; renderUsrChildren();
                 loadInitialData(); // Para recargar lista de padres
             } else {
