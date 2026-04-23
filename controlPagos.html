@@ -565,11 +565,17 @@
         // Reset states
         document.getElementById('access-result').style.display = 'none';
         document.getElementById('pay-details').style.display = 'none';
+        if (document.getElementById('history-box')) {
+            document.getElementById('history-box').style.display = 'none';
+        }
         showMsg('access', '', '');
         showMsg('pay', '', '');
         showMsg('reg', '', '');
         showMsg('reassign', '', '');
         showMsg('baja', '', '');
+        showMsg('hist', '', '');
+        showMsg('users', '', '');
+        showMsg('baja-user', '', '');
         
         if (t === 'reassign' || t === 'reg' || t === 'baja') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
