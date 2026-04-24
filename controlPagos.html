@@ -296,6 +296,7 @@
         <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👥 Alta Usuario</div>
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
         <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
+        <div class="nav-item" id="nav-debtors" onclick="switchTab('debtors')" style="display:none; color: #ea580c;">⚠️ Deudores</div>
     </div>
 
     <div class="content">
@@ -480,6 +481,20 @@
             <div id="status-reassign" class="status-msg"></div>
         </div>
 
+        <!-- VISTA: DEUDORES -->
+        <div id="view-debtors" class="view">
+            <h3 style="margin-top: 0;">Lista de Deudores</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Alumnos que no han pagado el mes en curso.</p>
+            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <select id="debtors-filter-cat" onchange="renderDebtors()" style="flex: 1;">
+                    <option value="">Todas las Categorías</option>
+                </select>
+                <input type="text" id="debtors-search" placeholder="Buscar por nombre..." oninput="renderDebtors()" autocomplete="off" style="flex: 2;">
+            </div>
+            <div id="debtors-list" style="display: grid; gap: 15px;"></div>
+            <div id="status-debtors" class="status-msg"></div>
+        </div>
+
     </div>
 </div>
 
@@ -555,6 +570,9 @@
         
         if (t === 'reassign' || t === 'reg') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
+        }
+        if (t === 'debtors') {
+            fetchDebtors();
         }
     }
 
@@ -646,6 +664,58 @@
             document.getElementById('nav-hist').style.display = 'flex';
             switchTab('hist');
         }
+    }
+
+    let allDebtors = [];
+    async function fetchDebtors() {
+        showMsg('debtors', 'info', 'Cargando lista de deudores...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-get-debtors`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result && result.status === 'success') {
+                allDebtors = result.deudores || [];
+                showMsg('debtors', '', '');
+                renderDebtors();
+                
+                // Actualizar filtro categorias
+                const select = document.getElementById('debtors-filter-cat');
+                const currentVal = select.value;
+                const cats = [...new Set(allDebtors.map(d => d.categoria).filter(c=>c))];
+                select.innerHTML = '<option value="">Todas las Categorías</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                select.value = currentVal || '';
+            } else {
+                showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
+            }
+        } catch(e) {
+            showMsg('debtors', 'error', '🔌 Error de red al cargar deudores.');
+        }
+    }
+
+    function renderDebtors() {
+        const list = document.getElementById('debtors-list');
+        const filterCat = document.getElementById('debtors-filter-cat').value;
+        const search = document.getElementById('debtors-search').value.toLowerCase();
+        
+        let filtered = allDebtors.filter(d => {
+            const matchCat = filterCat ? d.categoria === filterCat : true;
+            const matchSearch = d.nombre.toLowerCase().includes(search);
+            return matchCat && matchSearch;
+        });
+        
+        if (filtered.length === 0) {
+            list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No hay deudores para mostrar.</div>`;
+            return;
+        }
+        
+        list.innerHTML = filtered.map(d => `
+            <div style="background:var(--bg-body); padding:16px; border-radius:12px; border:1px solid #ef4444; position:relative;">
+                <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
+                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
+                <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">⚠️</div>
+            </div>
+        `).join('');
     }
 
     async function deleteUser() {
@@ -1050,7 +1120,9 @@
             monto: document.getElementById('pay-amount').innerText,
             mes: document.getElementById('pay-month').value,
             anio: document.getElementById('pay-year').value,
-            modalidad: document.getElementById('pay-mode').value
+            modalidad: document.getElementById('pay-mode').value,
+            admin_id: currentUser ? currentUser.id : null,
+            admin_nombre: currentUser ? currentUser.nombre : null
         };
 
         const btn = document.getElementById('btn-execute-pay');
