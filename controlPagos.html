@@ -1,1269 +1,1420 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SporTapp - Castores Nungaray</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #e65100; /* Naranja Castores */
-            --primary-hover: #ef6c00;
-            --bg-body: #1c1917; /* Fondo oscuro cálido */
-            --bg-card: #292524; /* Tarjeta oscura cálida */
-            --text-main: #f5f5f4;
-            --text-muted: #a8a29e;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
+{
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ht-auth",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
+      },
+      "id": "aad55678-d326-4021-8b5b-6cbd9ee60e6e",
+      "name": "WH-Auth",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        5568
+      ],
+      "webhookId": "2990d11f-0cce-4b22-89b9-381101fb2810"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, rol, nombre FROM ht_users WHERE nfc_uid = '{{$json.query.nfc_uid}}'",
+        "additionalFields": {}
+      },
+      "id": "13e7b903-54f1-45aa-b0c5-436c8a7e5daf",
+      "name": "Supabase-PIN",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        5568
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .app-container {
-            width: 100%;
-            max-width: 500px;
-            background: var(--bg-card);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n      try {\n        const items = $items(\"Supabase-PIN\");\n        if (items && items.length > 0 && items[0].json && items[0].json.rol) {\n          const u = items[0].json;\n          return [{json: {status: \"success\", rol: u.rol, nombre: u.nombre, id: u.id}}];\n        } else {\n          return [{json: {status: \"error\"}}];\n        }\n      } catch (e) {\n        return [{json: {status: \"error\"}}];\n      }\n    "
+      },
+      "id": "65279446-7859-4feb-adab-a0ec09e505a3",
+      "name": "Check PIN",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        5568
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-
-        .header-container {
-            background: linear-gradient(135deg, #381a05, #140801);
-            border-bottom: 3px solid var(--primary);
-            text-align: center;
-            position: relative;
+      },
+      "id": "5457e177-96db-48de-99be-3ce2c56ab121",
+      "name": "Res-Auth",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        5568
+      ]
+    },
+    {
+      "parameters": {
+        "path": "ht-categories",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-        .header-logout {
-            position: absolute; top: 15px; right: 15px; z-index: 10;
-            background: rgba(255,255,255,0.1); border: 1px solid #44403c; 
-            color: #f5f5f4; padding: 6px 12px; border-radius: 8px; cursor: pointer;
-            font-family: inherit; font-size: 0.8rem; font-weight: 600; display: none;
+      },
+      "id": "c56e69f8-eb69-45c7-b77e-ea3947880226",
+      "name": "WH-Categories",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        5776
+      ],
+      "webhookId": "8220bbc2-e7ba-40f2-9b22-0bc99f390065"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (SELECT coalesce(json_agg(t), '[]'::json) FROM (SELECT id, nombre FROM categorias) t) as categorias, (SELECT coalesce(json_agg(t), '[]'::json) FROM (SELECT id, nombre FROM alumnos) t) as alumnos, (SELECT coalesce(json_agg(t), '[]'::json) FROM (SELECT id, nombre FROM ht_users WHERE rol='padre') t) as padres",
+        "additionalFields": {}
+      },
+      "id": "6d85ac4e-9059-437c-a4a1-41e622203ced",
+      "name": "Supabase-Cat",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        5776
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-        .header-logout:hover { background: rgba(255,255,255,0.2); }
-
-        .header-banner {
-            padding: 20px 20px 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT coalesce(json_agg(t), '[]'::json) as data FROM (SELECT id, nombre FROM alumnos) t",
+        "additionalFields": {}
+      },
+      "id": "3ea7da64-b66b-4d62-8c13-aa0eb0bcf502",
+      "name": "Supabase-Stu",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        5776
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .header-banner-img {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            object-fit: contain;
-            border-radius: 8px;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n      try {\n        const row = $items(\"Supabase-Cat\")[0].json;\n        return [{json: {status: \"success\", categorias: row.categorias, alumnos: row.alumnos, padres: row.padres}}];\n      } catch (e) {\n        return [{json: {status: \"error\"}}];\n      }\n    "
+      },
+      "id": "f40f406b-e88a-488e-b63e-bccdcd214854",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        5776
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-
-        .header-text {
-            padding: 0 20px 15px;
+      },
+      "id": "55eed2ab-1ef9-4aee-a591-264dcf69a848",
+      "name": "Res-Cat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14416,
+        5776
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-register",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-        .header-text h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            color: #ffedd5;
+      },
+      "id": "9ccaf34b-7619-4981-be49-4562c196dfdd",
+      "name": "WH-Register",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        5968
+      ],
+      "webhookId": "4cb8c59f-a1e1-4459-b611-046909266b9f"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO alumnos (nfc_uid, nombre, edad, fecha_nacimiento, categoria_id, tipo_sangre, padre_id, contacto_emergencia_nombre, contacto_emergencia_telefono, costo_mensualidad) VALUES ('{{$json.body.nfc_uid}}', '{{$json.body.nombre}}', {{$json.body.edad}}, {{ $json.body.fecha_nacimiento ? \"'\"+$json.body.fecha_nacimiento+\"'\" : 'NULL' }}, '{{$json.body.categoria_id}}', '{{$json.body.tipo_sangre}}', {{ $json.body.padre_id ? \"'\"+$json.body.padre_id+\"'\" : 'NULL' }}, '{{$json.body.contacto_emergencia_nombre}}', '{{$json.body.contacto_emergencia_tel}}', 0) RETURNING 'success' as status;",
+        "additionalFields": {}
+      },
+      "id": "d1dd7515-99a6-4e74-bcdc-f1ee4f12905b",
+      "name": "Supabase-Reg",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        5968
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .header-text p {
-            margin: 5px 0 0;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0 || !items[0].json.status) {\n    let msg = 'Error interno o falta de datos.';\n    try {\n      const err = $('Supabase-Reg').error;\n      if (err && err.message.includes('duplicate key')) msg = '⚠️ La pulsera ingresada ya está asignada a otro alumno.';\n      else if (err) msg = err.message;\n    } catch(e) {}\n    return [{json: {status: 'error', message: msg}}];\n  }\n  return [{json: {status: 'success'}}];\n} catch (e) {\n  return [{json: {status: 'error', message: 'Ocurrió un error general.'}}];\n}"
+      },
+      "id": "05c78e56-a2cf-40a7-8aad-b36af1c7e6d7",
+      "name": "Check Reg",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        5968
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-
-        .nav {
-            display: flex;
-            background: var(--bg-body);
-            border-bottom: 1px solid #44403c;
-            overflow-x: auto;
+      },
+      "id": "bc0d91ad-2044-44f8-a9c9-6ad8a392cef3",
+      "name": "Res-Reg",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        5968
+      ]
+    },
+    {
+      "parameters": {
+        "path": "ht-access",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-        .nav-item {
-            flex: 1;
-            min-width: 90px;
-            padding: 15px 10px;
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-muted);
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
+      },
+      "id": "949773e7-5571-4c54-9bdb-57f1b01475bf",
+      "name": "WH-Access",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        6176
+      ],
+      "webhookId": "0e0806e8-000e-4f74-898a-84ce1921b898"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nombre, (SELECT json_build_object('nombre', categorias.nombre) FROM categorias WHERE id = alumnos.categoria_id) as categorias FROM alumnos WHERE nfc_uid = '{{$json.query.nfc_uid}}'",
+        "additionalFields": {}
+      },
+      "id": "80299fe2-442c-4572-8bc8-85600b1ac668",
+      "name": "Supabase-Acc",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        6176
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .nav-item.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
-            background: rgba(249, 115, 22, 0.05);
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT coalesce(json_agg(t), '[]'::json) as data FROM (SELECT mes, anio FROM pagos WHERE alumno_id = '{{$json.id}}') t",
+        "additionalFields": {}
+      },
+      "id": "1da86551-c3db-4c81-9eb7-17d83e5597fb",
+      "name": "Supabase-Pay",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        6176
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .content {
-            padding: 24px;
-            flex-grow: 1;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT coalesce((SELECT valor FROM configuracion WHERE clave = 'limite_pago'), '5') as valor",
+        "additionalFields": {}
+      },
+      "id": "ba08b54b-2bbb-4aec-a089-fd8992807811",
+      "name": "Supabase-Lim",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        6176
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .view {
-            display: none;
-            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n    const accItems = $items(\"Supabase-Acc\") || [];\n    if (accItems.length === 0 || !accItems[0].json || !accItems[0].json.id) {\n        return [{json: {status: \"not_found\"}}];\n    }\n    const alumno = accItems[0].json;\n    \n    let pagos = [];\n    try {\n        pagos = $items(\"Supabase-Pay\")[0].json.data || [];\n    } catch(e) {}\n    \n    let lim_pago = 5;\n    try {\n        const limItems = $items(\"Supabase-Lim\") || [];\n        if(limItems.length > 0 && limItems[0].json && limItems[0].json.valor) lim_pago = parseInt(limItems[0].json.valor);\n    } catch(e) {}\n\n    const hoy = new Date();\n    const currMonth = hoy.getMonth() + 1;\n    const currYear = hoy.getFullYear();\n    const pagoMes = pagos.find(p => p.mes === currMonth && p.anio === currYear);\n    \n    let al_corriente = false;\n    let motivo = \"\";\n    \n    if (pagos.length === 0) {\n        // Nunca ha realizado un pago (asegura que el primer pago de inscripción sea obligatorio antes del acceso)\n        al_corriente = false;\n        motivo = \"No hay ningún pago registrado. Debe pagar su mensualidad.\";\n    } else {\n        if(pagoMes) {\n            al_corriente = true;\n        } else {\n            if(hoy.getDate() <= lim_pago) {\n                al_corriente = true; // en periodo de gracia\n            } else {\n                motivo = \"Mes de cobro vencido y límite excedido.\";\n            }\n        }\n    }\n\n    return [{json: {\n        status: \"success\",\n        nombre: alumno.nombre,\n        categoria: (alumno.categorias && typeof alumno.categorias === 'object') ? alumno.categorias.nombre : \"N/A\",\n        al_corriente: al_corriente,\n        motivo: motivo\n    }}];\n} catch(e) {\n    return [{json: {status: \"not_found\", error: e.message}}];\n}\n"
+      },
+      "id": "25db175b-7491-4878-bc27-0222c5a68884",
+      "name": "Access Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14416,
+        6176
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-
-        .view.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+      },
+      "id": "30533feb-0f47-4dd4-89c9-17991540ddbc",
+      "name": "Res-Acc",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14624,
+        6176
+      ]
+    },
+    {
+      "parameters": {
+        "path": "ht-get-payment",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
-        
-        input, select {
-            width: 100%;
-            padding: 14px;
-            background: var(--bg-body);
-            border: 1px solid #44403c;
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
+      },
+      "id": "cd52ea09-bc2c-4bce-8f52-e5ef7907a979",
+      "name": "WH-GetPay",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        6368
+      ],
+      "webhookId": "686adaf5-78cd-4821-b2c7-55154c092c99"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT a.id, a.nombre, a.padre_id, COALESCE((SELECT p.costo_mensual FROM ht_paquetes_precio p WHERE p.cantidad_hijos = (SELECT LEAST(COUNT(*), 3)::int FROM alumnos a2 WHERE a2.padre_id = a.padre_id)), (SELECT costo_mensual FROM ht_paquetes_precio WHERE cantidad_hijos = 1)) as costo_mensualidad FROM alumnos a WHERE a.nfc_uid = '{{$json.query.nfc_uid}}'",
+        "additionalFields": {}
+      },
+      "id": "e403af83-9a7b-4d71-bf78-b01a859b1b49",
+      "name": "Supabase-GPay",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        6368
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT coalesce(json_agg(t), '[]'::json) as data FROM (SELECT mes, anio, monto, fecha_pago FROM pagos WHERE alumno_id = '{{$json.id}}' ORDER BY anio DESC, mes DESC) t",
+        "additionalFields": {}
+      },
+      "id": "3a0b1520-581d-4b67-ad7f-bb459b1b9068",
+      "name": "Supabase-GPay2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        6368
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-
-        .btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-weight: 800;
-            font-size: 1.05rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n    const accItems = $items(\"Supabase-GPay\") || [];\n    if (accItems.length === 0 || !accItems[0].json || !accItems[0].json.id) {\n        return [{json: {status: \"not_found\"}}];\n    }\n    const alumno = accItems[0].json;\n    \n    let pagos = [];\n    try {\n        pagos = $items(\"Supabase-GPay2\")[0].json.data || [];\n    } catch(e) {}\n    \n    const hoy = new Date();\n    const currMonth = hoy.getMonth() + 1;\n    const currYear = hoy.getFullYear();\n    const pagoMes = pagos.find(p => p.mes === currMonth && p.anio === currYear);\n    return [{json: {\n        status: \"success\",\n        nombre: alumno.nombre,\n        alumno_id: alumno.id,\n        costo_mensualidad: alumno.costo_mensualidad,\n        mes_cobro: currMonth,\n        anio_cobro: currYear,\n        ya_pagado: !!pagoMes,\n        pagos: pagos\n    }}];\n} catch(e) {\n    return [{json: {status: \"not_found\"}}];\n}\n"
+      },
+      "id": "f904ad6e-529e-40ad-8ce1-d45eedaa8d22",
+      "name": "Logic GPay",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        6368
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-
-        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(1px); }
-        
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #059669; }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
+      },
+      "id": "85e18f8a-f956-469d-b66e-2a01999ddf09",
+      "name": "Res-GPay",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14416,
+        6368
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-execute-pay",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-        .status-msg {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            display: none;
-            text-align: center;
+      },
+      "id": "f291b43b-a826-4290-80e3-e834fdabe685",
+      "name": "WH-EPay",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        6576
+      ],
+      "webhookId": "ec291e32-2b8e-4c1a-ba4e-2f0e79c3b126"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pagos (alumno_id, monto, mes, anio) SELECT '{{$json.body.alumno_id}}', {{$json.body.monto}} / {{$json.body.modalidad || '1'}}, (( {{$json.body.mes}} - 1 + i ) % 12) + 1, {{$json.body.anio}} + (( {{$json.body.mes}} - 1 + i ) / 12) FROM generate_series(0, {{$json.body.modalidad || '1'}}::int - 1) as i RETURNING 'success' as status;",
+        "additionalFields": {}
+      },
+      "id": "1f3415c3-cb32-450c-8cfc-5550e53b0743",
+      "name": "Supabase-EPay",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        6576
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-        .status-msg.success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); display: block; }
-        .status-msg.error { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block; }
-        .status-msg.info { background: rgba(249, 115, 22, 0.1); color: var(--primary); border: 1px solid var(--primary); display: block; }
-
-        /* Pantalla Bloqueo */
-        #lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(28, 25, 23, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 9999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; text-align: center; padding: 20px;
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0 || !items[0].json.status) {\n    let msg = 'No se pudo procesar el pago. Por favor intenta de nuevo.';\n    try {\n      const err = $('Supabase-EPay').error;\n      if (err) msg = '⚠️ Error en base de datos: ' + err.message;\n    } catch(e) {}\n    return [{json: {status: 'error', message: msg}}];\n  }\n  return [{json: {status: 'success'}}];\n} catch (e) {\n  return [{json: {status: 'error', message: 'Fallo crítico al aplicar el pago.'}}];\n}"
+      },
+      "id": "150a09a2-c064-4a3f-83a4-c76c7efd89cd",
+      "name": "Check Epay",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        6576
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-        #lock-screen.hidden { display: none; }
-
-        /* Tarjeta de Status Alumno */
-        .student-card {
-            background: var(--bg-body);
-            border: 1px solid #44403c;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
+      },
+      "id": "5e9bff97-9597-4543-929f-8097a0828be7",
+      "name": "Res-EPay",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        6576
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-reassign",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-        .student-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
-        .student-cat { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-        
-        .badge-status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 1rem;
-            text-transform: uppercase;
+      },
+      "id": "e66f8241-9353-4f52-ade6-20c536a3d93e",
+      "name": "WH-Reas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        6768
+      ],
+      "webhookId": "5ff0c7c9-d9f4-4f91-bef9-72c2d116cdfe"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE alumnos SET nfc_uid = '{{$json.body.nfc_uid}}' WHERE id = '{{$json.body.alumno_id}}' RETURNING 'success' as status;",
+        "additionalFields": {}
+      },
+      "id": "67180c0d-8f14-40e3-a736-d940266202c4",
+      "name": "Supabase-Reas",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        6768
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
         }
-        .badge-ok { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
-        .badge-debt { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-        .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
-        
-        @keyframes pulse-scan {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-            100% { transform: scale(1); opacity: 0.8; }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0 || !items[0].json.status) {\n    let msg = 'No se pudo generar la baja/reasignación.';\n    try {\n      const err = $('Supabase-Reas').error;\n      if (err && err.message.includes('duplicate key')) msg = '⚠️ Esta nueva pulsera YA está en uso por otra persona.';\n      else if (err) msg = err.message;\n    } catch(e) {}\n    return [{json: {status: 'error', message: msg}}];\n  }\n  return [{json: {status: 'success'}}];\n} catch (e) {\n  return [{json: {status: 'error', message: 'Fallo al procesar reasignación.'}}];\n}"
+      },
+      "id": "40d7eb5c-c8a4-4600-abf3-12ac76c8b72f",
+      "name": "Check Reas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        6768
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
         }
-        .anim-scanning {
-            animation: pulse-scan 1.2s infinite ease-in-out;
-            border: 1px solid var(--primary-light) !important;
-            background: rgba(59, 130, 246, 0.1) !important;
+      },
+      "id": "0f82bf00-598e-4ef9-b0f2-93dffe94ceca",
+      "name": "Res-Reas",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        6768
+      ]
+    },
+    {
+      "id": "baja-zvh0vfi0a",
+      "name": "WH-Baja",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        13616,
+        6950
+      ],
+      "disabled": false,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-baja",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
         }
-
-    </style>
-</head>
-<body>
-
-<!-- PANTALLA DE AUTENTICACION -->
-<div id="lock-screen">
-    <div style="text-align: center; margin-bottom: 25px;">
-        <img src="./Logo_SporTapp.jpeg" alt="SporTapp Logo" style="height: 160px; width: auto; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); object-fit: contain;">
-        <h1 style="font-size: 2.8rem; font-weight: 800; margin: 20px 0 5px; color: var(--primary); letter-spacing: -1px; text-shadow: 0 4px 6px rgba(0,0,0,0.5);">SporTapp</h1>
-    </div>
-    
-    <h2 style="font-size: 1.6rem; margin: 0 0 10px; color: #f5f5f4;">Castores Admin</h2>
-    <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
-    
-    <div style="width: 100%; max-width: 250px;">
-        <button class="btn btn-success" onclick="login()">📡 Leer Pulsera para Ingresar</button>
-    </div>
-    <div id="status-login" class="status-msg"></div>
-    
-    <div style="position: absolute; bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.9;">
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Powered by</span>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height: 35px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
-            <strong style="font-size: 1.3rem; color: #f5f5f4; letter-spacing: 1px;">TechTap</strong>
-        </div>
-    </div>
-</div>
-
-<div class="app-container">
-    <div class="header-container">
-        <button id="btn-logout" class="header-logout" onclick="logout()">Salir</button>
-        <div class="header-banner">
-            <img src="./Header.png" alt="Header Castores" class="header-banner-img">
-        </div>
-        <div class="header-text">
-            <h1>Castores Nungaray</h1>
-            <p>Powered by TechTap</p>
-        </div>
-    </div>
-    
-    <div class="nav">
-        <div class="nav-item active" id="nav-access" onclick="switchTab('access')">🎯 Lector Acceso</div>
-        <div class="nav-item" id="nav-pay" onclick="switchTab('pay')">💰 Cobrar Mes</div>
-        <div class="nav-item" id="nav-hist" onclick="switchTab('hist')">📊 Historial</div>
-        <div class="nav-item" id="nav-reg" onclick="switchTab('reg')" style="display:none;">📝 Alta Alumno</div>
-        <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👥 Alta Usuario</div>
-        <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
-        <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
-    </div>
-
-    <div class="content">
-        
-        <!-- VISTA: LECTOR ACCESO -->
-        <div id="view-access" class="view active">
-            <div style="text-align: center; padding: 20px 0;">
-                <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
-                <h3 style="margin:0 0 10px;">Control de Acceso</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.</p>
-                <button class="btn" onclick="scanAccess()" style="margin-top: 20px;">🔴 Leer Pulsera (NFC)</button>
-            </div>
-            
-            <!-- Resultado del escaneo -->
-            <div id="access-result" style="display: none; margin-top: 20px;">
-                <div class="student-card">
-                    <div class="student-name" id="acc-name">Cargando...</div>
-                    <div class="student-cat" id="acc-cat">---</div>
-                    <div id="acc-badge" class="badge-status">---</div>
-                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-msg">
-                        Último pago: <strong id="acc-lastpay" style="color: white;">---</strong>
-                    </div>
-                </div>
-            </div>
-            <div id="status-access" class="status-msg"></div>
-        </div>
-
-        <!-- VISTA: COBRAR MES -->
-        <div id="view-pay" class="view">
-            <h3 style="margin-top: 0;">Registrar Mensualidad</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee la pulsera para identificar al alumno y cobrar el mes en curso.</p>
-            
-            <button class="btn btn-outline" onclick="scanForPayment()">📡 Identificar Alumno (NFC)</button>
-
-            <div id="pay-details" style="display: none; margin-top: 20px;">
-                <div class="student-card" style="box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                    <div class="student-name" id="pay-name">Nombre Alumno</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary); margin: 10px 0;">
-                        Total a Pagar: $<span id="pay-amount">0.00</span>
-                    </div>
-                    <div class="form-group" style="text-align: left;">
-                        <label>Modalidad de Pago</label>
-                        <select id="pay-mode" onchange="recalcPayAmount()">
-                            <option value="1">Mensualidad (1 Mes)</option>
-                            <option value="10">Anualidad (10 Meses)</option>
-                        </select>
-                    </div>
-                    <!-- Mes y año a pagar -->
-                    <div style="font-size: 1rem; color: #cbd5e1; margin-bottom: 15px;">
-                        Cobrando a partir de mes: <strong id="pay-month-lbl" style="color: white;">---</strong>
-                    </div>
-                    <button class="btn btn-success" onclick="executePayment()" id="btn-execute-pay">✅ Confirmar Pago</button>
-                    <input type="hidden" id="pay-uid">
-                    <input type="hidden" id="pay-st-id">
-                    <input type="hidden" id="pay-month">
-                    <input type="hidden" id="pay-year">
-                </div>
-            </div>
-            <div id="status-pay" class="status-msg"></div>
-        </div>
-
-        <!-- VISTA: ALTA ALUMNO -->
-        <div id="view-hist" class="view">
-            <button class="btn" onclick="startHistory()">📊 Leer Pulsera y Ver Pagos</button>
-            <div id="status-hist" class="status-msg"></div>
-
-            <div id="history-box" style="display:none; margin-top: 20px;">
-                <div class="student-card">
-                    <div id="hist-student-name" class="student-name">...</div>
-                    <div id="hist-student-cat" class="student-cat">...</div>
-                </div>
-                <div id="historial-list" style="max-height: 300px; overflow-y: auto; text-align: left;">
-                    <!-- items llenados via JS -->
-                </div>
-            </div>
-        </div>
-
-        <div id="view-reg" class="view">
-            <div class="form-group">
-                <label>Nombre Completo</label>
-                <input type="text" id="reg-name" placeholder="Ej: Michael Jordan">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
-                    <label>Edad</label>
-                    <input type="number" id="reg-age" placeholder="Años" readonly style="background: rgba(255,255,255,0.05); color: #94a3b8; cursor: not-allowed;">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Nacimiento</label>
-                    <input type="date" id="reg-dob" onchange="calcularEdad()">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Categoría</label>
-                <select id="reg-cat">
-                    <option value="">Cargando...</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1;">
-                    <label>Tipo de Sangre</label>
-                    <select id="reg-blood">
-                        <option value="O+">O+</option><option value="O-">O-</option>
-                        <option value="A+">A+</option><option value="A-">A-</option>
-                        <option value="B+">B+</option><option value="B-">B-</option>
-                        <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Padre de Familia (Opcional)</label>
-                    <input type="text" id="reg-padre-search" placeholder="Buscar padre..." oninput="filterPadres()" autocomplete="off">
-                    <div id="reg-padre-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
-                    <input type="hidden" id="reg-padre">
-                    <div id="reg-padre-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(79,70,229,0.1); border:1px solid #4f46e5; border-radius:10px; font-weight:700; color:white; justify-content:space-between; align-items:center;">
-                        <span id="reg-padre-selected-name"></span>
-                        <span onclick="clearPadre()" style="color:#ef4444; cursor:pointer;" title="Quitar">❌</span>
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1;">
-                    <label>Contacto Emerg. (Nombre)</label>
-                    <input type="text" id="reg-em-name" placeholder="Ej: María Gómez">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Teléfono Emerg. (WhatsApp)</label>
-                    <input type="tel" id="reg-em-tel" placeholder="Ej: 5512345678">
-                </div>
-            </div>
-            <button class="btn" onclick="registerStudent()">📡 Leer Pulsera y Guardar</button>
-            <div id="status-reg" class="status-msg"></div>
-        </div>
-
-        <!-- VISTA: ALTA USUARIO -->
-        <div id="view-users" class="view">
-            <h3 style="margin-top: 0;">Registro de Usuarios</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Crea cuentas de acceso de forma rápida.</p>
-            <div class="form-group">
-                <label>Nombre de Usuario</label>
-                <input type="text" id="usr-name" placeholder="Ej: Juan Pérez">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1;">
-                    <label>Rol de Acceso</label>
-                    <select id="usr-rol" onchange="checkPadreRol()">
-                        <option value="padre">Padre de Familia</option>
-                        <option value="instructor">Instructor</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Pulsera NFC de Usuario</label>
-                    <button class="btn btn-outline" style="width:100%; border-color:var(--primary); color:white;" id="btn-read-usr-nfc" onclick="readUsrNfc()">📡 Escanear Pulsera</button>
-                    <input type="hidden" id="usr-uid">
-                </div>
-            </div>
-            
-            <div id="padre-children-section" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #44403c;">
-                <label>Asignar Hijos al Padre</label>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0;">Busca y agrega los alumnos que estarán ligados a este padre. Su mensualidad se calculará en automático.</p>
-                <input type="text" id="usr-child-search" placeholder="Buscar alumno..." oninput="filterUsrChildren()" autocomplete="off">
-                <div id="usr-child-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:150px; overflow-y:auto;"></div>
-                <div id="usr-child-list" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
-            </div>
-
-            <button class="btn" style="background:#4f46e5;" onclick="registerUser()">👤 Crear Usuario</button>
-            <div id="status-users" class="status-msg"></div>
-        </div>
-
-        <!-- VISTA: BAJA USUARIO (GENERAL) -->
-        <div id="view-baja-user" class="view">
-            <h3 style="margin-top: 0;">Baja General</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del Alumno, Padre, Instructor o Administrador que deseas dar de baja y eliminar del sistema.</p>
-            <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;" onclick="deleteUser()">🗑️ Leer Pulsera y Dar de Baja</button>
-            <div id="status-baja-user" class="status-msg"></div>
-        </div>
-
-        <!-- VISTA: RE-ASIGNAR -->
-        <div id="view-reassign" class="view">
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un alumno pierde su pulsera, búscalo y registra una nueva pulsera.</p>
-            <div class="form-group">
-                <label>Buscar Alumno</label>
-                <input type="text" id="reassign-search" placeholder="Escribe el nombre..." oninput="filterStudents('reassign')" autocomplete="off">
-                <div id="reassign-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
-                <input type="hidden" id="reassign-student">
-                <div id="reassign-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(249,115,22,0.1); border:1px solid var(--primary); border-radius:10px; font-weight:700; color:var(--primary);"></div>
-            </div>
-            <button class="btn btn-outline" onclick="reassignNfc()">🔄 Asignar Nueva Pulsera</button>
-            <div id="status-reassign" class="status-msg"></div>
-        </div>
-
-    </div>
-</div>
-
-<script>
-    // URL base de n8n para comunicarse por Webhooks
-    // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
-    const N8N_URL = "https://joel-inadaptados.oph.st/webhook"; 
-    // const N8N_URL = "https://joel-inadaptados.oph.st/webhook-test"; // Para pruebas
-    const API_KEY = "hoop-tap-secret-v1"; 
-
-    // ==========================================
-    // AUDIO ENGINE (Sintetizador Web Audio API)
-    // ==========================================
-    let audioCtx;
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if(audioCtx.state === 'suspended') audioCtx.resume();
+      }
+    },
+    {
+      "id": "baja-hfyteutq5",
+      "name": "Supabase-Baja",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        13824,
+        6950
+      ],
+      "disabled": false,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM alumnos WHERE id = '{{$json.body.alumno_id}}' RETURNING 'success' as status;",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "baja-obtrgg0ro",
+      "name": "Check Baja",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        14016,
+        6950
+      ],
+      "disabled": false,
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0 || !items[0].json.status) {\n    let msg = '❌ El alumno no se pudo encontrar o ya fue dado de baja.';\n    try {\n      const err = $('Supabase-Baja').error;\n      if (err) msg = '⚠️ Error al dar de baja: ' + err.message;\n    } catch(e) {}\n    return [{json: {status: 'error', message: msg}}];\n  }\n  return [{json: {status: 'success'}}];\n} catch (e) {\n  return [{json: {status: 'error', message: 'Error interno en la eliminación del alumno.'}}];\n}"
+      }
+    },
+    {
+      "id": "baja-u0iz8nyqr",
+      "name": "Res-Baja",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        14224,
+        6950
+      ],
+      "disabled": false,
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-register-user",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
+        }
+      },
+      "id": "reg-usr-wh",
+      "name": "WH-Reg-User",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        7150
+      ],
+      "webhookId": "wh-reg-usr-uuid-id"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH inserted_user AS (INSERT INTO ht_users (nombre, rol, nfc_uid) VALUES ('{{$json.body.nombre}}', '{{$json.body.rol}}', UPPER('{{$json.body.nfc_uid}}')) RETURNING id), do_update AS (UPDATE alumnos SET padre_id = (SELECT id FROM inserted_user) WHERE id::text = ANY (string_to_array('{{($json.body.hijos_ids && $json.body.hijos_ids.length > 0) ? $json.body.hijos_ids.join(\",\") : \"\"}}', ',')) RETURNING id) SELECT 'success' as status FROM inserted_user",
+        "additionalFields": {}
+      },
+      "id": "reg-usr-pg",
+      "name": "Supabase-Reg-User",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        7150
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0 || !items[0].json.status) {\n    let msg = 'Error en base de datos. Referencia vacía.';\n    try {\n      const err = $('Supabase-Reg-User').error;\n      if (err && err.message.includes('duplicate key')) msg = '⚠️ Esta pulsera ya pertenece a otro Usuario/Instructor/Padre.';\n      else if (err) msg = err.message;\n    } catch(e) {}\n    return [{json: {status: 'error', message: msg}}];\n  }\n  return [{json: {status: 'success'}}];\n} catch (e) {\n  return [{json: {status: 'error', message: 'Ocurrió un error al registrar usuario.'}}];\n}"
+      },
+      "id": "reg-usr-code",
+      "name": "Check-Reg-User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        14016,
+        7150
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "reg-usr-res",
+      "name": "Res-Reg-User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        7150
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ht-baja-user",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, OPTIONS"
+              }
+            ]
+          }
+        }
+      },
+      "id": "baja-usr-wh",
+      "name": "WH-Baja-User",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        13616,
+        7350
+      ],
+      "webhookId": "wh-baja-usr-uuid-id"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH del_alumnos AS (DELETE FROM alumnos WHERE nfc_uid = '{{$json.body.nfc_uid}}' RETURNING id), del_users AS (DELETE FROM ht_users WHERE nfc_uid = '{{$json.body.nfc_uid}}' RETURNING id) SELECT (SELECT count(*) FROM del_alumnos) as alumnos_deleted, (SELECT count(*) FROM del_users) as users_deleted;",
+        "additionalFields": {}
+      },
+      "id": "baja-usr-pg",
+      "name": "Supabase-Baja-User",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        13824,
+        7350
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yhThMhTjR1LKUhsA",
+          "name": "Postgres controlPagos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "\ntry {\n  const items = $input.all();\n  if (items.length === 0) {\n      return [{json: {status: 'error', message: 'Respuesta vacía de la base de datos.'}}];\n  }\n  const res = items[0].json;\n  \n  try {\n      const err = $('Supabase-Baja-User').error;\n      if (err) return [{json: {status: 'error', message: '⚠️ Error base de datos: ' + err.message}}];\n  } catch(e) {}\n  \n  if (res.alumnos_deleted > 0 || res.users_deleted > 0) {\n      return [{json: {status: 'success', message: 'Registro eliminado correctamente.'}}];\n  } else {\n      return [{json: {status: 'error', message: '❌ Esta pulsera NO pertenece a ningún usuario o alumno registrado.'}}];\n  }\n} catch (e) {\n  return [{json: {status: 'error', message: 'Fallo crítico al eliminar.'}}];\n}"
+      },
+      "id": "baja-usr-code",
+      "name": "Check-Baja-User",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        14016,
+        7350
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "baja-usr-res",
+      "name": "Res-Baja-User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        14224,
+        7350
+      ]
     }
-
-    function playTone(freq, type, duration, vol=0.1) {
-        initAudio();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+  ],
+  "connections": {
+    "WH-Auth": {
+      "main": [
+        [
+          {
+            "node": "Supabase-PIN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-PIN": {
+      "main": [
+        [
+          {
+            "node": "Check PIN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check PIN": {
+      "main": [
+        [
+          {
+            "node": "Res-Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Categories": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Cat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Cat": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Stu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Stu": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Res-Cat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Register": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Reg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Reg": {
+      "main": [
+        [
+          {
+            "node": "Check Reg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Reg": {
+      "main": [
+        [
+          {
+            "node": "Res-Reg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Access": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Acc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Acc": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Pay": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Lim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Lim": {
+      "main": [
+        [
+          {
+            "node": "Access Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access Logic": {
+      "main": [
+        [
+          {
+            "node": "Res-Acc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-GetPay": {
+      "main": [
+        [
+          {
+            "node": "Supabase-GPay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-GPay": {
+      "main": [
+        [
+          {
+            "node": "Supabase-GPay2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-GPay2": {
+      "main": [
+        [
+          {
+            "node": "Logic GPay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logic GPay": {
+      "main": [
+        [
+          {
+            "node": "Res-GPay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-EPay": {
+      "main": [
+        [
+          {
+            "node": "Supabase-EPay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-EPay": {
+      "main": [
+        [
+          {
+            "node": "Check Epay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Epay": {
+      "main": [
+        [
+          {
+            "node": "Res-EPay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Reas": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Reas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Reas": {
+      "main": [
+        [
+          {
+            "node": "Check Reas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Reas": {
+      "main": [
+        [
+          {
+            "node": "Res-Reas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Baja": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Baja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Baja": {
+      "main": [
+        [
+          {
+            "node": "Check Baja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Baja": {
+      "main": [
+        [
+          {
+            "node": "Res-Baja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Reg-User": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Reg-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Reg-User": {
+      "main": [
+        [
+          {
+            "node": "Check-Reg-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check-Reg-User": {
+      "main": [
+        [
+          {
+            "node": "Res-Reg-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH-Baja-User": {
+      "main": [
+        [
+          {
+            "node": "Supabase-Baja-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase-Baja-User": {
+      "main": [
+        [
+          {
+            "node": "Check-Baja-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check-Baja-User": {
+      "main": [
+        [
+          {
+            "node": "Res-Baja-User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
-
-    // Sonido lectura NFC
-    function soundRead() { playTone(880, 'sine', 0.1, 0.2); }
-    
-    // Sonido Al Corriente (Arpegio Feliz)
-    function soundSuccess() {
-        playTone(523.25, 'sine', 0.15, 0.2); // C5
-        setTimeout(() => playTone(659.25, 'sine', 0.15, 0.2), 100); // E5
-        setTimeout(() => playTone(783.99, 'sine', 0.3,  0.2), 200); // G5
-    }
-
-    // Sonido Adeuda (Zumbido Grave)
-    function soundError() {
-        playTone(150, 'sawtooth', 0.6, 0.3);
-    }
-
-    // ==========================================
-    // UI Y NAVEGACIÓN
-    // ==========================================
-    function switchTab(t) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-        const activeTab = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(t));
-        if (activeTab) activeTab.classList.add('active');
-        const viewEl = document.getElementById('view-' + t);
-        if (viewEl) viewEl.classList.add('active');
-        
-        // Reset states
-        document.getElementById('access-result').style.display = 'none';
-        document.getElementById('pay-details').style.display = 'none';
-        if (document.getElementById('history-box')) {
-            document.getElementById('history-box').style.display = 'none';
-        }
-        showMsg('access', '', '');
-        showMsg('pay', '', '');
-        showMsg('reg', '', '');
-        showMsg('reassign', '', '');
-        showMsg('hist', '', '');
-        showMsg('users', '', '');
-        showMsg('baja-user', '', '');
-        
-        if (t === 'reassign' || t === 'reg') {
-            loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
-        }
-    }
-
-    function showMsg(view, type, text) {
-        const el = document.getElementById('status-' + view);
-        if (!text) { el.style.display = 'none'; el.classList.remove('anim-scanning'); return; }
-        el.className = 'status-msg ' + type;
-        if(type === 'info') el.classList.add('anim-scanning');
-        el.innerText = text;
-        el.style.display = 'block';
-    }
-
-    // Mapeo nombres de meses
-    const nMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-    function calcularEdad() {
-        const dStr = document.getElementById('reg-dob').value;
-        if(dStr) {
-            const today = new Date();
-            const birthDate = new Date(dStr);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            document.getElementById('reg-age').value = age;
-        } else {
-            document.getElementById('reg-age').value = '';
-        }
-    }
-
-    let currentUser = null;
-    let basePayAmount = 0;
-    // ==========================================
-    // LOGIN
-    // ==========================================
-    async function login() {
-        showMsg('login', 'info', 'Esperando NFC...');
-        initAudio(); // Permiso de audio al click
-        const uid = await getUidFromNFC();
-        if (!uid) { showMsg('login', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('login', 'info', 'Validando...');
-        try {
-            const res = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(uid)}`);
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            if(result.status === 'success') {
-                currentUser = result; // Debe incluir {rol: 'admin', nombre: 'Joel', id: 'uuid'}
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('btn-logout').style.display = 'block';
-                // Llenar selects de categoríasy alumnos
-                loadInitialData();
-                applyPermissions();
-            } else {
-                showMsg('login', 'error', 'La clave PIN es incorrecta. Intenta de nuevo.');
-            }
-        } catch(e) {
-            console.error(e);
-            showMsg('login', 'error', 'No se pudo conectar al servidor. Revisa tu conexión a internet.');
-        }
-    }
-
-    function applyPermissions() {
-        document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'none');
-        
-        const r = currentUser.rol;
-        if(r === 'admin') {
-            document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
-            switchTab('access');
-        } else if(r === 'instructor') {
-            document.getElementById('nav-access').style.display = 'flex';
-            document.getElementById('nav-pay').style.display = 'flex';
-            document.getElementById('nav-hist').style.display = 'flex';
-            document.getElementById('nav-reg').style.display = 'flex';
-            switchTab('access');
-        } else if(r === 'padre') {
-            document.getElementById('nav-hist').style.display = 'flex';
-            switchTab('hist');
-        }
-    }
-
-    async function deleteUser() {
-        showMsg('baja-user', 'info', 'Acerque la pulsera...');
-        initAudio();
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); return; }
-        
-        if(!confirm('¿Estás seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
-            showMsg('baja-user', 'info', 'Operación cancelada.');
-            return;
-        }
-
-        showMsg('baja-user', 'info', 'Procesando baja...');
-        try {
-            const res = await fetch(`${N8N_URL}/ht-baja-user`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nfc_uid: uid })
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            if(result && result.status === 'success') {
-                showMsg('baja-user', 'success', 'Baja procesada correctamente.');
-                soundSuccess();
-                loadInitialData(); // Para refrescar listas
-            } else {
-                showMsg('baja-user', 'error', 'No se pudo procesar la baja. ' + (result.message || 'Verifica que la pulsera fue registrada.'));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('baja-user', 'error', 'Error de red al procesar la baja.');
-            soundError();
-        }
-    }
-
-
-    // ==========================================
-    // NFC SCAN LÓGICA (Genérica)
-    // ==========================================
-    async function getUidFromNFC() {
-        if ("NDEFReader" in window) {
-            try {
-                const ndef = new NDEFReader();
-                await ndef.scan();
-                return await new Promise((resolve, reject) => {
-                    const timer = setTimeout(() => reject(new Error("Timeout")), 15000);
-                    ndef.onreading = event => { clearTimeout(timer); soundRead(); resolve(event.serialNumber.toUpperCase()); };
-                });
-            } catch (error) {
-                console.error("NFC Error", error);
-                // NFC no disponible o apagado — retornar null para que el llamador muestre el error
-                return null;
-            }
-        } else {
-            // Dispositivo sin soporte NFC o protocolo no seguro
-            return null;
-        }
-    }
-
-    // ==========================================
-    // CARGAR DATOS
-    // ==========================================
-    async function loadInitialData() {
-        try {
-            const res = await fetch(`${N8N_URL}/ht-categories`);
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            const catSelect = document.getElementById('reg-cat');
-            if(result.categorias) {
-                catSelect.innerHTML = result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
-            }
-            
-            // Guardar lista de alumnos en variable global para el buscador
-            if(result.alumnos) {
-                window._allStudents = result.alumnos; // [{id, nombre}, ...]
-            }
-            if(result.padres) {
-                window._allPadres = result.padres; 
-            }
-        } catch(e) {
-            console.log("Aún no conectado a n8n o error:", e);
-        }
-    }
-
-    // ==========================================
-    // BUSCADOR INTELIGENTE DE ALUMNOS
-    // ==========================================
-    window._allStudents = [];
-
-    function filterStudents(prefix) {
-        const query = document.getElementById(prefix + '-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById(prefix + '-dropdown');
-        const hiddenInput = document.getElementById(prefix + '-student');
-        const selectedBox = document.getElementById(prefix + '-selected');
-
-        // Limpiar selección anterior
-        hiddenInput.value = '';
-        selectedBox.style.display = 'none';
-
-        if (!query) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
-
-        const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-
-        dropdown.innerHTML = matches.map(a => `
-            <div onclick="selectStudent('${prefix}', '${a.id}', '${a.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
-                ${a.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-
-    function selectStudent(prefix, id, nombre) {
-        document.getElementById(prefix + '-student').value = id;
-        document.getElementById(prefix + '-search').value = nombre;
-        document.getElementById(prefix + '-dropdown').style.display = 'none';
-        const box = document.getElementById(prefix + '-selected');
-        box.textContent = '✔ Seleccionado: ' + nombre;
-        box.style.display = 'block';
-    }
-
-    window._allPadres = [];
-    function filterPadres() {
-        const query = document.getElementById('reg-padre-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById('reg-padre-dropdown');
-        if (!query) { dropdown.style.display = 'none'; return; }
-        const matches = window._allPadres.filter(p => p.nombre.toLowerCase().includes(query));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-        dropdown.innerHTML = matches.map(p => `
-            <div onclick="selectPadre('${p.id}', '${p.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(79,70,229,0.15)'" onmouseout="this.style.background=''">
-                ${p.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-    function selectPadre(id, nombre) {
-        document.getElementById('reg-padre').value = id;
-        document.getElementById('reg-padre-search').value = '';
-        document.getElementById('reg-padre-search').style.display = 'none';
-        document.getElementById('reg-padre-dropdown').style.display = 'none';
-        document.getElementById('reg-padre-selected-name').textContent = 'Vinculado a: ' + nombre;
-        document.getElementById('reg-padre-selected').style.display = 'flex';
-    }
-    function clearPadre() {
-        document.getElementById('reg-padre').value = '';
-        document.getElementById('reg-padre-selected').style.display = 'none';
-        document.getElementById('reg-padre-search').style.display = 'block';
-        document.getElementById('reg-padre-search').value = '';
-    }
-
-    let selectedChildren = [];
-    function checkPadreRol() {
-        const rol = document.getElementById('usr-rol').value;
-        document.getElementById('padre-children-section').style.display = (rol === 'padre') ? 'block' : 'none';
-        if(rol !== 'padre') {
-            selectedChildren = [];
-            document.getElementById('usr-child-list').innerHTML = '';
-        }
-    }
-    function filterUsrChildren() {
-        const query = document.getElementById('usr-child-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById('usr-child-dropdown');
-        if (!query) { dropdown.style.display = 'none'; return; }
-        const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query) && !selectedChildren.includes(a.id));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-        dropdown.innerHTML = matches.map(a => `
-            <div onclick="selectUsrChild('${a.id}', '${a.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
-                ${a.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-    function selectUsrChild(id, nombre) {
-        selectedChildren.push(id);
-        document.getElementById('usr-child-search').value = '';
-        document.getElementById('usr-child-dropdown').style.display = 'none';
-        renderUsrChildren();
-    }
-    function removeUsrChild(id) {
-        selectedChildren = selectedChildren.filter(c => c !== id);
-        renderUsrChildren();
-    }
-    function renderUsrChildren() {
-        const list = document.getElementById('usr-child-list');
-        list.innerHTML = selectedChildren.map(id => {
-            const a = window._allStudents.find(x => x.id === id);
-            return `<div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                <span>${a.nombre}</span>
-                <span onclick="removeUsrChild('${id}')" style="color:var(--danger); cursor:pointer;">❌</span>
-            </div>`;
-        }).join('');
-    }
-    async function readUsrNfc() {
-        showMsg('users', 'info', 'Acerque la pulsera...');
-        initAudio();
-        const uid = await getUidFromNFC();
-        if (uid) {
-            document.getElementById('usr-uid').value = uid;
-            document.getElementById('btn-read-usr-nfc').innerText = "✅ Pulsera Vinculada";
-            document.getElementById('btn-read-usr-nfc').style.borderColor = "var(--success)";
-            document.getElementById('btn-read-usr-nfc').style.color = "var(--success)";
-            showMsg('users', 'success', 'ID de Pulsera capturado.');
-            soundSuccess();
-        } else {
-            showMsg('users', 'error', 'Error al leer pulsera.');
-            soundError();
-        }
-    }
-    
-    async function registerUser() {
-        const nombre = document.getElementById('usr-name').value;
-        const rol = document.getElementById('usr-rol').value;
-        const uid = document.getElementById('usr-uid').value;
-        if(!nombre || !uid) { showMsg('users', 'error', 'Completa el nombre y escanea una pulsera.'); return; }
-        showMsg('users', 'info', 'Creando usuario...');
-        try {
-            const res = await fetch(`${N8N_URL}/ht-register-user`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, rol, nfc_uid: uid, hijos_ids: selectedChildren })
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-            if(result.status === 'success') {
-                showMsg('users', 'success', 'Usuario creado correctamente.');
-                document.getElementById('usr-name').value = '';
-                document.getElementById('usr-uid').value = '';
-                document.getElementById('btn-read-usr-nfc').innerText = "📡 Escanear Pulsera";
-                document.getElementById('btn-read-usr-nfc').style.borderColor = "var(--primary)";
-                document.getElementById('btn-read-usr-nfc').style.color = "white";
-                selectedChildren = []; renderUsrChildren();
-                loadInitialData(); // Para recargar lista de padres
-            } else {
-                showMsg('users', 'error', 'Error al crear usuario: ' + (result.message||''));
-            }
-        } catch(e) {
-            showMsg('users', 'error', 'Error de red.');
-        }
-    }
-
-    // ==========================================
-    // ACCESO (VALIDAR VIGENCIA)
-    // ==========================================
-    async function scanAccess() {
-        showMsg('access', 'info', 'Acerque la pulsera...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('access', 'info', 'Validando en servidor...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            
-            // Parsear JSON de forma segura; si falla, la pulsera no está registrada o hay error del servidor
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON del servidor (HTTP ' + res.status + ')', parseErr);
-                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-
-            // Verificar explícitamente not_found o response HTTP no OK
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('access-result').style.display = 'block';
-            document.getElementById('acc-name').innerText = result.nombre;
-            document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
-            
-            showMsg('access', '', '');
-
-            if(result.al_corriente === true) {
-                soundSuccess();
-                document.getElementById('acc-badge').className = "badge-status badge-ok";
-                document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
-                document.getElementById('acc-msg').innerText = "El alumno está autorizado para entrenar.";
-            } else {
-                soundError();
-                document.getElementById('acc-badge').className = "badge-status badge-debt";
-                document.getElementById('acc-badge').innerText = "❌ ADEUDA";
-                document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
-            }
-        } catch(e) {
-            console.error('Error en scanAccess:', e);
-            showMsg('access', 'error', 'No se pudo conectar al servidor. Verifica tu internet.');
-        }
-    }
-
-    // ==========================================
-    // COBRO MENSUALIDAD
-    // ==========================================
-    async function scanForPayment() {
-        showMsg('pay', 'info', 'Acerque la pulsera...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('pay', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
-                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('pay-details').style.display = 'block';
-            showMsg('pay', '', '');
-            
-            basePayAmount = Number(result.costo_mensualidad || 0);
-            
-            document.getElementById('pay-name').innerText = result.nombre;
-            document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
-            
-            document.getElementById('pay-mode').value = "1";
-            recalcPayAmount();
-            
-            // Hidden fields
-            document.getElementById('pay-uid').value = uid;
-            document.getElementById('pay-st-id').value = result.alumno_id;
-            document.getElementById('pay-month').value = result.mes_cobro;
-            document.getElementById('pay-year').value = result.anio_cobro;
-
-            if(result.ya_pagado === true) {
-                showMsg('pay', 'warning', '⚠️ Este mes ya está pagado. No se recomienda volver a cobrar.');
-                document.getElementById('pay-month-lbl').innerText += " (YA PAGADO)";
-            }
-
-        } catch(e) {
-            console.error('Error en scanForPayment:', e);
-            showMsg('pay', 'error', 'No se pudo conectar al servidor. Verifica tu internet.');
-        }
-    }
-    
-    function recalcPayAmount() {
-        const mul = parseInt(document.getElementById('pay-mode').value) || 1;
-        document.getElementById('pay-amount').innerText = (basePayAmount * mul).toFixed(2);
-    }
-    
-    async function executePayment() {
-        const payload = {
-            alumno_id: document.getElementById('pay-st-id').value,
-            monto: document.getElementById('pay-amount').innerText,
-            mes: document.getElementById('pay-month').value,
-            anio: document.getElementById('pay-year').value,
-            modalidad: document.getElementById('pay-mode').value
-        };
-
-        const btn = document.getElementById('btn-execute-pay');
-        btn.disabled = true;
-        btn.innerText = "Procesando...";
-
-        try {
-            const res = await fetch(`${N8N_URL}/ht-execute-pay`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result.status === 'success') {
-                showMsg('pay', 'success', `✅ Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
-                document.getElementById('pay-details').style.display = 'none';
-                soundSuccess();
-            } else {
-                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result.message || 'Error desconocido'));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('pay', 'error', 'No se pudo procesar el pago por un error de conexión.');
-            soundError();
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "✅ Confirmar Pago";
-        }
-    }
-
-    // ==========================================
-    // LOGICA DE HISTORIAL
-    // ==========================================
-    async function startHistory() {
-        showMsg('hist', 'info', 'Acerque la pulsera NFC...', true);
-        document.getElementById('history-box').style.display = 'none';
-
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('hist', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-
-        showMsg('hist', 'info', 'Consultando historial de pagos...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
-                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('history-box').style.display = 'block';
-            document.getElementById('hist-student-name').textContent = result.nombre;
-            
-            let html = '';
-            if(!result.pagos || result.pagos.length === 0) {
-                document.getElementById('hist-student-cat').textContent = 'Sin historial de pagos';
-                html = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No hay pagos registrados.</div>';
-            } else {
-                document.getElementById('hist-student-cat').textContent = `${result.pagos.length} Pagos registrados`;
-                result.pagos.forEach(p => {
-                    const d = p.fecha_pago ? new Date(p.fecha_pago).toLocaleDateString() : 'N/A';
-                    html += `
-                    <div style="background:#1e293b; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:800; font-size:1.1rem; color:white;">${nMeses[p.mes-1]} ${p.anio}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">Pagado el: ${d}</div>
-                        </div>
-                        <div style="font-weight:800; color:var(--success); font-size:1.1rem;">
-                            $${p.monto}
-                        </div>
-                    </div>`;
-                });
-            }
-            document.getElementById('historial-list').innerHTML = html;
-            showMsg('hist', 'success', 'Historial cargado.');
-            soundSuccess();
-
-        } catch (e) {
-            showMsg('hist', 'error', 'Error de conexión al obtener el historial de pagos.');
-            soundError();
-        }
-    }
-
-
-    // ==========================================
-    // ALTA ALUMNO Y ASIGNAR BANDA
-    // ==========================================
-    async function registerStudent() {
-        const payload = {
-            nombre: document.getElementById('reg-name').value,
-            edad: document.getElementById('reg-age').value,
-            fecha_nacimiento: document.getElementById('reg-dob').value,
-            categoria_id: document.getElementById('reg-cat').value,
-            tipo_sangre: document.getElementById('reg-blood').value,
-            padre_id: document.getElementById('reg-padre').value,
-            contacto_emergencia_nombre: document.getElementById('reg-em-name').value,
-            contacto_emergencia_tel: document.getElementById('reg-em-tel').value
-        };
-
-        if(!payload.nombre || !payload.edad || !payload.categoria_id) { 
-            showMsg('reg', 'error', 'Por favor, completa los datos básicos.'); 
-            return; 
-        }
-        
-        showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
-        try {
-            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            if (valRes.ok) {
-                const valText = await valRes.text();
-                if (valText) {
-                    const valData = JSON.parse(valText);
-                    const valResult = Array.isArray(valData) ? valData[0] : valData;
-                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
-                        soundError();
-                        return;
-                    }
-                }
-            }
-        } catch(e) {
-             console.warn('Validación de pulsera nueva generó error, continuando...', e);
-        }
-
-        payload.nfc_uid = uid;
-        showMsg('reg', 'info', 'Guardando en Base de Datos...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result.status === 'success') {
-                showMsg('reg', 'success', `✅ Alumno ${payload.nombre} registrado exitosamente.`);
-                soundSuccess();
-                // Limpiar form
-                document.getElementById('reg-name').value = '';
-                document.getElementById('reg-padre').value = '';
-                document.getElementById('reg-em-name').value = '';
-                document.getElementById('reg-em-tel').value = '';
-            } else if (result.status === 'conflict') {
-                showMsg('reg', 'error', `❌ No se pudo registrar: ${result.message}`);
-                soundError();
-            } else {
-                showMsg('reg', 'error', `❌ Ocurrió un problema inesperado al registrar el alumno.`);
-                soundError();
-            }
-        } catch(e) {
-            showMsg('reg', 'error', 'Error de conexión al guardar los datos del alumno.');
-            soundError();
-        }
-    }
-
-    // ==========================================
-    // RE-ASIGNAR PULSERA
-    // ==========================================
-    async function reassignNfc() {
-        const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); return; }
-
-        showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reassign', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
-
-        showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
-        try {
-            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            if (valRes.ok) {
-                const valText = await valRes.text();
-                if (valText) {
-                    const valData = JSON.parse(valText);
-                    const valResult = Array.isArray(valData) ? valData[0] : valData;
-                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
-                        soundError();
-                        return;
-                    }
-                }
-            }
-        } catch(e) {
-             console.warn('Validación de pulsera nueva generó error, continuando...', e);
-        }
-
-        showMsg('reassign', 'info', 'Asignando pulsera...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-reassign`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ alumno_id: studentId, nfc_uid: uid })
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result.status === 'success') {
-                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
-                soundSuccess();
-            } else {
-                showMsg('reassign', 'error', `❌ No se pudo reasignar: ${result.message || 'Error desconocido'}`);
-                soundError();
-            }
-        } catch(e) {
-            showMsg('reassign', 'error', 'Error de conexión al reasignar la pulsera.');
-            soundError();
-        }
-    }
-
-    // ==========================================
-
-    function logout() {
-        if(confirm("¿Estás seguro que deseas cerrar sesión? Todos los datos temporalmente cacheados se cerrarán.")) {
-            window.location.reload();
-        }
-    }
-
-</script>
-</body>
-</html>
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a9a5039a75a852013176bc7ed07f488bdde5b0fcfc20ff5fb52ff34272c3ba3c"
+  }
+}
