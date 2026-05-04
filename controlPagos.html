@@ -9,8 +9,8 @@
         :root {
             --primary: #e65100; /* Naranja Castores */
             --primary-hover: #ef6c00;
-            --bg-body: #1c1917; /* Fondo oscuro cÃ¡lido */
-            --bg-card: #292524; /* Tarjeta oscura cÃ¡lida */
+            --bg-body: #1c1917; /* Fondo oscuro cálido */
+            --bg-card: #292524; /* Tarjeta oscura cálida */
             --text-main: #f5f5f4;
             --text-muted: #a8a29e;
             --success: #10b981;
@@ -263,7 +263,7 @@
     <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
     
     <div style="width: 100%; max-width: 250px;">
-        <button class="btn btn-success" onclick="login()"> Leer Pulsera para Ingresar</button>
+        <button class="btn btn-success" onclick="login()">📡 Leer Pulsera para Ingresar</button>
     </div>
     <div id="status-login" class="status-msg"></div>
     
@@ -683,13 +683,13 @@
                 const select = document.getElementById('debtors-filter-cat');
                 const currentVal = select.value;
                 const cats = [...new Set(allDebtors.map(d => d.categoria).filter(c=>c))];
-                select.innerHTML = '<option value="">Todas las CategorÃ­as</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                select.innerHTML = '<option value="">Todas las Categorías</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
                 select.value = currentVal || '';
             } else {
                 showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
             }
         } catch(e) {
-            showMsg('debtors', 'error', 'ðŸ”Œ Error de red al cargar deudores.');
+            showMsg('debtors', 'error', '🔌 Error de red al cargar deudores.');
         }
     }
 
@@ -712,7 +712,7 @@
         list.innerHTML = filtered.map(d => `
             <div style="background:var(--bg-body); padding:16px; border-radius:12px; border:1px solid #ef4444; position:relative;">
                 <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
-                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categorÃ­a'}</div>
+                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
                 <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">âš ï¸</div>
             </div>
         `).join('');
@@ -724,8 +724,8 @@
         const uid = await getUidFromNFC();
         if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); return; }
         
-        if(!confirm('Â¿EstÃ¡s seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acciÃ³n no se puede deshacer.')) {
-            showMsg('baja-user', 'info', 'OperaciÃ³n cancelada.');
+        if(!confirm('¿Estás seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
+            showMsg('baja-user', 'info', 'Operación cancelada.');
             return;
         }
 
@@ -750,18 +750,18 @@
                 soundSuccess();
                 loadInitialData(); // Para refrescar listas
             } else {
-                showMsg('baja-user', 'error', 'No se pudo dar de baja. ' + (result?.message || 'AsegÃºrate que la pulsera estÃ© registrada.'));
+                showMsg('baja-user', 'error', 'No se pudo dar de baja. ' + (result?.message || 'Asegúrate que la pulsera esté registrada.'));
                 soundError();
             }
         } catch(e) {
-            showMsg('baja-user', 'error', 'ðŸ”Œ ?? No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('baja-user', 'error', '🔌 ?? No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
             soundError();
         }
     }
 
 
     // ==========================================
-    // NFC SCAN LÃ“GICA (GenÃ©rica)
+    // NFC SCAN LÓGICA (Genérica)
     // ==========================================
     async function getUidFromNFC() {
         if ("NDEFReader" in window) {
@@ -774,7 +774,7 @@
                 });
             } catch (error) {
                 console.error("NFC Error", error);
-                // NFC no disponible o apagado â€” retornar null para que el llamador muestre el error
+                // NFC no disponible o apagado — retornar null para que el llamador muestre el error
                 return null;
             }
         } else {
