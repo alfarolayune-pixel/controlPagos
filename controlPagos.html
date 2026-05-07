@@ -327,13 +327,25 @@
         <!-- VISTA: COBRAR MES -->
         <div id="view-pay" class="view">
             <h3 style="margin-top: 0;">Registrar Mensualidad</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee la pulsera para identificar al alumno y cobrar el mes en curso.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee la pulsera para pago individual o busca un padre de familia para pago de hermanos.</p>
             
-            <button class="btn btn-outline" onclick="scanForPayment()">📲 Identificar Alumno (NFC)</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" style="flex:1;" onclick="scanForPayment()">📲 Individual (NFC)</button>
+                <button class="btn btn-outline" style="flex:1; border-color:#8b5cf6; color:#8b5cf6;" onclick="toggleFamilyPay()">👨‍👩‍👦 Familiar (Buscar)</button>
+            </div>
+
+            <!-- Contenedor Búsqueda Familiar -->
+            <div id="family-search-container" style="display:none; margin-top:20px; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid #334155;">
+                <label>Buscar Padre de Familia</label>
+                <input type="text" id="pay-family-search" placeholder="Buscar por nombre..." oninput="filterPayFamily()" autocomplete="off">
+                <div id="pay-family-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                <input type="hidden" id="pay-padre-id">
+            </div>
 
             <div id="pay-details" style="display: none; margin-top: 20px;">
                 <div class="student-card" style="box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                     <div class="student-name" id="pay-name">Nombre Alumno</div>
+                    <div id="pay-children-list" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px; display:none;"></div>
                     <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary); margin: 10px 0;">
                         Total a Pagar: $<span id="pay-amount">0.00</span>
                     </div>
@@ -557,6 +569,8 @@
         // Reset states
         document.getElementById('access-result').style.display = 'none';
         document.getElementById('pay-details').style.display = 'none';
+        document.getElementById('family-search-container').style.display = 'none';
+        
         if (document.getElementById('history-box')) {
             document.getElementById('history-box').style.display = 'none';
         }
@@ -567,12 +581,38 @@
         showMsg('hist', '', '');
         showMsg('users', '', '');
         showMsg('baja-user', '', '');
+        showMsg('debtors', '', '');
         
         if (t === 'reassign' || t === 'reg') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
         }
         if (t === 'debtors') {
             fetchDebtors();
+        }
+
+        // Limpiar inputs al cambiar de módulo
+        if(document.getElementById('reg-name')) {
+            document.getElementById('reg-name').value = '';
+            document.getElementById('reg-age').value = '';
+            document.getElementById('reg-dob').value = '';
+            document.getElementById('reg-cat').value = '';
+            document.getElementById('reg-blood').selectedIndex = 0;
+            document.getElementById('reg-em-name').value = '';
+            document.getElementById('reg-em-tel').value = '';
+            if (typeof clearPadre === 'function') clearPadre();
+        }
+        if(document.getElementById('usr-name')) {
+            document.getElementById('usr-name').value = '';
+            document.getElementById('usr-rol').selectedIndex = 0;
+            checkPadreRol();
+            document.getElementById('usr-child-search').value = '';
+            selectedChildren = [];
+            if (typeof renderUsrChildren === 'function') renderUsrChildren();
+        }
+        if(document.getElementById('reassign-student')) {
+            document.getElementById('reassign-student').value = '';
+            document.getElementById('reassign-search').value = '';
+            document.getElementById('reassign-selected').style.display = 'none';
         }
     }
 
@@ -794,7 +834,7 @@
             
             const catSelect = document.getElementById('reg-cat');
             if(result.categorias) {
-                catSelect.innerHTML = result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
             }
             
             // Guardar lista de alumnos en variable global para el buscador
@@ -980,6 +1020,9 @@
                 showMsg('users', 'success', `✅ Usuario ${nombre} creado correctamente.`);
                 soundSuccess();
                 document.getElementById('usr-name').value = '';
+                document.getElementById('usr-rol').selectedIndex = 0;
+                checkPadreRol();
+                document.getElementById('usr-child-search').value = '';
                 selectedChildren = []; renderUsrChildren();
                 loadInitialData(); // Para recargar lista de padres
             } else {
@@ -1053,6 +1096,9 @@
     // COBRO MENSUALIDAD
     // ==========================================
     async function scanForPayment() {
+        document.getElementById('family-search-container').style.display = 'none';
+        currentPayMode = 'individual';
+        
         showMsg('pay', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
         if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
@@ -1115,6 +1161,10 @@
     }
     
     async function executePayment() {
+        if(currentPayMode === 'family') {
+            return executeFamilyPayment();
+        }
+        
         const payload = {
             alumno_id: document.getElementById('pay-st-id').value,
             monto: document.getElementById('pay-amount').innerText,
@@ -1148,6 +1198,7 @@
             if(result && result.status === 'success') {
                 showMsg('pay', 'success', `✅ Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
                 document.getElementById('pay-details').style.display = 'none';
+                document.getElementById('pay-mode').value = "1";
                 soundSuccess();
             } else {
                 showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || 'Error desconocido'));
@@ -1155,6 +1206,140 @@
             }
         } catch(e) {
             showMsg('pay', 'error', '🔌 Error de red al procesar el pago. Revisa tu internet e intenta de nuevo.');
+            soundError();
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "✅ Confirmar Pago";
+        }
+    }
+
+    // ==========================================
+    // COBRO FAMILIAR
+    // ==========================================
+    let currentPayMode = 'individual'; // 'individual' o 'family'
+    let familyChildrenToPay = [];
+
+    function toggleFamilyPay() {
+        const cont = document.getElementById('family-search-container');
+        document.getElementById('pay-details').style.display = 'none';
+        showMsg('pay', '', '');
+        if (cont.style.display === 'none') {
+            cont.style.display = 'block';
+            document.getElementById('pay-family-search').value = '';
+            document.getElementById('pay-padre-id').value = '';
+        } else {
+            cont.style.display = 'none';
+        }
+    }
+
+    function filterPayFamily() {
+        const query = document.getElementById('pay-family-search').value.trim().toLowerCase();
+        const dropdown = document.getElementById('pay-family-dropdown');
+        if (!query) { dropdown.style.display = 'none'; return; }
+        const matches = window._allPadres.filter(p => p.nombre.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+        dropdown.innerHTML = matches.map(p => `
+            <div onclick="selectPayFamily('${p.id}', '${p.nombre.replace(/'/g, "\\'")}')"
+                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
+                 onmouseover="this.style.background='rgba(139,92,246,0.15)'" onmouseout="this.style.background=''">
+                ${p.nombre}
+            </div>`).join('');
+        dropdown.style.display = 'block';
+    }
+
+    async function selectPayFamily(id, nombre) {
+        document.getElementById('pay-family-dropdown').style.display = 'none';
+        document.getElementById('pay-family-search').value = nombre;
+        document.getElementById('pay-padre-id').value = id;
+        
+        showMsg('pay', 'info', 'Consultando historial de los hijos...');
+        currentPayMode = 'family';
+
+        try {
+            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${id}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(!res.ok || !result || result.status !== 'success') {
+                showMsg('pay', 'error', 'No se pudo obtener la información de esta familia.');
+                soundError();
+                return;
+            }
+
+            if(!result.hijos_pendientes || result.hijos_pendientes.length === 0) {
+                showMsg('pay', 'success', '✅ Todos los hijos de esta familia ya han pagado el mes actual.');
+                soundSuccess();
+                document.getElementById('pay-details').style.display = 'none';
+                return;
+            }
+
+            showMsg('pay', '', '');
+            familyChildrenToPay = result.hijos_pendientes;
+            basePayAmount = result.total_a_pagar || 0;
+            
+            document.getElementById('pay-details').style.display = 'block';
+            document.getElementById('pay-name').innerText = `Familia: ${nombre}`;
+            document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
+            
+            // Listar hijos
+            const listEl = document.getElementById('pay-children-list');
+            listEl.style.display = 'block';
+            listEl.innerHTML = 'Pagando por:<br>' + familyChildrenToPay.map(h => `- ${h.nombre} ($${h.costo_mensualidad})`).join('<br>');
+            
+            document.getElementById('pay-mode').value = "1";
+            recalcPayAmount();
+            
+            document.getElementById('pay-uid').value = ''; // No aplica NFC
+            document.getElementById('pay-st-id').value = id; // id del padre temporalmente
+            document.getElementById('pay-month').value = result.mes_cobro;
+            document.getElementById('pay-year').value = result.anio_cobro;
+
+        } catch(e) {
+            showMsg('pay', 'error', '🔌 Error de red al obtener datos de la familia.');
+            soundError();
+        }
+    }
+
+    async function executeFamilyPayment() {
+        const payload = {
+            padre_id: document.getElementById('pay-st-id').value,
+            hijos: familyChildrenToPay,
+            mes: document.getElementById('pay-month').value,
+            anio: document.getElementById('pay-year').value,
+            modalidad: document.getElementById('pay-mode').value,
+            admin_id: currentUser ? currentUser.id : null,
+            admin_nombre: currentUser ? currentUser.nombre : null
+        };
+
+        const btn = document.getElementById('btn-execute-pay');
+        btn.disabled = true;
+        btn.innerText = "Procesando Grupo...";
+
+        try {
+            const res = await fetch(`${N8N_URL}/ht-execute-pay-family`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result && result.status === 'success') {
+                showMsg('pay', 'success', `✅ Pago familiar registrado correctamente (${nMeses[payload.mes-1]}).`);
+                document.getElementById('pay-details').style.display = 'none';
+                document.getElementById('family-search-container').style.display = 'none';
+                document.getElementById('pay-mode').value = "1";
+                soundSuccess();
+            } else {
+                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || ''));
+                soundError();
+            }
+        } catch(e) {
+            showMsg('pay', 'error', '🔌 Error de red al procesar el pago grupal.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -1298,8 +1483,8 @@
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-age').value = '';
                 document.getElementById('reg-dob').value = '';
-                document.getElementById('reg-cat').value = ''; // o poner index = 0
-                document.getElementById('reg-blood').value = ''; // o poner index = 0
+                document.getElementById('reg-cat').value = '';
+                document.getElementById('reg-blood').selectedIndex = 0;
                 document.getElementById('reg-em-name').value = '';
                 document.getElementById('reg-em-tel').value = '';
                 if (typeof clearPadre === 'function') clearPadre();
@@ -1366,6 +1551,9 @@
             if(result && result.status === 'success') {
                 showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
                 soundSuccess();
+                document.getElementById('reassign-student').value = '';
+                document.getElementById('reassign-search').value = '';
+                document.getElementById('reassign-selected').style.display = 'none';
             } else {
                 showMsg('reassign', 'error', `❌ No se pudo reasignar: ${result?.message || 'Error desconocido'}`);
                 soundError();
