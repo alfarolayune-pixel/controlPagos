@@ -1155,9 +1155,13 @@
         }
     }
     
+    // ==========================================
+    // RECALCULAR PAGO
+    // ==========================================
     function recalcPayAmount() {
-        const mul = parseInt(document.getElementById('pay-mode').value) || 1;
-        document.getElementById('pay-amount').innerText = (basePayAmount * mul).toFixed(2);
+        const mode = parseInt(document.getElementById('pay-mode').value || "1");
+        const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
+        document.getElementById('pay-amount').innerText = formatPrice(basePayAmount * mode);
     }
     
     async function executePayment() {
@@ -1285,10 +1289,12 @@
             document.getElementById('pay-name').innerText = `Familia: ${nombre}`;
             document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
             
+            const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
+
             // Listar hijos
             const listEl = document.getElementById('pay-children-list');
             listEl.style.display = 'block';
-            listEl.innerHTML = 'Pagando por:<br>' + familyChildrenToPay.map(h => `- ${h.nombre} ($${h.costo_mensualidad})`).join('<br>');
+            listEl.innerHTML = 'Pagando por:<br>' + familyChildrenToPay.map(h => `- ${h.nombre} ($${formatPrice(h.costo_mensualidad)})`).join('<br>');
             
             document.getElementById('pay-mode').value = "1";
             recalcPayAmount();
