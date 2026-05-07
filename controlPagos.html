@@ -613,7 +613,7 @@
         showMsg('login', 'info', 'Esperando NFC...');
         initAudio(); // Permiso de audio al click
         const uid = await getUidFromNFC();
-        if (!uid) { showMsg('login', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if (!uid) { showMsg('login', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('login', 'info', 'Validando...');
         try {
@@ -940,7 +940,7 @@
         
         showMsg('users', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('users', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('users', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('users', 'info', 'Validando disponibilidad de pulsera...');
         try {
@@ -998,7 +998,7 @@
     async function scanAccess() {
         showMsg('access', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('access', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('access', 'info', 'Validando en servidor...');
         
@@ -1055,7 +1055,7 @@
     async function scanForPayment() {
         showMsg('pay', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('pay', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
         
@@ -1170,7 +1170,7 @@
         document.getElementById('history-box').style.display = 'none';
 
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('hist', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('hist', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
 
         showMsg('hist', 'info', 'Consultando historial de pagos...');
         
@@ -1251,7 +1251,7 @@
         
         showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('reg', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
         try {
@@ -1324,7 +1324,7 @@
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reassign', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('reassign', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
 
         showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
         try {
@@ -1371,7 +1371,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reassign', 'error', 'ðŸ”Œ Error de red al reasignar la pulsera. Revisa tu internet e intenta de nuevo.');
+            showMsg('reassign', 'error', '🔌 Error de red al reasignar la pulsera. Revisa tu internet e inténtalo de nuevo.');
             soundError();
         }
     }
