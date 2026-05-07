@@ -1235,11 +1235,11 @@
     async function registerStudent() {
         const payload = {
             nombre: document.getElementById('reg-name').value,
-            edad: document.getElementById('reg-age').value,
+            edad: parseInt(document.getElementById('reg-age').value) || 0,
             fecha_nacimiento: document.getElementById('reg-dob').value,
-            categoria_id: document.getElementById('reg-cat').value,
+            categoria_id: parseInt(document.getElementById('reg-cat').value) || null,
             tipo_sangre: document.getElementById('reg-blood').value,
-            padre_id: document.getElementById('reg-padre').value,
+            padre_id: document.getElementById('reg-padre').value || null,
             contacto_emergencia_nombre: document.getElementById('reg-em-name').value,
             contacto_emergencia_tel: document.getElementById('reg-em-tel').value
         };
@@ -1299,11 +1299,10 @@
                 document.getElementById('reg-padre').value = '';
                 document.getElementById('reg-em-name').value = '';
                 document.getElementById('reg-em-tel').value = '';
-            } else if (result && result.status === 'conflict') {
-                showMsg('reg', 'error', `âŒ No se pudo registrar: ${result.message}`);
-                soundError();
             } else {
-                showMsg('reg', 'error', `âŒ OcurriÃ³ un problema inesperado al registrar el alumno.`);
+                // Muestra el mensaje real del servidor (conflict, error, etc.)
+                const errMsg = result?.message || 'Error desconocido. Intenta de nuevo.';
+                showMsg('reg', 'error', `❌ ${errMsg}`);
                 soundError();
             }
         } catch(e) {
