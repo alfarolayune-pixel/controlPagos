@@ -305,7 +305,60 @@
 
     <div class="content">
         
-        <!-- VISTA: LECTOR ACCESO -->
+        
+        <!-- VISTA: INFO PULSERA (PROFESOR/ADMIN) -->
+        <div id="view-user-info" class="view">
+            <h3 style="margin-top: 0;">Identificar Pulsera</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Escanea la pulsera para ver los datos del alumno en caso de emergencia.</p>
+            <button class="btn" onclick="scanUserInfo()" style="background:#0284c7; margin-bottom:20px;">🔍 Leer Pulsera</button>
+            <div id="status-user-info" class="status-msg"></div>
+            
+            <div id="ui-result" style="display: none; background:#1e293b; padding:15px; border-radius:12px; border:1px solid #334155; margin-top:20px;">
+                <div style="font-size:1.3rem; font-weight:800; color:#f8fafc;" id="ui-name"></div>
+                <div style="font-size:0.9rem; color:var(--primary); font-weight:600; margin-bottom:15px;" id="ui-rol"></div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div>
+                        <div style="font-size:0.8rem; color:#94a3b8;">Tipo Sangre</div>
+                        <div style="font-weight:bold; color:#ef4444;" id="ui-blood"></div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:#94a3b8;">Categoría</div>
+                        <div style="font-weight:bold;" id="ui-cat"></div>
+                    </div>
+                </div>
+                
+                <div style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); padding:10px; border-radius:8px; margin-bottom:15px;">
+                    <div style="font-size:0.8rem; color:#94a3b8;">Contacto de Emergencia</div>
+                    <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc;" id="ui-em-name"></div>
+                    <div style="font-weight:bold; font-size:1.1rem; color:#10b981;" id="ui-em-tel"></div>
+                </div>
+                
+                <div style="display:flex; gap:10px; flex-direction:column;">
+                    <a id="ui-btn-hosp" href="#" target="_blank" style="display:block; text-align:center; background:#ef4444; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">🏥 Buscar Hospitales Cercanos</a>
+                    <a id="ui-btn-farm" href="#" target="_blank" style="display:block; text-align:center; background:#10b981; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">💊 Buscar Farmacias Cercanas</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: BUSQUEDA FAMILIAS / PAGOS (ADMIN) -->
+        <div id="view-search-family" class="view">
+            <h3 style="margin-top: 0;">Buscar Familia</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Busca por nombre de padre de familia para ver estado de sus hijos.</p>
+            
+            <div style="position:relative; margin-bottom:20px;">
+                <input type="text" id="sf-search" placeholder="Escribe el nombre del padre..." oninput="filterSfFamily()" autocomplete="off" style="width:100%; padding:14px; border-radius:12px; border:1px solid #334155; background:#1e293b; color:#f8fafc;">
+                <div id="sf-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:#1e293b; border:1px solid #334155; border-radius:0 0 10px 10px; z-index:10; max-height:200px; overflow-y:auto; box-shadow:0 10px 15px -3px rgba(0,0,0,0.5);"></div>
+            </div>
+            
+            <div id="status-search-family" class="status-msg"></div>
+            
+            <div id="sf-results" style="display:none; margin-top:20px;">
+                <div id="sf-padre-name" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px; color:var(--primary);"></div>
+                <div id="sf-hijos-list"></div>
+            </div>
+        </div>
+\n        <!-- VISTA: LECTOR ACCESO -->
         <div id="view-access" class="view active">
             <div style="text-align: center; padding: 20px 0;">
                 <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
@@ -721,8 +774,9 @@
                 switchTab('access');
                 break;
             case 'instructor':
-                document.getElementById('nav-access').style.display = 'flex';
-                switchTab('access');
+                const navUserInfoIns = document.getElementById('nav-user-info');
+                if(navUserInfoIns) navUserInfoIns.style.display = 'flex';
+                switchTab('user-info');
                 break;
             case 'padre':
                 const navHist = document.getElementById('nav-hist');
