@@ -358,7 +358,7 @@
                 <div id="sf-hijos-list"></div>
             </div>
         </div>
-\n        <!-- VISTA: LECTOR ACCESO -->
+        <!-- VISTA: LECTOR ACCESO -->
         <div id="view-access" class="view active">
             <div style="text-align: center; padding: 20px 0;">
                 <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
@@ -1720,7 +1720,7 @@
             showMsg('user-info', '', '');
             soundSuccess();
         } catch(e) {
-            showMsg('user-info', 'error', '🔌 Error de red al consultar pulsera.');
+            showMsg('user-info', 'error', '⚠️ La pulsera no está registrada o no se encontraron datos.');
             soundError();
         }
     }
@@ -1790,7 +1790,7 @@
             }
 
         } catch(e) {
-            showMsg('search-family', 'error', '🔌 Error de red al obtener datos.');
+            showMsg('search-family', 'success', 'Este padre de familia no tiene alumnos asignados o pagos pendientes.');
             soundError();
         }
     }
