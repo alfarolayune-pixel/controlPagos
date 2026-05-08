@@ -298,10 +298,9 @@
         <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👥 Alta Usuario</div>
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
         <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
+        <div class="nav-item" id="nav-family-statement" onclick="switchTab('family-statement')" style="display:none; color: #f59e0b;">💳 Estado de Cuenta</div>
         <div class="nav-item" id="nav-debtors" onclick="switchTab('debtors')" style="display:none; color: #ea580c;">⚠️ Deudores</div>
-        <div class="nav-item" id="nav-family-statement" onclick="switchTab('family-statement')" style="display:none;">💳 Estado de Cuenta</div>
-        <div class="nav-item" id="nav-search-family" onclick="switchTab('search-family')" style="display:none;">👨‍👩‍👦 Familias / Pagos</div>
-        <div class="nav-item" id="nav-user-info" onclick="switchTab('user-info')" style="display:none;">🔍 Info Pulsera</div>
+        
     </div>
 
     <div class="content">
@@ -506,7 +505,15 @@
         </div>
 
         <!-- VISTA: DEUDORES -->
-        <div id="view-debtors" class="view">
+        
+        <div id="view-family-statement" class="view">
+            <h3 style="margin-top: 0;">Mi Estado de Cuenta</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Consulta el estatus de pago de tus hijos.</p>
+            <div id="status-family-statement" class="status-msg"></div>
+            <div id="family-statement-list" style="margin-top: 20px;"></div>
+        </div>
+
+<div id="view-debtors" class="view">
             <h3 style="margin-top: 0;">Lista de Deudores</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem;">Alumnos que no han pagado el mes en curso.</p>
             <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -521,41 +528,7 @@
 
     </div>
 
-        <!-- VISTA: ESTADO DE CUENTA PAPA -->
-        <div id="view-family-statement" class="view">
-            <h3 style="margin-top: 0;">Mi Estado de Cuenta</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Consulta el estatus de pago de tus hijos.</p>
-            <div id="status-family-statement" class="status-msg"></div>
-            <div id="family-statement-list" style="display: grid; gap: 15px; margin-top: 20px;"></div>
-        </div>
-
-        <!-- MÓDULO: Buscar Familias (Admin) -->
-        <div id="view-search-family" class="view">
-            <h3 style="margin-top: 0;">Buscar Familias / Pagos</h3>
-            <div class="form-group">
-                <label>Buscar Papá/Tutor</label>
-                <input type="text" id="family-search-input" placeholder="Escribe el nombre..." style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #d1d5db;" oninput="filterAdminFamily()">
-                <div id="admin-family-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
-                <input type="hidden" id="admin-family-id">
-            </div>
-            <button class="btn btn-secondary" onclick="buscarFamiliaAdmin()" style="width: 100%;">🔍 Buscar</button>
-            <div id="family-search-results" style="margin-top: 15px;"></div>
-        </div>
-
-        <!-- MÓDULO: Info Pulsera (Admin) -->
-        <div id="view-user-info" class="view">
-            <h3 style="margin-top: 0;">Identificar Pulsera</h3>
-            <button class="btn btn-primary" onclick="leerPulseraInfo()">🔍 Leer Pulsera (Identificar)</button>
-            <div id="status-user-info" class="status-msg"></div>
-            <div id="user-info-result" class="student-card" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05);">
-                <div class="student-name" id="ui-name">...</div>
-                <div class="student-cat" id="ui-rol">...</div>
-            </div>
-        </div>
-
-    </div>
-</div>
-<script>
+        <script>
     // URL base de n8n para comunicarse por Webhooks
     // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
     const N8N_URL = "https://joel-inadaptados.oph.st/webhook"; 
@@ -738,243 +711,66 @@
 
     function applyPermissions() {
         document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'none');
-        
-        const r = currentUser.rol;
-        if(r === 'admin') {
-            document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
-            switchTab('access');
-        } else if(r === 'instructor') {
-            document.getElementById('nav-access').style.display = 'flex';
-            document.getElementById('nav-pay').style.display = 'flex';
-            document.getElementById('nav-hist').style.display = 'flex';
-            document.getElementById('nav-reg').style.display = 'flex';
-            switchTab('access');
-        } else if(r === 'padre') {
-            document.getElementById('nav-hist').style.display = 'flex';
-            switchTab('hist');
+        if(!currentUser) return;
+        const role = currentUser.rol;
+        switch(role) {
+            case 'admin':
+                document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
+                document.getElementById('nav-family-statement').style.display = 'none'; // Admin usa search-family, no statement propio
+                switchTab('access');
+                break;
+            case 'instructor':
+                document.getElementById('nav-access').style.display = 'flex';
+                switchTab('access');
+                break;
+            case 'padre':
+                // Mostramos el de pago personal y el de historial si queremos
+                document.getElementById('nav-family-statement').style.display = 'flex';
+                switchTab('family-statement');
+                consultarEstadoCuentaPapaOriginal();
+                break;
+            default:
+                break;
         }
     }
 
-    let allDebtors = [];
-    async function fetchDebtors() {
-        showMsg('debtors', 'info', 'Cargando lista de deudores...');
+    // Funcionalidad extra para el papá
+    async function consultarEstadoCuentaPapaOriginal() {
+        showMsg('family-statement', 'info', 'Consultando estado de cuenta...');
         try {
-            const res = await fetch(`${N8N_URL}/ht-get-debtors`);
-            const data = await res.json();
+            const resp = await fetch(N8N_URL + '/ht-get-family-payment?padre_id=' + currentUser.id);
+            const data = await resp.json();
             const result = Array.isArray(data) ? data[0] : data;
             
-            if(result && result.status === 'success') {
-                allDebtors = result.deudores || [];
-                showMsg('debtors', '', '');
-                renderDebtors();
-                
-                // Actualizar filtro categorias
-                const select = document.getElementById('debtors-filter-cat');
-                const currentVal = select.value;
-                const cats = [...new Set(allDebtors.map(d => d.categoria).filter(c=>c))];
-                select.innerHTML = '<option value="">Todas las Categorías</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
-                select.value = currentVal || '';
+            showMsg('family-statement', '', '');
+            const listEl = document.getElementById('family-statement-list');
+            if(!listEl) return;
+            
+            if(!result || result.status !== 'success' || !result.hijos_pendientes) {
+                 listEl.innerHTML = '<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos tus alumnos están al corriente.</div>';
+                 soundSuccess();
+                 return;
+            }
+            
+            if(result.hijos_pendientes.length === 0) {
+                 listEl.innerHTML = '<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos tus alumnos están al corriente.</div>';
+                 soundSuccess();
             } else {
-                showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
+                 let txt = '<div style="color: var(--danger); font-weight: bold; margin-bottom: 10px;">❌ Tienen pagos pendientes este mes:</div>';
+                 result.hijos_pendientes.forEach(h => {
+                     txt += `<div style="background:var(--bg-card); padding:10px; margin-bottom:5px; border-radius:8px; border:1px solid #ef4444;">
+                         <strong>${h.nombre}</strong><br>
+                         <span style="color:var(--text-muted); font-size:0.9rem;">Deuda mensualidad: ${h.costo_mensualidad}</span>
+                     </div>`;
+                 });
+                 listEl.innerHTML = txt;
+                 soundError();
             }
         } catch(e) {
-            showMsg('debtors', 'error', '🔌 Error de red al cargar deudores.');
+            showMsg('family-statement', 'error', 'Error de conexión.');
         }
     }
 
-    function renderDebtors() {
-        const list = document.getElementById('debtors-list');
-        const filterCat = document.getElementById('debtors-filter-cat').value;
-        const search = document.getElementById('debtors-search').value.toLowerCase();
-        
-        let filtered = allDebtors.filter(d => {
-            const matchCat = filterCat ? d.categoria === filterCat : true;
-            const matchSearch = d.nombre.toLowerCase().includes(search);
-            return matchCat && matchSearch;
-        });
-        
-        if (filtered.length === 0) {
-            list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No hay deudores para mostrar.</div>`;
-            return;
-        }
-        
-        list.innerHTML = filtered.map(d => `
-            <div style="background:var(--bg-body); padding:16px; border-radius:12px; border:1px solid #ef4444; position:relative;">
-                <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
-                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
-                <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">⚠️</div>
-            </div>
-        `).join('');
-    }
-
-    async function deleteUser() {
-        showMsg('baja-user', 'info', 'Acerque la pulsera...');
-        initAudio();
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); return; }
-        
-        if(!confirm('¿Estás seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
-            showMsg('baja-user', 'info', 'Operación cancelada.');
-            return;
-        }
-
-        showMsg('baja-user', 'info', 'Procesando baja...');
-        try {
-            const res = await fetch(`${N8N_URL}/ht-baja-user`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nfc_uid: uid })
-            });
-            let data;
-            try {
-                data = await res.json();
-            } catch(err) {
-                showMsg('baja-user', 'error', '⚠️ La pulsera escaneada no pertenece a ningún usuario registrado.');
-                soundError();
-                return;
-            }
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            if(result && result.status === 'success') {
-                showMsg('baja-user', 'success', 'Baja procesada correctamente.');
-                soundSuccess();
-                loadInitialData(); // Para refrescar listas
-            } else {
-                showMsg('baja-user', 'error', 'No se pudo dar de baja. ' + (result?.message || 'Asegúrate que la pulsera esté registrada.'));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('baja-user', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
-            soundError();
-        }
-    }
-
-
-    // ==========================================
-    // NFC SCAN LÓGICA (Genérica)
-    // ==========================================
-    async function getUidFromNFC() {
-        if ("NDEFReader" in window) {
-            try {
-                const ndef = new NDEFReader();
-                await ndef.scan();
-                return await new Promise((resolve, reject) => {
-                    const timer = setTimeout(() => reject(new Error("Timeout")), 15000);
-                    ndef.onreading = event => { clearTimeout(timer); soundRead(); resolve(event.serialNumber.toUpperCase()); };
-                });
-            } catch (error) {
-                console.error("NFC Error", error);
-                // NFC no disponible o apagado — retornar null para que el llamador muestre el error
-                return null;
-            }
-        } else {
-            // Dispositivo sin soporte NFC o protocolo no seguro
-            return null;
-        }
-    }
-
-    // ==========================================
-    // CARGAR DATOS
-    // ==========================================
-    async function loadInitialData() {
-        try {
-            const res = await fetch(`${N8N_URL}/ht-categories`);
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            const catSelect = document.getElementById('reg-cat');
-            if(result.categorias) {
-                catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
-            }
-            
-            // Guardar lista de alumnos en variable global para el buscador
-            if(result.alumnos) {
-                window._allStudents = result.alumnos; // [{id, nombre}, ...]
-            }
-            if(result.padres) {
-                window._allPadres = result.padres; 
-            }
-        } catch(e) {
-            console.log("Aún no conectado a n8n o error:", e);
-        }
-    }
-
-    // ==========================================
-    // BUSCADOR INTELIGENTE DE ALUMNOS
-    // ==========================================
-    window._allStudents = [];
-
-    function filterStudents(prefix) {
-        const query = document.getElementById(prefix + '-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById(prefix + '-dropdown');
-        const hiddenInput = document.getElementById(prefix + '-student');
-        const selectedBox = document.getElementById(prefix + '-selected');
-
-        // Limpiar selección anterior
-        hiddenInput.value = '';
-        selectedBox.style.display = 'none';
-
-        if (!query) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
-
-        const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-
-        dropdown.innerHTML = matches.map(a => `
-            <div onclick="selectStudent('${prefix}', '${a.id}', '${a.nombre.replace(/'/g, "\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
-                ${a.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-
-    function selectStudent(prefix, id, nombre) {
-        document.getElementById(prefix + '-student').value = id;
-        document.getElementById(prefix + '-search').value = nombre;
-        document.getElementById(prefix + '-dropdown').style.display = 'none';
-        const box = document.getElementById(prefix + '-selected');
-        box.textContent = '✔ Seleccionado: ' + nombre;
-        box.style.display = 'block';
-    }
-
-    window._allPadres = [];
-    function filterPadres() {
-        const query = document.getElementById('reg-padre-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById('reg-padre-dropdown');
-        if (!query) { dropdown.style.display = 'none'; return; }
-        const matches = window._allPadres.filter(p => p.nombre.toLowerCase().includes(query));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-        dropdown.innerHTML = matches.map(p => `
-            <div onclick="selectPadre('${p.id}', '${p.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(79,70,229,0.15)'" onmouseout="this.style.background=''">
-                ${p.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-    function selectPadre(id, nombre) {
-        document.getElementById('reg-padre').value = id;
-        document.getElementById('reg-padre-search').value = '';
-        document.getElementById('reg-padre-search').style.display = 'none';
-        document.getElementById('reg-padre-dropdown').style.display = 'none';
-        document.getElementById('reg-padre-selected-name').textContent = 'Vinculado a: ' + nombre;
-        document.getElementById('reg-padre-selected').style.display = 'flex';
-    }
-    function clearPadre() {
-        document.getElementById('reg-padre').value = '';
-        document.getElementById('reg-padre-selected').style.display = 'none';
-        document.getElementById('reg-padre-search').style.display = 'block';
-        document.getElementById('reg-padre-search').value = '';
-    }
-
-    let selectedChildren = [];
     function checkPadreRol() {
         const rol = document.getElementById('usr-rol').value;
         document.getElementById('padre-children-section').style.display = (rol === 'padre') ? 'block' : 'none';
@@ -987,6 +783,10 @@
         const query = document.getElementById('usr-child-search').value.trim().toLowerCase();
         const dropdown = document.getElementById('usr-child-dropdown');
         if (!query) { dropdown.style.display = 'none'; return; }
+        if (window._allPadres.length === 0) { 
+            // intentamos cargar
+            fetch(`${N8N_URL}/ht-categories`).then(r=>r.json()).then(d=>{ if(d[0]&&d[0].padres) window._allPadres = d[0].padres; filterSfFamily(); });
+        }
         const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query) && !selectedChildren.includes(a.id));
         if (matches.length === 0) {
             dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
@@ -1639,17 +1439,16 @@
         showMsg('user-info', 'info', 'Consultando...');
         
         try {
+            soundRead();
             const res = await fetch(`${N8N_URL}/ht-user-info?nfc_uid=${encodeURIComponent(uid)}`);
             let data;
             try { data = await res.json(); } catch(err) {
-                showMsg('user-info', 'error', '⚠️ Pulsera no registrada en el sistema.');
-                soundError(); return;
+                showMsg('user-info', 'error', '⚠️ Pulsera no registrada en el sistema.'); soundError(); return;
             }
             const result = Array.isArray(data) ? data[0] : data;
             
             if(!res.ok || !result || result.status === 'not_found' || !result.nombre) {
-                showMsg('user-info', 'error', '⚠️ Pulsera no registrada en el sistema.');
-                soundError(); return;
+                showMsg('user-info', 'error', '⚠️ Pulsera no registrada en el sistema.'); soundError(); return;
             }
 
             document.getElementById('ui-result').style.display = 'block';
