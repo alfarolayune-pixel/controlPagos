@@ -1716,6 +1716,14 @@
                 showMsg('user-info', 'error', '⚠️ Pulsera no registrada en el sistema.'); /* soundError quitado */ return;
             }
 
+
+            // Restricción: el instructor solo puede leer alumnos
+            if (currentUser && currentUser.rol === 'instructor' && result.rol.toLowerCase() !== 'alumno') {
+                showMsg('user-info', 'error', '⚠️ Solo puedes consultar información de alumnos.');
+                soundError();
+                return;
+            }
+
             document.getElementById('ui-result').style.display = 'block';
             document.getElementById('ui-name').innerText = result.nombre;
             document.getElementById('ui-rol').innerText = `Rol: ${result.rol.toUpperCase()}`;
@@ -1725,9 +1733,13 @@
             } else {
                 document.getElementById('ui-extra-info').style.display = 'block';
                 document.getElementById('ui-blood').innerText = result.tipo_sangre || 'No esp.';
-                document.getElementById('ui-cat').innerText = result.categoria || 'N/A';
-                document.getElementById('ui-em-name').innerText = result.contacto_emergencia_nombre || 'N/A';
-                document.getElementById('ui-em-tel').innerText = result.contacto_emergencia_telefono || 'N/A';
+                
+                // Extraer la categoría si viene en el JSON de Supabase
+                const catName = result.categorias ? result.categorias.nombre : (result.categoria || 'N/A');
+                document.getElementById('ui-cat').innerText = catName;
+                
+                document.getElementById('ui-em-name').innerText = result.contacto_emergencia_nombre || 'No registrado';
+                document.getElementById('ui-em-tel').innerText = result.contacto_emergencia_telefono || 'No registrado';
                 
                 document.getElementById('ui-btn-hosp').href = "https://www.google.com/maps/search/Hospitales+cerca+de+mi";
                 document.getElementById('ui-btn-farm').href = "https://www.google.com/maps/search/Farmacias+cerca+de+mi";
