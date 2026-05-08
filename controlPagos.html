@@ -299,6 +299,9 @@
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
         <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
         <div class="nav-item" id="nav-debtors" onclick="switchTab('debtors')" style="display:none; color: #ea580c;">⚠️ Deudores</div>
+        <div class="nav-item" id="nav-family-statement" onclick="switchTab('family-statement')" style="display:none;">💳 Estado de Cuenta</div>
+        <div class="nav-item" id="nav-search-family" onclick="switchTab('search-family')" style="display:none;">👨‍👩‍👦 Familias / Pagos</div>
+        <div class="nav-item" id="nav-user-info" onclick="switchTab('user-info')" style="display:none;">🔍 Info Pulsera</div>
     </div>
 
     <div class="content">
@@ -318,8 +321,15 @@
                     <div class="student-name" id="acc-name">Cargando...</div>
                     <div class="student-cat" id="acc-cat">---</div>
                     <div id="acc-badge" class="badge-status">---</div>
+                    
                     <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-msg">
-                        Último pago: <strong id="acc-lastpay" style="color: white;">---</strong>
+                        Último pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br>
+                        Sangre: <strong id="acc-blood" style="color: #ef4444;">---</strong><br>
+                        Emergencia: <strong id="acc-em-name" style="color: white;">---</strong> (<span id="acc-em-tel">---</span>)
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:15px;" id="acc-maps-buttons">
+                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#ef4444; color:#ef4444;" onclick="window.open('https://www.google.com/maps/search/hospitales+cercanos', '_blank')">🏥 Hospitales</button>
+                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://www.google.com/maps/search/farmacias+cercanas', '_blank')">💊 Farmacias</button>
                     </div>
                 </div>
             </div>
@@ -510,8 +520,41 @@
         </div>
 
     </div>
-</div>
 
+        <!-- VISTA: ESTADO DE CUENTA PAPA -->
+        <div id="view-family-statement" class="view">
+            <h3 style="margin-top: 0;">Mi Estado de Cuenta</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Consulta el estatus de pago de tus hijos.</p>
+            <div id="status-family-statement" class="status-msg"></div>
+            <div id="family-statement-list" style="display: grid; gap: 15px; margin-top: 20px;"></div>
+        </div>
+
+        <!-- MÓDULO: Buscar Familias (Admin) -->
+        <div id="view-search-family" class="view">
+            <h3 style="margin-top: 0;">Buscar Familias / Pagos</h3>
+            <div class="form-group">
+                <label>Buscar Papá/Tutor</label>
+                <input type="text" id="family-search-input" placeholder="Escribe el nombre..." style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #d1d5db;" oninput="filterAdminFamily()">
+                <div id="admin-family-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                <input type="hidden" id="admin-family-id">
+            </div>
+            <button class="btn btn-secondary" onclick="buscarFamiliaAdmin()" style="width: 100%;">🔍 Buscar</button>
+            <div id="family-search-results" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- MÓDULO: Info Pulsera (Admin) -->
+        <div id="view-user-info" class="view">
+            <h3 style="margin-top: 0;">Identificar Pulsera</h3>
+            <button class="btn btn-primary" onclick="leerPulseraInfo()">🔍 Leer Pulsera (Identificar)</button>
+            <div id="status-user-info" class="status-msg"></div>
+            <div id="user-info-result" class="student-card" style="display:none; margin-top:15px; background:rgba(255,255,255,0.05);">
+                <div class="student-name" id="ui-name">...</div>
+                <div class="student-cat" id="ui-rol">...</div>
+            </div>
+        </div>
+
+    </div>
+</div>
 <script>
     // URL base de n8n para comunicarse por Webhooks
     // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
