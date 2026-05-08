@@ -317,7 +317,29 @@
                 <div style="font-size:1.3rem; font-weight:800; color:#f8fafc;" id="ui-name"></div>
                 <div style="font-size:0.9rem; color:var(--primary); font-weight:600; margin-bottom:15px;" id="ui-rol"></div>
                 
-                
+                <div id="ui-extra-info" style="display:none;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div>
+                            <div style="font-size:0.8rem; color:#94a3b8;">Tipo Sangre</div>
+                            <div style="font-weight:bold; color:#ef4444;" id="ui-blood"></div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:#94a3b8;">Categoría</div>
+                            <div style="font-weight:bold;" id="ui-cat"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); padding:10px; border-radius:8px; margin-bottom:15px;">
+                        <div style="font-size:0.8rem; color:#94a3b8;">Contacto de Emergencia</div>
+                        <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc;" id="ui-em-name"></div>
+                        <div style="font-weight:bold; font-size:1.1rem; color:#10b981;" id="ui-em-tel"></div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; flex-direction:column;">
+                        <a id="ui-btn-hosp" href="#" target="_blank" style="display:block; text-align:center; background:#ef4444; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">🏥 Buscar Hospitales Cercanos</a>
+                        <a id="ui-btn-farm" href="#" target="_blank" style="display:block; text-align:center; background:#10b981; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold;">💊 Buscar Farmacias Cercanas</a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1696,7 +1718,20 @@
 
             document.getElementById('ui-result').style.display = 'block';
             document.getElementById('ui-name').innerText = result.nombre;
-            document.getElementById('ui-rol').innerText = `Rol: ${result.rol}`;
+            document.getElementById('ui-rol').innerText = `Rol: ${result.rol.toUpperCase()}`;
+            
+            if (currentUser && currentUser.rol === 'admin') {
+                document.getElementById('ui-extra-info').style.display = 'none';
+            } else {
+                document.getElementById('ui-extra-info').style.display = 'block';
+                document.getElementById('ui-blood').innerText = result.tipo_sangre || 'No esp.';
+                document.getElementById('ui-cat').innerText = result.categoria || 'N/A';
+                document.getElementById('ui-em-name').innerText = result.contacto_emergencia_nombre || 'N/A';
+                document.getElementById('ui-em-tel').innerText = result.contacto_emergencia_telefono || 'N/A';
+                
+                document.getElementById('ui-btn-hosp').href = "https://www.google.com/maps/search/Hospitales+cerca+de+mi";
+                document.getElementById('ui-btn-farm').href = "https://www.google.com/maps/search/Farmacias+cerca+de+mi";
+            }
             showMsg('user-info', '', '');
             soundSuccess();
         } catch(e) {
