@@ -620,6 +620,43 @@
     // Sonido Al Corriente (Arpegio Feliz)
     function soundSuccess() {
         playTone(523.25, 'sine', 0.15, 0.2); // C5
+        
+<script>
+    // URL base de n8n para comunicarse por Webhooks
+    // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
+    const N8N_URL = "https://joel-inadaptados.oph.st/webhook"; 
+    // const N8N_URL = "https://joel-inadaptados.oph.st/webhook-test"; // Para pruebas
+    const API_KEY = "hoop-tap-secret-v1"; 
+
+    // ==========================================
+    // AUDIO ENGINE (Sintetizador Web Audio API)
+    // ==========================================
+    let audioCtx;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, type, duration, vol=0.1) {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Sonido lectura NFC
+    function soundRead() { playTone(880, 'sine', 0.1, 0.2); }
+    
+    // Sonido Al Corriente (Arpegio Feliz)
+    function soundSuccess() {
+        playTone(523.25, 'sine', 0.15, 0.2); // C5
         setTimeout(() => playTone(659.25, 'sine', 0.15, 0.2), 100); // E5
         setTimeout(() => playTone(783.99, 'sine', 0.3,  0.2), 200); // G5
     }
@@ -632,34 +669,95 @@
     // ==========================================
     // UI Y NAVEGACIÓN
     // ==========================================
+    // Quita el focus de los botones para que regresen a su color original en móviles
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('button');
+        if (btn) {
+            setTimeout(() => { btn.blur(); }, 200);
+        }
+    });
+
+    let msgTimeouts = {};
+
+    function resetView(view) {
+        const viewEl = document.getElementById('view-' + view);
+        if(!viewEl) return;
+        
+        // 1. Limpiar inputs y selects
+        viewEl.querySelectorAll('input:not([type="hidden"]), select').forEach(el => {
+            if(el.id === 'pay-mode') el.value = "1";
+            else if(el.id === 'usr-rol') el.selectedIndex = 0;
+            else if(el.id === 'debtors-filter-cat') el.value = "";
+            else if(!el.readOnly) el.value = '';
+        });
+        
+        // 2. Limpiar hidden inputs
+        viewEl.querySelectorAll('input[type="hidden"]').forEach(el => el.value = '');
+
+        // 3. Restaurar botones (quitar disabled y blur)
+        viewEl.querySelectorAll('button').forEach(btn => {
+            btn.disabled = false;
+            btn.blur();
+            if (btn.id === 'btn-execute-pay') {
+                btn.innerText = "✅ Confirmar Pago";
+            }
+        });
+
+        // 4. Ocultar secciones dinámicas y limpiar
+        if (view === 'access') {
+            const res = document.getElementById('access-result');
+            if(res) res.style.display = 'none';
+        } else if (view === 'pay') {
+            const payDet = document.getElementById('pay-details');
+            if(payDet) payDet.style.display = 'none';
+            const famCont = document.getElementById('family-search-container');
+            if(famCont) famCont.style.display = 'none';
+        } else if (view === 'hist') {
+            const histBox = document.getElementById('history-box');
+            if(histBox) histBox.style.display = 'none';
+        } else if (view === 'search-family') {
+            const sfRes = document.getElementById('sf-results');
+            if(sfRes) sfRes.style.display = 'none';
+        } else if (view === 'user-info') {
+            const uiRes = document.getElementById('ui-result');
+            if(uiRes) uiRes.style.display = 'none';
+        } else if (view === 'reg') {
+            const age = document.getElementById('reg-age');
+            if(age) age.value = ''; // readonly
+            if (typeof clearPadre === 'function') clearPadre();
+        } else if (view === 'users') {
+            selectedChildren = [];
+            if (typeof renderUsrChildren === 'function') renderUsrChildren();
+            if (typeof checkPadreRol === 'function') checkPadreRol();
+        } else if (view === 'reassign') {
+            const sel = document.getElementById('reassign-selected');
+            if(sel) sel.style.display = 'none';
+        } else if (view === 'family-statement') {
+            // No resetear la lista si estamos en la vista, se recarga manualmente
+        }
+        
+        // 5. Cerrar dropdowns
+        viewEl.querySelectorAll('div[id$="-dropdown"]').forEach(el => {
+            el.style.display = 'none';
+            el.innerHTML = '';
+        });
+    }
+
     function switchTab(t) {
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        
         const activeTab = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(t));
         if (activeTab) activeTab.classList.add('active');
         const viewEl = document.getElementById('view-' + t);
         if (viewEl) viewEl.classList.add('active');
         
-        // Reset states
-        document.getElementById('access-result').style.display = 'none';
-        document.getElementById('pay-details').style.display = 'none';
-        document.getElementById('family-search-container').style.display = 'none';
-        
-        if (document.getElementById('history-box')) {
-            document.getElementById('history-box').style.display = 'none';
-        }
-        showMsg('access', '', '');
-        showMsg('pay', '', '');
-        showMsg('reg', '', '');
-        showMsg('reassign', '', '');
-        showMsg('hist', '', '');
-        showMsg('users', '', '');
-        showMsg('baja-user', '', '');
-        showMsg('debtors', '', '');
-        showMsg('search-family', '', '');
-        showMsg('user-info', '', '');
-        if (document.getElementById('sf-results')) document.getElementById('sf-results').style.display = 'none';
-        if (document.getElementById('ui-result')) document.getElementById('ui-result').style.display = 'none';
+        // Reiniciar TODOS los modulos
+        const allViews = ['access', 'pay', 'hist', 'search-family', 'user-info', 'reg', 'users', 'baja-user', 'reassign', 'family-statement', 'debtors'];
+        allViews.forEach(v => {
+            showMsg(v, '', '');
+            resetView(v);
+        });
         
         if (t === 'reassign' || t === 'reg') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
@@ -667,40 +765,41 @@
         if (t === 'debtors') {
             fetchDebtors();
         }
-
-        // Limpiar inputs al cambiar de módulo
-        if(document.getElementById('reg-name')) {
-            document.getElementById('reg-name').value = '';
-            document.getElementById('reg-age').value = '';
-            document.getElementById('reg-dob').value = '';
-            document.getElementById('reg-cat').value = '';
-            document.getElementById('reg-blood').selectedIndex = 0;
-            document.getElementById('reg-em-name').value = '';
-            document.getElementById('reg-em-tel').value = '';
-            if (typeof clearPadre === 'function') clearPadre();
-        }
-        if(document.getElementById('usr-name')) {
-            document.getElementById('usr-name').value = '';
-            document.getElementById('usr-rol').selectedIndex = 0;
-            checkPadreRol();
-            document.getElementById('usr-child-search').value = '';
-            selectedChildren = [];
-            if (typeof renderUsrChildren === 'function') renderUsrChildren();
-        }
-        if(document.getElementById('reassign-student')) {
-            document.getElementById('reassign-student').value = '';
-            document.getElementById('reassign-search').value = '';
-            document.getElementById('reassign-selected').style.display = 'none';
+        if (t === 'family-statement' && currentUser && currentUser.rol === 'padre') {
+            consultarEstadoCuentaPapaOriginal();
         }
     }
 
     function showMsg(view, type, text) {
         const el = document.getElementById('status-' + view);
-        if (!text) { el.style.display = 'none'; el.classList.remove('anim-scanning'); return; }
+        if (!el) return;
+
+        if (msgTimeouts[view]) {
+            clearTimeout(msgTimeouts[view]);
+            delete msgTimeouts[view];
+        }
+
+        if (!text) { 
+            el.style.display = 'none'; 
+            el.classList.remove('anim-scanning'); 
+            return; 
+        }
+        
         el.className = 'status-msg ' + type;
         if(type === 'info') el.classList.add('anim-scanning');
+        else el.classList.remove('anim-scanning');
+        
         el.innerText = text;
         el.style.display = 'block';
+
+        if (type === 'success' || type === 'error') {
+            msgTimeouts[view] = setTimeout(() => {
+                el.style.display = 'none';
+                el.className = 'status-msg';
+                el.innerText = '';
+                resetView(view);
+            }, 5000);
+        }
     }
 
     // Mapeo nombres de meses
@@ -1051,633 +1150,6 @@
             // Si por error no hay datos, intentamos cargar desde n8n
             fetch(`${N8N_URL}/ht-categories`).then(r=>r.json()).then(d=>{ const res = Array.isArray(d) ? d[0] : d; if(res && res.padres) { window._allPadres = res.padres; filterSfFamily(); } });
             return;
-        }
-        const matches = window._allStudents.filter(a => a.nombre.toLowerCase().includes(query) && !selectedChildren.includes(a.id));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-        dropdown.innerHTML = matches.map(a => `
-            <div onclick="selectUsrChild('${a.id}', '${a.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
-                ${a.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-    function selectUsrChild(id, nombre) {
-        selectedChildren.push(id);
-        document.getElementById('usr-child-search').value = '';
-        document.getElementById('usr-child-dropdown').style.display = 'none';
-        renderUsrChildren();
-    }
-    function removeUsrChild(id) {
-        selectedChildren = selectedChildren.filter(c => c !== id);
-        renderUsrChildren();
-    }
-    function renderUsrChildren() {
-        const list = document.getElementById('usr-child-list');
-        list.innerHTML = selectedChildren.map(id => {
-            const a = window._allStudents.find(x => x.id === id);
-            return `<div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                <span>${a.nombre}</span>
-                <span onclick="removeUsrChild('${id}')" style="color:var(--danger); cursor:pointer;">&#10060;</span>
-            </div>`;
-        }).join('');
-    }
-    async function registerUser() {
-        const nombre = document.getElementById('usr-name').value;
-        const rol = document.getElementById('usr-rol').value;
-        
-        if(!nombre) { showMsg('users', 'error', 'Completa el nombre.'); return; }
-        
-        showMsg('users', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('users', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('users', 'info', 'Validando disponibilidad de pulsera...');
-        try {
-            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            if (valRes.ok) {
-                const valText = await valRes.text();
-                if (valText) {
-                    const valData = JSON.parse(valText);
-                    const valResult = Array.isArray(valData) ? valData[0] : valData;
-                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('users', 'error', `❌ Esta pulsera ya está asignada a: ${valResult.nombre}`);
-                        soundError();
-                        return;
-                    }
-                }
-            }
-        } catch(e) {
-             console.warn('Validación de pulsera nueva generó error, continuando...', e);
-        }
-
-        showMsg('users', 'info', 'Creando usuario...');
-        try {
-            const res = await fetch(`${N8N_URL}/ht-register-user`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, rol, nfc_uid: uid, hijos_ids: selectedChildren })
-            });
-            let data;
-            try {
-                data = await res.json();
-            } catch(err) {
-                showMsg('users', 'error', '⚠️ Ocurrió un error en el servidor al intentar crear el usuario.');
-                soundError();
-                return;
-            }
-            const result = Array.isArray(data) ? data[0] : data;
-            if(result && result.status === 'success') {
-                showMsg('users', 'success', `✅ Usuario ${nombre} creado correctamente.`);
-                soundSuccess();
-                document.getElementById('usr-name').value = '';
-                document.getElementById('usr-rol').selectedIndex = 0;
-                checkPadreRol();
-                document.getElementById('usr-child-search').value = '';
-                selectedChildren = []; renderUsrChildren();
-                loadInitialData(); // Para recargar lista de padres
-            } else {
-                showMsg('users', 'error', 'Error al crear usuario: ' + (result?.message || 'Error desconocido.'));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('users', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
-            soundError();
-        }
-    }
-
-    // ==========================================
-    // ACCESO (VALIDAR VIGENCIA)
-    // ==========================================
-    async function scanAccess() {
-        showMsg('access', 'info', 'Acerque la pulsera...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('access', 'info', 'Validando en servidor...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            
-            // Parsear JSON de forma segura; si falla, la pulsera no está registrada o hay error del servidor
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON del servidor (HTTP ' + res.status + ')', parseErr);
-                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-
-            // Verificar explícitamente not_found o response HTTP no OK
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('access', 'error', '⚠️ Esta pulsera no pertenece a ningún alumno registrado.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('access-result').style.display = 'block';
-            document.getElementById('acc-name').innerText = result.nombre;
-            document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
-            
-            showMsg('access', '', '');
-
-            if(result.al_corriente === true) {
-                soundSuccess();
-                document.getElementById('acc-badge').className = "badge-status badge-ok";
-                document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
-                document.getElementById('acc-msg').innerText = "El alumno está autorizado para entrenar.";
-            } else {
-                soundError();
-                document.getElementById('acc-badge').className = "badge-status badge-debt";
-                document.getElementById('acc-badge').innerText = "❌ ADEUDA";
-                document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
-            }
-        } catch(e) {
-            console.error('Error en scanAccess:', e);
-            showMsg('access', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
-            soundError();
-        }
-    }
-
-    // ==========================================
-    // COBRO MENSUALIDAD
-    // ==========================================
-    async function scanForPayment() {
-        document.getElementById('family-search-container').style.display = 'none';
-        currentPayMode = 'individual';
-        
-        showMsg('pay', 'info', 'Acerque la pulsera...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
-                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('pay', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('pay-details').style.display = 'block';
-            showMsg('pay', '', '');
-            
-            basePayAmount = Number(result.costo_mensualidad || 0);
-            
-            document.getElementById('pay-name').innerText = result.nombre;
-            document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
-            
-            document.getElementById('pay-mode').value = "1";
-            recalcPayAmount();
-            
-            // Hidden fields
-            document.getElementById('pay-uid').value = uid;
-            document.getElementById('pay-st-id').value = result.alumno_id;
-            document.getElementById('pay-month').value = result.mes_cobro;
-            document.getElementById('pay-year').value = result.anio_cobro;
-
-            if(result.ya_pagado === true) {
-                showMsg('pay', 'warning', '⚠️ Este mes ya está pagado. No se recomienda volver a cobrar.');
-                document.getElementById('pay-month-lbl').innerText += " (YA PAGADO)";
-            }
-
-        } catch(e) {
-            console.error('Error en scanForPayment:', e);
-            showMsg('pay', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
-            soundError();
-        }
-    }
-    
-    // ==========================================
-    // RECALCULAR PAGO
-    // ==========================================
-    function recalcPayAmount() {
-        const mode = parseInt(document.getElementById('pay-mode').value || "1");
-        const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
-        document.getElementById('pay-amount').innerText = formatPrice(basePayAmount * mode);
-    }
-    
-    async function executePayment() {
-        if(currentPayMode === 'family') {
-            return executeFamilyPayment();
-        }
-        
-        const payload = {
-            alumno_id: document.getElementById('pay-st-id').value,
-            monto: document.getElementById('pay-amount').innerText,
-            mes: document.getElementById('pay-month').value,
-            anio: document.getElementById('pay-year').value,
-            modalidad: document.getElementById('pay-mode').value,
-            admin_id: currentUser ? currentUser.id : null,
-            admin_nombre: currentUser ? currentUser.nombre : null
-        };
-
-        const btn = document.getElementById('btn-execute-pay');
-        btn.disabled = true;
-        btn.innerText = "Procesando...";
-
-        try {
-            const res = await fetch(`${N8N_URL}/ht-execute-pay`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            let data;
-            try {
-                data = await res.json();
-            } catch(err) {
-                showMsg('pay', 'error', '⚠️ Error del servidor al registrar el pago.');
-                soundError();
-                return;
-            }
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result && result.status === 'success') {
-                showMsg('pay', 'success', `✅ Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
-                document.getElementById('pay-details').style.display = 'none';
-                document.getElementById('pay-mode').value = "1";
-                soundSuccess();
-            } else {
-                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || 'Error desconocido'));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al procesar el pago. Revisa tu internet e intenta de nuevo.');
-            soundError();
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "✅ Confirmar Pago";
-        }
-    }
-
-    // ==========================================
-    // COBRO FAMILIAR
-    // ==========================================
-    let currentPayMode = 'individual'; // 'individual' o 'family'
-    let familyChildrenToPay = [];
-
-    function toggleFamilyPay() {
-        const cont = document.getElementById('family-search-container');
-        document.getElementById('pay-details').style.display = 'none';
-        showMsg('pay', '', '');
-        if (cont.style.display === 'none') {
-            cont.style.display = 'block';
-            document.getElementById('pay-family-search').value = '';
-            document.getElementById('pay-padre-id').value = '';
-        } else {
-            cont.style.display = 'none';
-        }
-    }
-
-    function filterPayFamily() {
-        const query = document.getElementById('pay-family-search').value.trim().toLowerCase();
-        const dropdown = document.getElementById('pay-family-dropdown');
-        if (!query) { dropdown.style.display = 'none'; return; }
-        const matches = window._allPadres.filter(p => p.nombre.toLowerCase().includes(query));
-        if (matches.length === 0) {
-            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
-            dropdown.style.display = 'block';
-            return;
-        }
-        dropdown.innerHTML = matches.map(p => `
-            <div onclick="selectPayFamily('${p.id}', '${p.nombre.replace(/'/g, "\\'")}')"
-                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
-                 onmouseover="this.style.background='rgba(139,92,246,0.15)'" onmouseout="this.style.background=''">
-                ${p.nombre}
-            </div>`).join('');
-        dropdown.style.display = 'block';
-    }
-
-    async function selectPayFamily(id, nombre) {
-        document.getElementById('pay-family-dropdown').style.display = 'none';
-        document.getElementById('pay-family-search').value = nombre;
-        document.getElementById('pay-padre-id').value = id;
-        
-        showMsg('pay', 'info', 'Consultando historial de los hijos...');
-        currentPayMode = 'family';
-
-        try {
-            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${id}`);
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(!res.ok || !result || result.status !== 'success') {
-                showMsg('pay', 'error', 'No se pudo obtener la información de esta familia.');
-                soundError();
-                return;
-            }
-
-            if(!result.hijos_pendientes || result.hijos_pendientes.length === 0) {
-                showMsg('pay', 'success', '✅ Todos los hijos de esta familia ya han pagado el mes actual.');
-                soundSuccess();
-                document.getElementById('pay-details').style.display = 'none';
-                return;
-            }
-
-            showMsg('pay', '', '');
-            familyChildrenToPay = result.hijos_pendientes;
-            basePayAmount = result.total_a_pagar || 0;
-            
-            document.getElementById('pay-details').style.display = 'block';
-            document.getElementById('pay-name').innerText = `Familia: ${nombre}`;
-            document.getElementById('pay-month-lbl').innerText = `${nMeses[result.mes_cobro - 1]} ${result.anio_cobro}`;
-            
-            const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
-
-            // Listar hijos
-            const listEl = document.getElementById('pay-children-list');
-            listEl.style.display = 'block';
-            listEl.innerHTML = 'Pagando por:<br>' + familyChildrenToPay.map(h => `- ${h.nombre} ($${formatPrice(h.costo_mensualidad)})`).join('<br>');
-            
-            document.getElementById('pay-mode').value = "1";
-            recalcPayAmount();
-            
-            document.getElementById('pay-uid').value = ''; // No aplica NFC
-            document.getElementById('pay-st-id').value = id; // id del padre temporalmente
-            document.getElementById('pay-month').value = result.mes_cobro;
-            document.getElementById('pay-year').value = result.anio_cobro;
-
-        } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al obtener datos de la familia.');
-            soundError();
-        }
-    }
-
-    async function executeFamilyPayment() {
-        const payload = {
-            padre_id: document.getElementById('pay-st-id').value,
-            hijos: familyChildrenToPay,
-            mes: document.getElementById('pay-month').value,
-            anio: document.getElementById('pay-year').value,
-            modalidad: document.getElementById('pay-mode').value,
-            admin_id: currentUser ? currentUser.id : null,
-            admin_nombre: currentUser ? currentUser.nombre : null
-        };
-
-        const btn = document.getElementById('btn-execute-pay');
-        btn.disabled = true;
-        btn.innerText = "Procesando Grupo...";
-
-        try {
-            const res = await fetch(`${N8N_URL}/ht-execute-pay-family`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result && result.status === 'success') {
-                showMsg('pay', 'success', `✅ Pago familiar registrado correctamente (${nMeses[payload.mes-1]}).`);
-                document.getElementById('pay-details').style.display = 'none';
-                document.getElementById('family-search-container').style.display = 'none';
-                document.getElementById('pay-mode').value = "1";
-                soundSuccess();
-            } else {
-                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || ''));
-                soundError();
-            }
-        } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al procesar el pago grupal.');
-            soundError();
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "✅ Confirmar Pago";
-        }
-    }
-
-    // ==========================================
-    // LOGICA DE HISTORIAL
-    // ==========================================
-    async function startHistory() {
-        showMsg('hist', 'info', 'Acerque la pulsera NFC...', true);
-        document.getElementById('history-box').style.display = 'none';
-
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('hist', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-
-        showMsg('hist', 'info', 'Consultando historial de pagos...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-get-payment?nfc_uid=${encodeURIComponent(uid)}`);
-
-            let data;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                console.warn('Respuesta no-JSON (HTTP ' + res.status + ')', parseErr);
-                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            const result = Array.isArray(data) ? data[0] : data;
-            
-            if(!res.ok || !result || result.status === 'not_found') {
-                showMsg('hist', 'error', '⚠️ Esta pulsera no está asignada a ningún alumno.');
-                soundError();
-                return;
-            }
-
-            document.getElementById('history-box').style.display = 'block';
-            document.getElementById('hist-student-name').textContent = result.nombre;
-            
-            let html = '';
-            if(!result.pagos || result.pagos.length === 0) {
-                document.getElementById('hist-student-cat').textContent = 'Sin historial de pagos';
-                html = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No hay pagos registrados.</div>';
-            } else {
-                document.getElementById('hist-student-cat').textContent = `${result.pagos.length} Pagos registrados`;
-                result.pagos.forEach(p => {
-                    const d = p.fecha_pago ? new Date(p.fecha_pago).toLocaleDateString() : 'N/A';
-                    html += `
-                    <div style="background:#1e293b; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:800; font-size:1.1rem; color:white;">${nMeses[p.mes-1]} ${p.anio}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">Pagado el: ${d}</div>
-                        </div>
-                        <div style="font-weight:800; color:var(--success); font-size:1.1rem;">
-                            $${p.monto}
-                        </div>
-                    </div>`;
-                });
-            }
-            document.getElementById('historial-list').innerHTML = html;
-            showMsg('hist', 'success', 'Historial cargado.');
-            soundSuccess();
-
-        } catch (e) {
-            showMsg('hist', 'error', '🔌 Error de red al consultar el historial. Revisa tu internet e intenta de nuevo.');
-            soundError();
-        }
-    }
-
-
-    // ==========================================
-    // ALTA ALUMNO Y ASIGNAR BANDA
-    // ==========================================
-    async function registerStudent() {
-        const payload = {
-            nombre: document.getElementById('reg-name').value,
-            edad: parseInt(document.getElementById('reg-age').value) || 0,
-            fecha_nacimiento: document.getElementById('reg-dob').value,
-            categoria_id: parseInt(document.getElementById('reg-cat').value) || null,
-            tipo_sangre: document.getElementById('reg-blood').value,
-            padre_id: document.getElementById('reg-padre').value || null,
-            contacto_emergencia_nombre: document.getElementById('reg-em-name').value,
-            contacto_emergencia_tel: document.getElementById('reg-em-tel').value
-        };
-
-        if(!payload.nombre || !payload.edad || !payload.categoria_id) { 
-            showMsg('reg', 'error', 'Por favor, completa los datos básicos.'); 
-            return; 
-        }
-        
-        showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-        
-        showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
-        try {
-            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            if (valRes.ok) {
-                const valText = await valRes.text();
-                if (valText) {
-                    const valData = JSON.parse(valText);
-                    const valResult = Array.isArray(valData) ? valData[0] : valData;
-                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
-                        soundError();
-                        return;
-                    }
-                }
-            }
-        } catch(e) {
-             console.warn('Validación de pulsera nueva generó error, continuando...', e);
-        }
-
-        payload.nfc_uid = uid;
-        showMsg('reg', 'info', 'Guardando en Base de Datos...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            let data;
-            try {
-                data = await res.json();
-            } catch(err) {
-                showMsg('reg', 'error', '⚠️ Error del servidor al registrar el alumno.');
-                soundError();
-                return;
-            }
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result && result.status === 'success') {
-                showMsg('reg', 'success', `✅ Alumno ${payload.nombre} registrado exitosamente.`);
-                soundSuccess();
-                // Limpiar form completo
-                document.getElementById('reg-name').value = '';
-                document.getElementById('reg-age').value = '';
-                document.getElementById('reg-dob').value = '';
-                document.getElementById('reg-cat').value = '';
-                document.getElementById('reg-blood').selectedIndex = 0;
-                document.getElementById('reg-em-name').value = '';
-                document.getElementById('reg-em-tel').value = '';
-                if (typeof clearPadre === 'function') clearPadre();
-            } else {
-                // Muestra el mensaje real del servidor (conflict, error, etc.)
-                const errMsg = result?.message || 'Error desconocido. Intenta de nuevo.';
-                showMsg('reg', 'error', `❌ ${errMsg}`);
-                soundError();
-            }
-        } catch(e) {
-            showMsg('reg', 'error', 'ðŸ”Œ Error de red al registrar alumno. Revisa tu internet e intenta de nuevo.');
-            soundError();
-        }
-    }
-
-    // ==========================================
-    // RE-ASIGNAR PULSERA
-    // ==========================================
-    async function reassignNfc() {
-        const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); return; }
-
-        showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
-        const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reassign', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
-
-        showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
-        try {
-            const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-            if (valRes.ok) {
-                const valText = await valRes.text();
-                if (valText) {
-                    const valData = JSON.parse(valText);
-                    const valResult = Array.isArray(valData) ? valData[0] : valData;
-                    if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
-                        soundError();
-                        return;
-                    }
-                }
-            }
-        } catch(e) {
-             console.warn('Validación de pulsera nueva generó error, continuando...', e);
-        }
-
-        showMsg('reassign', 'info', 'Asignando pulsera...');
-        
-        try {
-            const res = await fetch(`${N8N_URL}/ht-reassign`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ alumno_id: studentId, nfc_uid: uid })
-            });
-            let data;
-            try {
-                data = await res.json();
-            } catch(err) {
-                showMsg('reassign', 'error', '⚠️ Error del servidor al reasignar la pulsera.');
-                soundError();
-                return;
-            }
-            const result = Array.isArray(data) ? data[0] : data;
-
-            if(result && result.status === 'success') {
-                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
-                soundSuccess();
-                document.getElementById('reassign-student').value = '';
-                document.getElementById('reassign-search').value = '';
-                document.getElementById('reassign-selected').style.display = 'none';
-            } else {
-                showMsg('reassign', 'error', `❌ No se pudo reasignar: ${result?.message || 'Error desconocido'}`);
-                soundError();
-            }
         } catch(e) {
             showMsg('reassign', 'error', '🔌 Error de red al reasignar la pulsera. Revisa tu internet e inténtalo de nuevo.');
             soundError();
