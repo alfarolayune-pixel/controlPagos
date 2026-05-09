@@ -517,6 +517,40 @@
             <div id="status-debtors" class="status-msg"></div>
         </div>
 
+        <!-- VISTA: INFO PULSERA -->
+        <div id="view-user-info" class="view">
+            <h3 style="margin-top: 0;">Identificar Pulsera</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee una pulsera para ver a qué usuario (alumno, padre, instructor o admin) pertenece.</p>
+            <button class="btn" onclick="scanUserInfo()">📲 Leer Pulsera (NFC)</button>
+
+            <div id="ui-result" style="display:none; margin-top: 20px;">
+                <div class="student-card">
+                    <div class="student-name" id="ui-name">---</div>
+                    <div class="student-cat" id="ui-rol" style="color: var(--text-muted);">---</div>
+                </div>
+            </div>
+            <div id="status-user-info" class="status-msg"></div>
+        </div>
+
+        <!-- VISTA: FAMILIAS / PAGOS -->
+        <div id="view-search-family" class="view">
+            <h3 style="margin-top: 0;">Estado de Cuenta Familiar</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Busca un padre de familia para ver el estado de pago de todos sus hijos.</p>
+
+            <div class="form-group" style="position: relative;">
+                <input type="text" id="sf-search" placeholder="Buscar padre de familia..." oninput="filterSfFamily()" autocomplete="off">
+                <div id="sf-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--bg-card); border:1px solid #334155; border-radius:12px; z-index:100; max-height:200px; overflow-y:auto;"></div>
+            </div>
+
+            <div id="sf-results" style="display:none; margin-top: 20px;">
+                <div class="student-card">
+                    <div class="student-name" id="sf-padre-name">---</div>
+                    <div id="sf-hijos-list" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+            <div id="status-search-family" class="status-msg"></div>
+        </div>
+
     </div>
 
         
@@ -655,6 +689,23 @@
         }
     }
 
+    // Helper: deshabilitar/rehabilitar botón y restaurar color
+    function setBtn(btn, processing) {
+        if (!btn) return;
+        if (processing) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.pointerEvents = 'none';
+            btn.dataset._origText = btn.innerText;
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+            if (btn.dataset._origText) btn.innerText = btn.dataset._origText;
+            btn.blur();
+        }
+    }
+
     // Mapeo nombres de meses
     const nMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -680,6 +731,8 @@
     // LOGIN
     // ==========================================
     async function login() {
+        const _btnLogin = document.querySelector('#lock-screen .btn');
+        setBtn(_btnLogin, true);
         showMsg('login', 'info', 'Esperando NFC...');
         initAudio(); // Permiso de audio al click
         const uid = await getUidFromNFC();
@@ -713,11 +766,14 @@
         } catch(e) {
             console.error(e);
             showMsg('login', 'error', '⚠️ No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            setBtn(_btnLogin, false);
             soundError();
+        } finally {
+            setBtn(_btnLogin, false);
         }
     }
 
-    function applyPermissions() {
+    function applyPermissions {
         document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'none');
         
         const r = currentUser.rol;
@@ -789,10 +845,12 @@
     }
 
     async function deleteUser() {
+        const _btn = document.querySelector('#view-baja-user button');
+        setBtn(_btn, true);
         showMsg('baja-user', 'info', 'Acerque la pulsera...');
         initAudio();
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); return; }
+        if(!uid) { showMsg('baja-user', 'error', 'Error al leer la pulsera.'); setBtn(_btn, false); return; }
         
         if(!confirm('¿Estás seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
             showMsg('baja-user', 'info', 'Operación cancelada.');
@@ -826,6 +884,8 @@
         } catch(e) {
             showMsg('baja-user', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1003,6 +1063,8 @@
         }).join('');
     }
     async function registerUser() {
+        const _btn = document.querySelector('#view-users > button');
+        setBtn(_btn, true);
         const nombre = document.getElementById('usr-name').value;
         const rol = document.getElementById('usr-rol').value;
         
@@ -1062,6 +1124,8 @@
         } catch(e) {
             showMsg('users', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1069,9 +1133,11 @@
     // ACCESO (VALIDAR VIGENCIA)
     // ==========================================
     async function scanAccess() {
+        const _btn = document.querySelector('#view-access > div > button');
+        setBtn(_btn, true);
         showMsg('access', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('access', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('access', 'info', 'Validando en servidor...');
         
@@ -1119,6 +1185,8 @@
             console.error('Error en scanAccess:', e);
             showMsg('access', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1126,12 +1194,14 @@
     // COBRO MENSUALIDAD
     // ==========================================
     async function scanForPayment() {
+        const _btn = document.querySelector('#view-pay .btn-outline');
+        setBtn(_btn, true);
         document.getElementById('family-search-container').style.display = 'none';
         currentPayMode = 'individual';
         
         showMsg('pay', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
         
@@ -1182,6 +1252,8 @@
             console.error('Error en scanForPayment:', e);
             showMsg('pay', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
     
@@ -1387,11 +1459,13 @@
     // LOGICA DE HISTORIAL
     // ==========================================
     async function startHistory() {
+        const _btn = document.querySelector('#view-hist > button');
+        setBtn(_btn, true);
         showMsg('hist', 'info', 'Acerque la pulsera NFC...', true);
         document.getElementById('history-box').style.display = 'none';
 
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('hist', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('hist', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
         showMsg('hist', 'info', 'Consultando historial de pagos...');
         
@@ -1446,6 +1520,8 @@
         } catch (e) {
             showMsg('hist', 'error', '🔌 Error de red al consultar el historial. Revisa tu internet e intenta de nuevo.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1454,6 +1530,8 @@
     // ALTA ALUMNO Y ASIGNAR BANDA
     // ==========================================
     async function registerStudent() {
+        const _btn = document.querySelector('#view-reg > button');
+        setBtn(_btn, true);
         const payload = {
             nombre: document.getElementById('reg-name').value,
             edad: parseInt(document.getElementById('reg-age').value) || 0,
@@ -1467,12 +1545,13 @@
 
         if(!payload.nombre || !payload.edad || !payload.categoria_id) { 
             showMsg('reg', 'error', 'Por favor, completa los datos básicos.'); 
+            setBtn(_btn, false);
             return; 
         }
         
         showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('reg', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
         try {
@@ -1531,8 +1610,10 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reg', 'error', 'ðŸ”Œ Error de red al registrar alumno. Revisa tu internet e intenta de nuevo.');
+            showMsg('reg', 'error', '🔌 Error de red al registrar alumno. Revisa tu internet e intenta de nuevo.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1540,12 +1621,14 @@
     // RE-ASIGNAR PULSERA
     // ==========================================
     async function reassignNfc() {
+        const _btn = document.querySelector('#view-reassign > button');
+        setBtn(_btn, true);
         const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); return; }
+        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); setBtn(_btn, false); return; }
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reassign', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('reassign', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
         showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
         try {
@@ -1558,6 +1641,7 @@
                     if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
                         showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
                         soundError();
+                        setBtn(_btn, false);
                         return;
                     }
                 }
@@ -1597,6 +1681,8 @@
         } catch(e) {
             showMsg('reassign', 'error', '🔌 Error de red al reasignar la pulsera. Revisa tu internet e inténtalo de nuevo.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
@@ -1613,9 +1699,11 @@
     // RECONOCIMIENTO DE PULSERA (USER INFO)
     // ==========================================
     async function scanUserInfo() {
+        const _btn = document.querySelector('#view-user-info > button');
+        setBtn(_btn, true);
         showMsg('user-info', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('user-info', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('user-info', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('user-info', 'info', 'Consultando...');
         
@@ -1641,6 +1729,8 @@
         } catch(e) {
             showMsg('user-info', 'error', '🔌 Error de red al consultar pulsera.');
             soundError();
+        } finally {
+            setBtn(_btn, false);
         }
     }
 
