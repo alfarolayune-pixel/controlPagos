@@ -319,12 +319,19 @@
                     <div class="student-name" id="acc-name">Cargando...</div>
                     <div class="student-cat" id="acc-cat">---</div>
                     <div id="acc-badge" class="badge-status">---</div>
+                    <div id="acc-status-msg" style="margin-top:10px; font-weight:600; font-size:0.9rem;"></div>
                     
-                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-msg">
-                        Último pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br>
+                    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-info-box">
+                        <span id="acc-lastpay-box">Último pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br></span>
                         Sangre: <strong id="acc-blood" style="color: #ef4444;">---</strong><br>
                         Emergencia: <strong id="acc-em-name" style="color: white;">---</strong> (<span id="acc-em-tel">---</span>)
                     </div>
+                    
+                    <div style="display:none; flex-direction:column; gap:10px; margin-top:15px;" id="acc-instructor-buttons">
+                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#3b82f6; color:#3b82f6;" onclick="window.open('tel:' + document.getElementById('acc-em-tel').innerText, '_self')">📞 Llamar Emergencia</button>
+                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://wa.me/52' + document.getElementById('acc-em-tel').innerText.replace(/\D/g,''), '_blank')">💬 WhatsApp Emergencia</button>
+                    </div>
+
                     <div style="display:flex; gap:10px; margin-top:15px;" id="acc-maps-buttons">
                         <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#ef4444; color:#ef4444;" onclick="window.open('https://www.google.com/maps/search/hospitales+cercanos', '_blank')">🏥 Hospitales</button>
                         <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://www.google.com/maps/search/farmacias+cercanas', '_blank')">💊 Farmacias</button>
@@ -772,9 +779,6 @@
             switchTab('access');
         } else if(r === 'instructor') {
             document.getElementById('nav-access').style.display = 'flex';
-            document.getElementById('nav-pay').style.display = 'flex';
-            document.getElementById('nav-hist').style.display = 'flex';
-            document.getElementById('nav-reg').style.display = 'flex';
             switchTab('access');
         } else if(r === 'padre') {
             document.getElementById('nav-hist').style.display = 'flex';
@@ -1159,18 +1163,39 @@
             document.getElementById('acc-name').innerText = result.nombre;
             document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
             
+            // Populating additional info
+            document.getElementById('acc-blood').innerText = result.tipo_sangre || 'N/A';
+            document.getElementById('acc-em-name').innerText = result.contacto_emergencia_nombre || 'N/A';
+            document.getElementById('acc-em-tel').innerText = result.contacto_emergencia_telefono || 'N/A';
+            
             showMsg('access', '', '');
 
-            if(result.al_corriente === true) {
-                soundSuccess();
-                document.getElementById('acc-badge').className = "badge-status badge-ok";
-                document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
-                document.getElementById('acc-msg').innerText = "El alumno está autorizado para entrenar.";
+            const r = currentUser.rol;
+            if(r === 'instructor') {
+                document.getElementById('acc-badge').style.display = 'none';
+                document.getElementById('acc-status-msg').style.display = 'none';
+                document.getElementById('acc-lastpay-box').style.display = 'none';
+                document.getElementById('acc-instructor-buttons').style.display = 'flex';
+                soundSuccess(); // Instructors always hear success just for validating identity
             } else {
-                soundError();
-                document.getElementById('acc-badge').className = "badge-status badge-debt";
-                document.getElementById('acc-badge').innerText = "❌ ADEUDA";
-                document.getElementById('acc-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
+                document.getElementById('acc-badge').style.display = 'inline-block';
+                document.getElementById('acc-status-msg').style.display = 'block';
+                document.getElementById('acc-lastpay-box').style.display = 'inline';
+                document.getElementById('acc-instructor-buttons').style.display = 'none';
+
+                if(result.al_corriente === true) {
+                    soundSuccess();
+                    document.getElementById('acc-badge').className = "badge-status badge-ok";
+                    document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
+                    document.getElementById('acc-status-msg').innerText = "El alumno está autorizado para entrenar.";
+                    document.getElementById('acc-status-msg').style.color = "var(--success)";
+                } else {
+                    soundError();
+                    document.getElementById('acc-badge').className = "badge-status badge-debt";
+                    document.getElementById('acc-badge').innerText = "❌ ADEUDA";
+                    document.getElementById('acc-status-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
+                    document.getElementById('acc-status-msg').style.color = "var(--danger)";
+                }
             }
         } catch(e) {
             console.error('Error en scanAccess:', e);
