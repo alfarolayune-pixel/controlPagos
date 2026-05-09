@@ -620,43 +620,6 @@
     // Sonido Al Corriente (Arpegio Feliz)
     function soundSuccess() {
         playTone(523.25, 'sine', 0.15, 0.2); // C5
-        
-<script>
-    // URL base de n8n para comunicarse por Webhooks
-    // **AQUÍ VA LA URL DE TUS WEBHOOKS DE N8N**
-    const N8N_URL = "https://joel-inadaptados.oph.st/webhook"; 
-    // const N8N_URL = "https://joel-inadaptados.oph.st/webhook-test"; // Para pruebas
-    const API_KEY = "hoop-tap-secret-v1"; 
-
-    // ==========================================
-    // AUDIO ENGINE (Sintetizador Web Audio API)
-    // ==========================================
-    let audioCtx;
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    function playTone(freq, type, duration, vol=0.1) {
-        initAudio();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    // Sonido lectura NFC
-    function soundRead() { playTone(880, 'sine', 0.1, 0.2); }
-    
-    // Sonido Al Corriente (Arpegio Feliz)
-    function soundSuccess() {
-        playTone(523.25, 'sine', 0.15, 0.2); // C5
         setTimeout(() => playTone(659.25, 'sine', 0.15, 0.2), 100); // E5
         setTimeout(() => playTone(783.99, 'sine', 0.3,  0.2), 200); // G5
     }
