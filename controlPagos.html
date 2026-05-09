@@ -614,10 +614,10 @@
         document.getElementById('access-result').style.display = 'none';
         document.getElementById('pay-details').style.display = 'none';
         document.getElementById('family-search-container').style.display = 'none';
+        if (document.getElementById('history-box')) document.getElementById('history-box').style.display = 'none';
+        if (document.getElementById('sf-results')) document.getElementById('sf-results').style.display = 'none';
+        if (document.getElementById('ui-result')) document.getElementById('ui-result').style.display = 'none';
         
-        if (document.getElementById('history-box')) {
-            document.getElementById('history-box').style.display = 'none';
-        }
         showMsg('access', '', '');
         showMsg('pay', '', '');
         showMsg('reg', '', '');
@@ -628,39 +628,29 @@
         showMsg('debtors', '', '');
         showMsg('search-family', '', '');
         showMsg('user-info', '', '');
-        if (document.getElementById('sf-results')) document.getElementById('sf-results').style.display = 'none';
-        if (document.getElementById('ui-result')) document.getElementById('ui-result').style.display = 'none';
         
+        // GLOBAL INPUT CLEAR: Reset all form fields to prevent data leaking between sessions
+        document.querySelectorAll('.view input').forEach(el => {
+            if (el.type === 'text' || el.type === 'number' || el.type === 'date' || el.type === 'tel' || el.type === 'hidden') {
+                el.value = '';
+            }
+        });
+        document.querySelectorAll('.view select').forEach(el => {
+            el.selectedIndex = 0;
+        });
+
+        // Specific UI state resets
+        if (typeof clearPadre === 'function') clearPadre();
+        if (typeof checkPadreRol === 'function') checkPadreRol();
+        selectedChildren = [];
+        if (typeof renderUsrChildren === 'function') renderUsrChildren();
+        if(document.getElementById('reassign-selected')) document.getElementById('reassign-selected').style.display = 'none';
+
         if (t === 'reassign' || t === 'reg') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
         }
         if (t === 'debtors') {
             fetchDebtors();
-        }
-
-        // Limpiar inputs al cambiar de módulo
-        if(document.getElementById('reg-name')) {
-            document.getElementById('reg-name').value = '';
-            document.getElementById('reg-age').value = '';
-            document.getElementById('reg-dob').value = '';
-            document.getElementById('reg-cat').value = '';
-            document.getElementById('reg-blood').selectedIndex = 0;
-            document.getElementById('reg-em-name').value = '';
-            document.getElementById('reg-em-tel').value = '';
-            if (typeof clearPadre === 'function') clearPadre();
-        }
-        if(document.getElementById('usr-name')) {
-            document.getElementById('usr-name').value = '';
-            document.getElementById('usr-rol').selectedIndex = 0;
-            checkPadreRol();
-            document.getElementById('usr-child-search').value = '';
-            selectedChildren = [];
-            if (typeof renderUsrChildren === 'function') renderUsrChildren();
-        }
-        if(document.getElementById('reassign-student')) {
-            document.getElementById('reassign-student').value = '';
-            document.getElementById('reassign-search').value = '';
-            document.getElementById('reassign-selected').style.display = 'none';
         }
     }
 
@@ -854,6 +844,7 @@
         
         if(!confirm('¿Estás seguro que deseas ELIMINAR este registro (Alumno, Padre, Instructor o Admin)? Esta acción no se puede deshacer.')) {
             showMsg('baja-user', 'info', 'Operación cancelada.');
+            setBtn(_btn, false);
             return;
         }
 
