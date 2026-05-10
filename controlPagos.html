@@ -1514,8 +1514,17 @@
         currentPayMode = 'family';
 
         try {
-            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${id}`);
-            const data = await res.json();
+            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${encodeURIComponent(id)}`);
+            let data;
+            try {
+                data = await res.json();
+            } catch(err) {
+                showMsg('pay', 'error', '⚠️ Error en la respuesta del servidor. Intente nuevamente.');
+                document.getElementById('pay-family-search').value = '';
+                document.getElementById('pay-padre-id').value = '';
+                soundError();
+                return;
+            }
             const result = Array.isArray(data) ? data[0] : data;
 
             if(!res.ok || !result || result.status !== 'success') {
@@ -1914,14 +1923,23 @@
         showMsg('search-family', 'info', 'Consultando estado de los hijos...');
         
         try {
-            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${id}`);
-            const data = await res.json();
+            const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${encodeURIComponent(id)}`);
+            let data;
+            try {
+                data = await res.json();
+            } catch(err) {
+                showMsg('search-family', 'error', '⚠️ Error en la respuesta del servidor al consultar esta familia.');
+                document.getElementById('sf-search').value = '';
+                soundError(); 
+                return;
+            }
             const result = Array.isArray(data) ? data[0] : data;
 
             if(!res.ok || !result || result.status !== 'success') {
                 showMsg('search-family', 'error', 'No se encontraron alumnos asignados a este Padre de Familia.');
                 document.getElementById('sf-search').value = '';
-                soundError(); return;
+                soundError(); 
+                return;
             }
 
             document.getElementById('sf-results').style.display = 'block';
