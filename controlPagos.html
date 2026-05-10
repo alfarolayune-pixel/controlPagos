@@ -1566,7 +1566,8 @@
             document.getElementById('pay-year').value = result.anio_cobro;
 
         } catch(e) {
-            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            console.error(e);
+            showMsg('pay', 'error', '⚠️ No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
             document.getElementById('pay-family-search').value = '';
             document.getElementById('pay-padre-id').value = '';
             soundError();
@@ -1970,7 +1971,8 @@
             }
 
         } catch(e) {
-            showMsg('search-family', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            console.error(e);
+            showMsg('search-family', 'error', '⚠️ No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
             document.getElementById('sf-search').value = '';
             soundError();
         }
