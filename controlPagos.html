@@ -1519,7 +1519,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('pay', 'error', '⚠️ Error en la respuesta del servidor. Intente nuevamente.');
+                showMsg('pay', 'error', '⚠️ No se pudo obtener la información. Es posible que los alumnos ya estén al corriente o hubo un error.');
                 document.getElementById('pay-family-search').value = '';
                 document.getElementById('pay-padre-id').value = '';
                 soundError();
@@ -1929,7 +1929,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('search-family', 'error', '⚠️ Error en la respuesta del servidor al consultar esta familia.');
+                showMsg('search-family', 'error', '⚠️ No se pudo obtener la información. Es posible que los alumnos ya estén al corriente o hubo un error.');
                 document.getElementById('sf-search').value = '';
                 soundError(); 
                 return;
