@@ -177,11 +177,11 @@
             letter-spacing: 0.5px;
         }
 
-        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(1px); }
-        
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #059669; }
+        @media (hover: hover) {
+            .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+            .btn-success:hover { background: #059669; }
+            .btn-outline:hover { background: rgba(249, 115, 22, 0.1); }
+        }
 
         .btn-outline {
             background: transparent;
@@ -491,8 +491,26 @@
         <!-- VISTA: BAJA USUARIO (GENERAL) -->
         <div id="view-baja-user" class="view">
             <h3 style="margin-top: 0;">Baja General</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del Alumno, Padre, Instructor o Administrador que deseas dar de baja y eliminar del sistema.</p>
-            <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;" onclick="deleteUser()">🗑️ Leer Pulsera y Dar de Baja</button>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera o busca el nombre del usuario (Alumno, Padre, Instructor o Admin) para darlo de baja.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="btn-baja-nfc" class="btn btn-outline" style="flex:1; border-color: #ef4444; color: #ef4444;" onclick="deleteUserNFC()">📲 Por Pulsera</button>
+                <button id="btn-baja-nombre" class="btn btn-outline" style="flex:1; border-color: #f59e0b; color: #f59e0b;" onclick="toggleBajaSearch()">🔍 Por Nombre</button>
+            </div>
+
+            <div id="baja-search-container" style="display:none; margin-top:10px; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid #334155;">
+                <label>Buscar Usuario</label>
+                <input type="text" id="baja-search-input" placeholder="Nombre completo..." oninput="filterBajaUsers()" autocomplete="off">
+                <div id="baja-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+                <input type="hidden" id="baja-selected-uid">
+                <input type="hidden" id="baja-selected-name">
+                <div id="baja-selected-box" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:10px; font-weight:700; color:#ef4444; justify-content:space-between; align-items:center;">
+                    <span id="baja-selected-text"></span>
+                    <span onclick="clearBajaSelection()" style="color:#ef4444; cursor:pointer;" title="Quitar">❌</span>
+                </div>
+                <button class="btn" style="background:#ef4444; margin-top: 15px;" onclick="deleteUserByName()" id="btn-execute-baja-name">🗑️ Confirmar Baja</button>
+            </div>
+
             <div id="status-baja-user" class="status-msg"></div>
         </div>
 
@@ -623,7 +641,7 @@
         document.getElementById('family-search-container').style.display = 'none';
         if (document.getElementById('history-box')) document.getElementById('history-box').style.display = 'none';
         if (document.getElementById('sf-results')) document.getElementById('sf-results').style.display = 'none';
-        if (document.getElementById('ui-result')) document.getElementById('ui-result').style.display = 'none';
+        if (document.getElementById('baja-search-container')) document.getElementById('baja-search-container').style.display = 'none';
         
         showMsg('access', '', '');
         showMsg('pay', '', '');
@@ -652,8 +670,9 @@
         selectedChildren = [];
         if (typeof renderUsrChildren === 'function') renderUsrChildren();
         if(document.getElementById('reassign-selected')) document.getElementById('reassign-selected').style.display = 'none';
+        if (typeof clearBajaSelection === 'function') clearBajaSelection();
 
-        if (t === 'reassign' || t === 'reg') {
+        if (t === 'reassign' || t === 'reg' || t === 'baja-user') {
             loadInitialData(); // refrescar lista de alumnos o categorías si saltan de tab
         }
         if (t === 'debtors') {
@@ -762,7 +781,7 @@
             }
         } catch(e) {
             console.error(e);
-            showMsg('login', 'error', '⚠️ No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('login', 'error', 'No se encontraron datos o hubo un error de conexión.');
             setBtn(_btnLogin, false);
             soundError();
         } finally {
@@ -809,7 +828,7 @@
                 showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
             }
         } catch(e) {
-            showMsg('debtors', 'error', '🔌 Error de red al cargar deudores.');
+            showMsg('debtors', 'error', 'No se encontraron datos o hubo un error de conexión.');
         }
     }
 
@@ -838,8 +857,8 @@
         `).join('');
     }
 
-    async function deleteUser() {
-        const _btn = document.querySelector('#view-baja-user button');
+    async function deleteUserNFC() {
+        const _btn = document.getElementById('btn-baja-nfc');
         setBtn(_btn, true);
         showMsg('baja-user', 'info', 'Acerque la pulsera...');
         initAudio();
@@ -877,7 +896,115 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('baja-user', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('baja-user', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            soundError();
+        } finally {
+            setBtn(_btn, false);
+        }
+    }
+
+    function toggleBajaSearch() {
+        const cont = document.getElementById('baja-search-container');
+        showMsg('baja-user', '', '');
+        if(cont.style.display === 'none') {
+            cont.style.display = 'block';
+            clearBajaSelection();
+        } else {
+            cont.style.display = 'none';
+        }
+    }
+
+    function filterBajaUsers() {
+        const query = document.getElementById('baja-search-input').value.trim().toLowerCase();
+        const dropdown = document.getElementById('baja-dropdown');
+        if (!query) { dropdown.style.display = 'none'; return; }
+        const matches = window._allUsers.filter(u => u.nombre.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
+            dropdown.style.display = 'block'; return;
+        }
+        dropdown.innerHTML = matches.map(u => `
+            <div onclick="selectBajaUser('${u.id || ''}', '${u.nombre.replace(/'/g, "\\'")}')"
+                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
+                 onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
+                ${u.nombre}
+            </div>`).join('');
+        dropdown.style.display = 'block';
+    }
+
+    function selectBajaUser(id, nombre) {
+        document.getElementById('baja-selected-uid').value = id;
+        document.getElementById('baja-selected-name').value = nombre;
+        document.getElementById('baja-search-input').value = '';
+        document.getElementById('baja-search-input').style.display = 'none';
+        document.getElementById('baja-dropdown').style.display = 'none';
+        document.getElementById('baja-selected-text').textContent = 'Seleccionado: ' + nombre;
+        document.getElementById('baja-selected-box').style.display = 'flex';
+    }
+
+    function clearBajaSelection() {
+        const uidEl = document.getElementById('baja-selected-uid');
+        if(uidEl) uidEl.value = '';
+        const nameEl = document.getElementById('baja-selected-name');
+        if(nameEl) nameEl.value = '';
+        const boxEl = document.getElementById('baja-selected-box');
+        if(boxEl) boxEl.style.display = 'none';
+        const inputEl = document.getElementById('baja-search-input');
+        if(inputEl) {
+            inputEl.style.display = 'block';
+            inputEl.value = '';
+        }
+        const ddEl = document.getElementById('baja-dropdown');
+        if(ddEl) ddEl.style.display = 'none';
+    }
+
+    async function deleteUserByName() {
+        const nombre = document.getElementById('baja-selected-name').value;
+        const uid = document.getElementById('baja-selected-uid').value;
+        if(!nombre) {
+            showMsg('baja-user', 'error', 'Busca y selecciona un usuario primero.');
+            return;
+        }
+
+        const _btn = document.getElementById('btn-execute-baja-name');
+        setBtn(_btn, true);
+
+        if(!confirm('¿Estás seguro que deseas ELIMINAR a ' + nombre + '? Esta acción no se puede deshacer.')) {
+            showMsg('baja-user', 'info', 'Operación cancelada.');
+            setBtn(_btn, false);
+            return;
+        }
+
+        showMsg('baja-user', 'info', 'Procesando baja...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-baja-user`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre: nombre, id: uid })
+            });
+            let data;
+            try {
+                data = await res.json();
+            } catch(err) {
+                showMsg('baja-user', 'error', '⚠️ Error al procesar la baja. El usuario podría no existir.');
+                clearBajaSelection();
+                soundError();
+                return;
+            }
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result && result.status === 'success') {
+                showMsg('baja-user', 'success', 'Baja procesada correctamente.');
+                soundSuccess();
+                clearBajaSelection();
+                loadInitialData();
+            } else {
+                showMsg('baja-user', 'error', 'No se pudo dar de baja. ' + (result?.message || 'Verifica el nombre.'));
+                clearBajaSelection();
+                soundError();
+            }
+        } catch(e) {
+            showMsg('baja-user', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            clearBajaSelection();
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -929,6 +1056,9 @@
             if(result.padres) {
                 window._allPadres = result.padres; 
             }
+            
+            // Consolidar todos los usuarios para la vista de bajas
+            window._allUsers = result.usuarios || [...(result.alumnos || []), ...(result.padres || [])];
         } catch(e) {
             console.log("Aún no conectado a n8n o error:", e);
         }
@@ -1117,7 +1247,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('users', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('users', 'error', 'No se encontraron datos o hubo un error de conexión.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1176,12 +1306,14 @@
                 document.getElementById('acc-status-msg').style.display = 'none';
                 document.getElementById('acc-lastpay-box').style.display = 'none';
                 document.getElementById('acc-instructor-buttons').style.display = 'flex';
+                document.getElementById('acc-maps-buttons').style.display = 'flex';
                 soundSuccess(); // Instructors always hear success just for validating identity
             } else {
                 document.getElementById('acc-badge').style.display = 'inline-block';
                 document.getElementById('acc-status-msg').style.display = 'block';
                 document.getElementById('acc-lastpay-box').style.display = 'inline';
                 document.getElementById('acc-instructor-buttons').style.display = 'none';
+                document.getElementById('acc-maps-buttons').style.display = 'none';
 
                 if(result.al_corriente === true) {
                     soundSuccess();
@@ -1199,7 +1331,7 @@
             }
         } catch(e) {
             console.error('Error en scanAccess:', e);
-            showMsg('access', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('access', 'error', 'No se encontraron datos o hubo un error de conexión.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1266,7 +1398,7 @@
 
         } catch(e) {
             console.error('Error en scanForPayment:', e);
-            showMsg('pay', 'error', '🔌 No pudimos conectar con el servidor central. Verifica tu conexión a internet.');
+            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1327,7 +1459,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al procesar el pago. Revisa tu internet e intenta de nuevo.');
+            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión al procesar el pago.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -1387,7 +1519,9 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(!res.ok || !result || result.status !== 'success') {
-                showMsg('pay', 'error', 'No se pudo obtener la información de esta familia.');
+                showMsg('pay', 'error', 'No se encontraron alumnos asignados a este Padre de Familia.');
+                document.getElementById('pay-family-search').value = '';
+                document.getElementById('pay-padre-id').value = '';
                 soundError();
                 return;
             }
@@ -1423,7 +1557,9 @@
             document.getElementById('pay-year').value = result.anio_cobro;
 
         } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al obtener datos de la familia.');
+            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            document.getElementById('pay-family-search').value = '';
+            document.getElementById('pay-padre-id').value = '';
             soundError();
         }
     }
@@ -1463,7 +1599,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('pay', 'error', '🔌 Error de red al procesar el pago grupal.');
+            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión al procesar el pago grupal.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -1534,7 +1670,7 @@
             soundSuccess();
 
         } catch (e) {
-            showMsg('hist', 'error', '🔌 Error de red al consultar el historial. Revisa tu internet e intenta de nuevo.');
+            showMsg('hist', 'error', 'No se encontraron datos o hubo un error de conexión.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1626,7 +1762,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reg', 'error', '🔌 Error de red al registrar alumno. Revisa tu internet e intenta de nuevo.');
+            showMsg('reg', 'error', 'No se encontraron datos o hubo un error de conexión al registrar alumno.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1695,7 +1831,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reassign', 'error', '🔌 Error de red al reasignar la pulsera. Revisa tu internet e inténtalo de nuevo.');
+            showMsg('reassign', 'error', 'No se encontraron datos o hubo un error de conexión al reasignar la pulsera.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1743,7 +1879,7 @@
             showMsg('user-info', '', '');
             soundSuccess();
         } catch(e) {
-            showMsg('user-info', 'error', '🔌 Error de red al consultar pulsera.');
+            showMsg('user-info', 'error', 'No se encontraron datos o hubo un error de conexión al consultar pulsera.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1783,7 +1919,8 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(!res.ok || !result || result.status !== 'success') {
-                showMsg('search-family', 'error', 'No se pudo obtener la información de los hijos.');
+                showMsg('search-family', 'error', 'No se encontraron alumnos asignados a este Padre de Familia.');
+                document.getElementById('sf-search').value = '';
                 soundError(); return;
             }
 
@@ -1815,7 +1952,8 @@
             }
 
         } catch(e) {
-            showMsg('search-family', 'error', '🔌 Error de red al obtener datos.');
+            showMsg('search-family', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            document.getElementById('sf-search').value = '';
             soundError();
         }
     }
