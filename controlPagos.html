@@ -682,6 +682,8 @@
         showMsg('search-family', '', '');
         showMsg('user-info', '', '');
         
+        if (t === 'students') fetchAllStudents();
+        
         // GLOBAL INPUT CLEAR: Reset all form fields to prevent data leaking between sessions
         document.querySelectorAll('.view input').forEach(el => {
             if (el.type === 'text' || el.type === 'number' || el.type === 'date' || el.type === 'tel' || el.type === 'hidden') {
@@ -2070,9 +2072,29 @@
         }
     });
 
+    
     // ==========================================
     // MÓDULO GESTIÓN DE ALUMNOS (ADMIN)
     // ==========================================
+    async function fetchAllStudents() {
+        showMsg('students', 'info', 'Cargando lista de alumnos...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-get-all-students`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            
+            if(result && result.alumnos) {
+                window._allStudents = result.alumnos;
+                showMsg('students', '', '');
+                filterStudentsModule(); // Mostrar resultados iniciales
+            } else {
+                showMsg('students', 'error', 'Error al procesar la lista de alumnos.');
+            }
+        } catch(e) {
+            showMsg('students', 'error', 'No se pudieron cargar los alumnos. ¿Creaste el webhook ht-get-all-students?');
+        }
+    }
+
     function filterStudentsModule() {
         const nameQuery = document.getElementById('students-search-name').value.trim().toLowerCase();
         const catQuery = document.getElementById('students-search-cat').value;
