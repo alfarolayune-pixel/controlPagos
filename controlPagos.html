@@ -323,8 +323,8 @@
                     
                     <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-info-box">
                         <span id="acc-lastpay-box">Último pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br></span>
-                        Sangre: <strong id="acc-blood" style="color: #ef4444;">---</strong><br>
-                        Emergencia: <strong id="acc-em-name" style="color: white;">---</strong> (<span id="acc-em-tel">---</span>)
+                        <span id="acc-blood-box">Sangre: <strong id="acc-blood" style="color: #ef4444;">---</strong><br></span>
+                        <span id="acc-em-box">Emergencia: <strong id="acc-em-name" style="color: white;">---</strong> (<span id="acc-em-tel">---</span>)</span>
                     </div>
                     
                     <div style="display:none; flex-direction:column; gap:10px; margin-top:15px;" id="acc-instructor-buttons">
@@ -1302,6 +1302,15 @@
             showMsg('access', '', '');
 
             const r = currentUser.rol;
+            
+            if (r === 'admin') {
+                document.getElementById('acc-blood-box').style.display = 'none';
+                document.getElementById('acc-em-box').style.display = 'none';
+            } else {
+                document.getElementById('acc-blood-box').style.display = 'inline';
+                document.getElementById('acc-em-box').style.display = 'inline';
+            }
+
             if(r === 'instructor') {
                 document.getElementById('acc-badge').style.display = 'none';
                 document.getElementById('acc-status-msg').style.display = 'none';
@@ -1531,11 +1540,13 @@
 
         try {
             const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${encodeURIComponent(id)}`);
+            const textRes = await res.text();
             let data;
             try {
-                data = await res.json();
+                data = textRes ? JSON.parse(textRes) : { status: 'success', hijos_pendientes: [], hijos_al_corriente: [] };
             } catch(err) {
-                showMsg('pay', 'error', '⚠️ No se pudo obtener la información. Es posible que los alumnos ya estén al corriente o hubo un error.');
+                console.error("Error parseando respuesta de n8n:", textRes);
+                showMsg('pay', 'error', `⚠️ Error: n8n regresó: ${textRes.substring(0, 60)}`);
                 document.getElementById('pay-family-search').value = '';
                 document.getElementById('pay-padre-id').value = '';
                 soundError();
@@ -1923,6 +1934,11 @@
     // ESTADO DE CUENTA FAMILIAR (PADRES / ADMIN)
     // ==========================================
     function filterSfFamily() {
+        // Limpiar resultados anteriores cada que empiece a escribir
+        document.getElementById('sf-results').style.display = 'none';
+        document.getElementById('sf-hijos-list').innerHTML = '';
+        showMsg('search-family', '', '');
+
         const query = document.getElementById('sf-search').value.trim().toLowerCase();
         const dropdown = document.getElementById('sf-dropdown');
         if (!query) { dropdown.style.display = 'none'; return; }
@@ -1948,11 +1964,13 @@
         
         try {
             const res = await fetch(`${N8N_URL}/ht-get-family-payment?padre_id=${encodeURIComponent(id)}`);
+            const textRes = await res.text();
             let data;
             try {
-                data = await res.json();
+                data = textRes ? JSON.parse(textRes) : { status: 'success', hijos_pendientes: [], hijos_al_corriente: [] };
             } catch(err) {
-                showMsg('search-family', 'error', '⚠️ No se pudo obtener la información. Es posible que los alumnos ya estén al corriente o hubo un error.');
+                console.error("Error parseando respuesta de n8n:", textRes);
+                showMsg('search-family', 'error', `⚠️ Error: n8n regresó: ${textRes.substring(0, 60)}`);
                 document.getElementById('sf-search').value = '';
                 soundError(); 
                 return;
