@@ -296,6 +296,7 @@
         <div class="nav-item" id="nav-user-info" onclick="switchTab('user-info')" style="display:none; color: #0284c7;">🔍 Info Pulsera</div>
         <div class="nav-item" id="nav-reg" onclick="switchTab('reg')" style="display:none;">📝 Alta Alumno</div>
         <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👥 Alta Usuario</div>
+        <div class="nav-item" id="nav-students" onclick="switchTab('students')" style="color: #f59e0b; display:none;">👨‍🎓 Alumnos</div>
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
         <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
         <div class="nav-item" id="nav-debtors" onclick="switchTab('debtors')" style="display:none; color: #ea580c;">⚠️ Deudores</div>
@@ -304,6 +305,32 @@
 
     <div class="content">
         
+        
+        <!-- VISTA: ALUMNOS (ADMIN ONLY) -->
+        <div id="view-students" class="view" style="display:none;">
+            <div style="text-align: center;">
+                <h3 style="margin:0 0 10px;">Gestión de Alumnos</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Busca y edita información de todos los alumnos registrados.</p>
+            </div>
+            
+            <div style="margin-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                <div class="form-group">
+                    <label>Buscar por Nombre</label>
+                    <input type="text" id="students-search-name" placeholder="Escribe el nombre del alumno..." onkeyup="filterStudentsModule()">
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Buscar por Categoría</label>
+                    <select id="students-search-cat" onchange="filterStudentsModule()">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline" style="margin-top:15px;" onclick="clearStudentsSearch()">🧹 Limpiar Búsqueda</button>
+            </div>
+
+            <div id="students-results" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;"></div>
+            <div id="status-students" class="status-msg"></div>
+        </div>
+
         <!-- VISTA: LECTOR ACCESO -->
         <div id="view-access" class="view active">
             <div style="text-align: center; padding: 20px 0;">
@@ -1048,6 +1075,8 @@
             const catSelect = document.getElementById('reg-cat');
             if(result.categorias) {
                 catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                const stuCatSelect = document.getElementById('students-search-cat');
+                if(stuCatSelect) stuCatSelect.innerHTML = '<option value="">Todas las categorías</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
             }
             
             // Guardar lista de alumnos en variable global para el buscador
@@ -1295,6 +1324,7 @@
             document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
             
             // Populating additional info
+            document.getElementById('acc-lastpay').innerText = result.ultimo_pago || '---';
             document.getElementById('acc-blood').innerText = result.tipo_sangre || 'N/A';
             document.getElementById('acc-em-name').innerText = result.contacto_emergencia_nombre || 'N/A';
             document.getElementById('acc-em-tel').innerText = result.contacto_emergencia_telefono || 'N/A';
@@ -2039,6 +2069,179 @@
             setTimeout(function() { e.target.blur(); }, 200);
         }
     });
+
+    // ==========================================
+    // MÓDULO GESTIÓN DE ALUMNOS (ADMIN)
+    // ==========================================
+    function filterStudentsModule() {
+        const nameQuery = document.getElementById('students-search-name').value.trim().toLowerCase();
+        const catQuery = document.getElementById('students-search-cat').value;
+        const resultsDiv = document.getElementById('students-results');
+        
+        let filtered = window._allStudents || [];
+        
+        if (nameQuery) {
+            filtered = filtered.filter(a => a.nombre && a.nombre.toLowerCase().includes(nameQuery));
+        }
+        if (catQuery) {
+            filtered = filtered.filter(a => a.categoria_id === catQuery || a.categoria === catQuery);
+        }
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">No se encontraron alumnos</div>';
+            return;
+        }
+
+        // Mostrar solo 20 para evitar lag
+        const toShow = filtered.slice(0, 20);
+        
+        resultsDiv.innerHTML = toShow.map(a => `
+            <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px;">
+                <div class="student-name" style="font-size: 1.2rem;">${a.nombre}</div>
+                <div class="student-cat" style="margin-bottom: 5px;">Categoría: ${a.categoria || a.categoria_nombre || 'N/A'}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                    Emergencia: ${a.contacto_emergencia_nombre || 'N/A'} (${a.contacto_emergencia_telefono || 'N/A'})<br>
+                    Sangre: ${a.tipo_sangre || 'N/A'}
+                </div>
+                <button class="btn btn-outline" style="padding: 8px; font-size: 0.9rem;" onclick="editStudent('${a.id}')">✏️ Editar Información</button>
+                
+                <div id="stu-edit-${a.id}" style="display:none; margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="edit-name-${a.id}" value="${a.nombre}">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Categoría</label>
+                        <select id="edit-cat-${a.id}">
+                            ${document.getElementById('reg-cat').innerHTML.replace('Seleccione Categoría...', '')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Contacto Emergencia (Nombre)</label>
+                        <input type="text" id="edit-em-name-${a.id}" value="${a.contacto_emergencia_nombre || ''}">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Teléfono Emergencia (10 dígitos)</label>
+                        <input type="tel" id="edit-em-tel-${a.id}" value="${a.contacto_emergencia_telefono || ''}" maxlength="10">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Tipo de Sangre</label>
+                        <select id="edit-blood-${a.id}">
+                            <option value="A+" ${a.tipo_sangre==='A+'?'selected':''}>A+</option>
+                            <option value="A-" ${a.tipo_sangre==='A-'?'selected':''}>A-</option>
+                            <option value="B+" ${a.tipo_sangre==='B+'?'selected':''}>B+</option>
+                            <option value="B-" ${a.tipo_sangre==='B-'?'selected':''}>B-</option>
+                            <option value="AB+" ${a.tipo_sangre==='AB+'?'selected':''}>AB+</option>
+                            <option value="AB-" ${a.tipo_sangre==='AB-'?'selected':''}>AB-</option>
+                            <option value="O+" ${a.tipo_sangre==='O+'?'selected':''}>O+</option>
+                            <option value="O-" ${a.tipo_sangre==='O-'?'selected':''}>O-</option>
+                            <option value="N/A" ${!a.tipo_sangre||a.tipo_sangre==='N/A'?'selected':''}>N/A</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-success" style="flex:1;" id="btn-save-${a.id}" onclick="saveStudentEdit('${a.id}')">💾 Guardar</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="cancelStudentEdit('${a.id}')">❌ Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Autoseleccionar la categoría en el form de edición
+        toShow.forEach(a => {
+            const catField = a.categoria_id || a.categoria;
+            if(catField) {
+                const sel = document.getElementById(`edit-cat-${a.id}`);
+                if(sel) sel.value = catField;
+            }
+        });
+    }
+
+    function clearStudentsSearch() {
+        document.getElementById('students-search-name').value = '';
+        document.getElementById('students-search-cat').value = '';
+        document.getElementById('students-results').innerHTML = '';
+        showMsg('students', '', '');
+    }
+    
+    function editStudent(id) {
+        document.getElementById(`stu-edit-${id}`).style.display = 'block';
+    }
+    
+    function cancelStudentEdit(id) {
+        document.getElementById(`stu-edit-${id}`).style.display = 'none';
+    }
+
+    async function saveStudentEdit(id) {
+        const btn = document.getElementById(`btn-save-${id}`);
+        setBtn(btn, true);
+        
+        const nombre = document.getElementById(`edit-name-${id}`).value.trim();
+        const cat = document.getElementById(`edit-cat-${id}`).value;
+        const emName = document.getElementById(`edit-em-name-${id}`).value.trim();
+        const emTel = document.getElementById(`edit-em-tel-${id}`).value.replace(/\D/g,'');
+        const blood = document.getElementById(`edit-blood-${id}`).value;
+        
+        if (!nombre || !cat) {
+            showMsg('students', 'error', 'Nombre y categoría son obligatorios.');
+            setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+            setBtn(btn, false);
+            return;
+        }
+        if (emTel && emTel.length !== 10) {
+            showMsg('students', 'error', 'El número de emergencia debe tener 10 dígitos exactos.');
+            setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+            setBtn(btn, false);
+            return;
+        }
+        
+        showMsg('students', 'info', 'Guardando cambios...');
+        
+        try {
+            const res = await fetch(`${N8N_URL}/ht-update-student`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: id,
+                    nombre: nombre,
+                    categoria_id: cat,
+                    contacto_emergencia_nombre: emName,
+                    contacto_emergencia_telefono: emTel,
+                    tipo_sangre: blood
+                })
+            });
+            const textRes = await res.text();
+            let data;
+            try { data = JSON.parse(textRes); } catch(e) { data = { status: 'error', message: textRes.substring(0, 50) }; }
+            
+            const result = Array.isArray(data) ? data[0] : data;
+            if(result && result.status === 'success') {
+                showMsg('students', 'success', '✅ Información actualizada correctamente.');
+                soundSuccess();
+                // Update local memory
+                const stu = window._allStudents.find(s => s.id === id);
+                if(stu) {
+                    stu.nombre = nombre;
+                    stu.categoria_id = cat;
+                    stu.contacto_emergencia_nombre = emName;
+                    stu.contacto_emergencia_telefono = emTel;
+                    stu.tipo_sangre = blood;
+                    const catObj = Array.from(document.getElementById('reg-cat').options).find(o => o.value === cat);
+                    if(catObj) stu.categoria_nombre = catObj.text;
+                }
+                filterStudentsModule(); // re-render
+                setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+            } else {
+                showMsg('students', 'error', '❌ Error al guardar: ' + (result?.message || 'Revisa el webhook de n8n.'));
+                soundError();
+                setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+            }
+        } catch(e) {
+            showMsg('students', 'error', 'Error de red al actualizar información.');
+            soundError();
+            setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+        }
+        setBtn(btn, false);
+    }
+
 </script>
 </body>
 </html>
