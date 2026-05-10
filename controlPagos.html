@@ -378,6 +378,7 @@
                         Cobrando a partir de mes: <strong id="pay-month-lbl" style="color: white;">---</strong>
                     </div>
                     <button class="btn btn-success" onclick="executePayment()" id="btn-execute-pay">✅ Confirmar Pago</button>
+                    <button class="btn btn-outline" style="margin-top: 10px; border-color: #64748b; color: #94a3b8;" onclick="cancelPay()">❌ Cancelar</button>
                     <input type="hidden" id="pay-uid">
                     <input type="hidden" id="pay-st-id">
                     <input type="hidden" id="pay-month">
@@ -1341,7 +1342,25 @@
     // ==========================================
     // COBRO MENSUALIDAD
     // ==========================================
+    function cancelPay() {
+        document.getElementById('pay-details').style.display = 'none';
+        document.getElementById('pay-family-search').value = '';
+        document.getElementById('pay-padre-id').value = '';
+        document.getElementById('pay-children-list').innerHTML = '';
+        document.getElementById('pay-name').innerText = 'Nombre Alumno';
+        document.getElementById('pay-month-lbl').innerText = '---';
+        document.getElementById('pay-amount').innerText = '0.00';
+        document.getElementById('pay-mode').value = '1';
+        showMsg('pay', '', '');
+        const btnExec = document.getElementById('btn-execute-pay');
+        if(btnExec) {
+            btnExec.disabled = false;
+            btnExec.innerText = '✅ Confirmar Pago';
+        }
+    }
+
     async function scanForPayment() {
+        cancelPay();
         const _btn = document.querySelector('#view-pay .btn-outline');
         setBtn(_btn, true);
         document.getElementById('family-search-container').style.display = 'none';
@@ -1474,13 +1493,10 @@
     let familyChildrenToPay = [];
 
     function toggleFamilyPay() {
+        cancelPay();
         const cont = document.getElementById('family-search-container');
-        document.getElementById('pay-details').style.display = 'none';
-        showMsg('pay', '', '');
-        if (cont.style.display === 'none') {
+        if (cont.style.display === 'none' || cont.style.display === '') {
             cont.style.display = 'block';
-            document.getElementById('pay-family-search').value = '';
-            document.getElementById('pay-padre-id').value = '';
         } else {
             cont.style.display = 'none';
         }
@@ -1709,6 +1725,13 @@
             showMsg('reg', 'error', 'Por favor, completa los datos básicos.'); 
             setBtn(_btn, false);
             return; 
+        }
+
+        const telClean = payload.contacto_emergencia_tel.replace(/\D/g, '');
+        if(telClean.length !== 10) {
+            showMsg('reg', 'error', 'El número de teléfono de emergencia debe tener exactamente 10 dígitos.');
+            setBtn(_btn, false);
+            return;
         }
         
         showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
@@ -1948,27 +1971,41 @@
             
             showMsg('search-family', '', '');
             
-            // hijos_pendientes contiene los que NO han pagado. 
-            // Sería bueno mostrar todos, pero ht-get-family-payment solo trae los que DEBEN.
-            // Asi que si está vacío, todos están al corriente.
+            // Mostrar hijos al corriente y/o pendientes
             const listEl = document.getElementById('sf-hijos-list');
+            const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
+            let txt = '';
             
-            if(!result.hijos_pendientes || result.hijos_pendientes.length === 0) {
-                listEl.innerHTML = `<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos los hijos están al corriente de sus pagos.</div>`;
-                soundSuccess();
-            } else {
-                const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
-                let txt = `<div style="color: var(--danger); font-weight: bold; margin-bottom: 10px;">❌ Tienen pagos pendientes este mes:</div>`;
-                
+            if(result.hijos_pendientes && result.hijos_pendientes.length > 0) {
+                txt += `<div style="color: var(--danger); font-weight: bold; margin-bottom: 10px;">❌ Tienen pagos pendientes este mes:</div>`;
                 result.hijos_pendientes.forEach(h => {
                     txt += `<div style="background:var(--bg-card); padding:10px; margin-bottom:5px; border-radius:8px; border:1px solid #ef4444;">
                         <strong>${h.nombre}</strong><br>
-                        <span style="color:var(--text-muted); font-size:0.9rem;">Deuda mensualidad: ${formatPrice(h.costo_mensualidad)}</span>
+                        <span style="color:var(--text-muted); font-size:0.9rem;">Deuda mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</span>
                     </div>`;
                 });
-                listEl.innerHTML = txt;
                 soundError();
             }
+            
+            if(result.hijos_al_corriente && result.hijos_al_corriente.length > 0) {
+                txt += `<div style="color: var(--success); font-weight: bold; margin-bottom: 10px; margin-top: 15px;">✅ Al corriente de pagos:</div>`;
+                result.hijos_al_corriente.forEach(h => {
+                    txt += `<div style="background:var(--bg-card); padding:10px; margin-bottom:5px; border-radius:8px; border:1px solid #10b981;">
+                        <strong>${h.nombre}</strong><br>
+                        <span style="color:var(--text-muted); font-size:0.9rem;">Mensualidad normal: $${formatPrice(h.costo_mensualidad || 0)}</span>
+                    </div>`;
+                });
+                if(!result.hijos_pendientes || result.hijos_pendientes.length === 0) {
+                    soundSuccess();
+                }
+            }
+
+            if(!txt) {
+                txt = `<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos los hijos están al corriente de sus pagos.</div>`;
+                soundSuccess();
+            }
+            
+            listEl.innerHTML = txt;
 
         } catch(e) {
             console.error(e);
