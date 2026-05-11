@@ -335,8 +335,8 @@
         <div id="view-access" class="view active">
             <div style="text-align: center; padding: 20px 0;">
                 <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
-                <h3 style="margin:0 0 10px;">Control de Acceso</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.</p>
+                <h3 id="access-title" style="margin:0 0 10px;">Control de Acceso</h3>
+                <p id="access-desc" style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.</p>
                 <button class="btn" onclick="scanAccess()" style="margin-top: 20px;">🔴 Leer Pulsera (NFC)</button>
             </div>
             
@@ -823,10 +823,21 @@
         
         const r = currentUser.rol;
         if(r === 'admin') {
+            const navAcc = document.getElementById('nav-access');
+            navAcc.innerHTML = '📲 Lector Acceso';
+            document.getElementById('access-title').innerText = 'Control de Acceso';
+            document.getElementById('access-desc').innerText = 'Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.';
+            
             document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
             switchTab('access');
         } else if(r === 'instructor') {
-            document.getElementById('nav-access').style.display = 'flex';
+            const navAcc = document.getElementById('nav-access');
+            navAcc.style.display = 'flex';
+            navAcc.innerHTML = '🏀 Lector de Alumnos';
+            
+            document.getElementById('access-title').innerText = 'Identificación de Alumno';
+            document.getElementById('access-desc').innerText = 'Escanea la pulsera para ver el perfil del alumno y a quién contactar en caso de incidente.';
+            
             switchTab('access');
         } else if(r === 'padre') {
             // Reutilizamos la vista Familia/Pagos para el padre
