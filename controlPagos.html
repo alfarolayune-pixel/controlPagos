@@ -311,6 +311,7 @@
             <div style="text-align: center;">
                 <h3 style="margin:0 0 10px;">Gestión de Alumnos</h3>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">Busca y edita información de todos los alumnos registrados.</p>
+                <div id="students-total-count" style="margin-top: 10px; font-weight: bold; color: #10b981; font-size: 1.1rem;">Total Alumnos: Cargando...</div>
             </div>
             
             <div style="margin-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid #334155;">
@@ -2101,6 +2102,12 @@
     // ==========================================
     // MÓDULO GESTIÓN DE ALUMNOS (ADMIN)
     // ==========================================
+    window._studentsDisplayedCount = 3;
+    function loadMoreStudents() {
+        window._studentsDisplayedCount += 3;
+        filterStudentsModule(true);
+    }
+
     async function fetchAllStudents() {
         showMsg('students', 'info', 'Cargando lista de alumnos...');
         try {
@@ -2120,12 +2127,18 @@
         }
     }
 
-    function filterStudentsModule() {
+    function filterStudentsModule(isAppend = false) {
+        if (!isAppend) window._studentsDisplayedCount = 3;
+        
         const nameQuery = document.getElementById('students-search-name').value.trim().toLowerCase();
         const catQuery = document.getElementById('students-search-cat').value;
         const resultsDiv = document.getElementById('students-results');
         
         let filtered = window._allStudents || [];
+        
+        // Mostrar total
+        const totalCountDiv = document.getElementById('students-total-count');
+        if (totalCountDiv) totalCountDiv.innerText = `Total Alumnos: ${window._allStudents ? window._allStudents.length : 0}`;
         
         if (nameQuery) {
             filtered = filtered.filter(a => a.nombre && a.nombre.toLowerCase().includes(nameQuery));
@@ -2139,8 +2152,8 @@
             return;
         }
 
-        // Mostrar solo 20 para evitar lag
-        const toShow = filtered.slice(0, 20);
+        // Mostrar paginado
+        const toShow = filtered.slice(0, window._studentsDisplayedCount);
         
         resultsDiv.innerHTML = toShow.map(a => `
             <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px;">
@@ -2192,6 +2205,14 @@
                 </div>
             </div>
         `).join('');
+        
+        if (filtered.length > window._studentsDisplayedCount) {
+            resultsDiv.innerHTML += `
+                <div style="text-align: center; margin-top: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-outline" style="max-width: 250px; margin: 0 auto; border-color: var(--primary); color: var(--primary);" onclick="loadMoreStudents()">⬇️ Mostrar más alumnos</button>
+                </div>
+            `;
+        }
         
         // Autoseleccionar la categoría en el form de edición
         toShow.forEach(a => {
