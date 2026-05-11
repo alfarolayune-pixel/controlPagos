@@ -596,10 +596,8 @@
             </div>
 
             <div id="sf-results" style="display:none; margin-top: 20px;">
-                <div class="student-card">
-                    <div class="student-name" id="sf-padre-name">---</div>
-                    <div id="sf-hijos-list" style="margin-top: 15px;"></div>
-                </div>
+                <h4 id="sf-padre-name" style="color: var(--text-muted); margin-bottom: 15px; font-size: 1.1rem; text-align: center;">---</h4>
+                <div id="sf-hijos-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
             <div id="status-search-family" class="status-msg"></div>
         </div>
@@ -2027,36 +2025,39 @@
             const formatPrice = (v) => { const n = parseFloat(v); return Number.isInteger(n) ? n : n.toFixed(2); };
             let txt = '';
             
+            let hasDebt = false;
+
             if(result.hijos_pendientes && result.hijos_pendientes.length > 0) {
-                txt += `<div style="color: var(--danger); font-weight: bold; margin-bottom: 10px;">❌ Tienen pagos pendientes este mes:</div>`;
+                hasDebt = true;
                 result.hijos_pendientes.forEach(h => {
-                    txt += `<div style="background:var(--bg-card); padding:10px; margin-bottom:5px; border-radius:8px; border:1px solid #ef4444;">
-                        <strong>${h.nombre}</strong><br>
-                        <span style="color:var(--text-muted); font-size:0.9rem;">Deuda mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</span>
+                    txt += `<div class="student-card" style="border: 2px solid #ef4444; margin-top:0;">
+                        <div class="student-name" style="font-size: 1.3rem;">${h.nombre}</div>
+                        <div style="color: #ef4444; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">❌ Pago Pendiente</div>
+                        <div style="color:var(--text-muted); font-size:1.1rem; margin-top: 10px;">Costo Mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</div>
                     </div>`;
                 });
-                soundError();
             }
             
             if(result.hijos_al_corriente && result.hijos_al_corriente.length > 0) {
-                txt += `<div style="color: var(--success); font-weight: bold; margin-bottom: 10px; margin-top: 15px;">✅ Al corriente de pagos:</div>`;
                 result.hijos_al_corriente.forEach(h => {
-                    txt += `<div style="background:var(--bg-card); padding:10px; margin-bottom:5px; border-radius:8px; border:1px solid #10b981;">
-                        <strong>${h.nombre}</strong><br>
-                        <span style="color:var(--text-muted); font-size:0.9rem;">Mensualidad normal: $${formatPrice(h.costo_mensualidad || 0)}</span>
+                    txt += `<div class="student-card" style="border: 2px solid #10b981; margin-top:0;">
+                        <div class="student-name" style="font-size: 1.3rem;">${h.nombre}</div>
+                        <div style="color: #10b981; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">✅ Al Corriente</div>
+                        <div style="color:var(--text-muted); font-size:1.1rem; margin-top: 10px;">Costo Mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</div>
                     </div>`;
                 });
-                if(!result.hijos_pendientes || result.hijos_pendientes.length === 0) {
-                    soundSuccess();
-                }
             }
 
             if(!txt) {
                 txt = `<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos los hijos están al corriente de sus pagos.</div>`;
-                soundSuccess();
             }
             
             listEl.innerHTML = txt;
+            if(hasDebt) {
+                soundError();
+            } else {
+                soundSuccess();
+            }
 
         } catch(e) {
             console.error(e);
