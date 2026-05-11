@@ -829,8 +829,18 @@
             document.getElementById('nav-access').style.display = 'flex';
             switchTab('access');
         } else if(r === 'padre') {
-            document.getElementById('nav-hist').style.display = 'flex';
-            switchTab('hist');
+            // Reutilizamos la vista Familia/Pagos para el padre
+            const navFam = document.getElementById('nav-search-family');
+            navFam.style.display = 'flex';
+            navFam.innerHTML = '🏀 Mis Hijos';
+            
+            const viewFam = document.getElementById('view-search-family');
+            viewFam.querySelector('h3').innerText = 'Mis Hijos';
+            viewFam.querySelector('p').style.display = 'none';
+            document.getElementById('sf-search').parentElement.style.display = 'none';
+            
+            switchTab('search-family');
+            selectPayFamilyForPadre(currentUser.id, currentUser.nombre);
         }
     }
 
@@ -881,6 +891,8 @@
             <div style="background:var(--bg-body); padding:16px; border-radius:12px; border:1px solid #ef4444; position:relative;">
                 <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
                 <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
+                <div style="font-size:0.95rem; color:#f8fafc; margin-top:8px;">Costo Mensualidad: <strong>$${parseFloat(d.costo_mensualidad || 0).toFixed(2)}</strong></div>
+                <div style="font-size:0.95rem; color:#f8fafc; margin-top:4px;">Último pago: <strong>${d.ultimo_mes || 'Nunca'}</strong></div>
                 <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">⚠️</div>
             </div>
         `).join('');
