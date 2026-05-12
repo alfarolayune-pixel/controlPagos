@@ -591,15 +591,12 @@
             <h3 style="margin-top: 0;">Estado de Cuenta Familiar</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Busca un padre de familia para ver el estado de pago de todos sus hijos.</p>
 
-            <div id="sf-search-buttons" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="btn btn-outline" style="flex:1; border-color: #6366f1; color: #6366f1;" onclick="scanPadreNFC()">📲 Por Pulsera</button>
-                <button class="btn btn-outline" style="flex:1; border-color: #f59e0b; color: #f59e0b;" onclick="toggleSfSearch()">🔍 Por Nombre</button>
-            </div>
-
-            <div id="family-search-container" class="form-group" style="position: relative; display:none;">
-                <input type="text" id="sf-search" placeholder="Buscar padre de familia..." oninput="filterSfFamily()" autocomplete="off">
+            <div class="form-group" style="position: relative;">
+                <input type="text" id="sf-search" placeholder="Buscar padre de familia por nombre..." oninput="filterSfFamily()" autocomplete="off">
                 <div id="sf-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--bg-card); border:1px solid #334155; border-radius:12px; z-index:100; max-height:200px; overflow-y:auto;"></div>
             </div>
+
+            <button id="btn-sf-nfc" class="btn btn-outline" style="width:100%; margin-top:12px; border-color: #6366f1; color: #6366f1;" onclick="scanPadreNFC()">📲 Buscar por Pulsera (NFC)</button>
 
             <div id="sf-results" style="display:none; margin-top: 20px;">
                 <h4 id="sf-padre-name" style="color: var(--text-muted); margin-bottom: 15px; font-size: 1.1rem; text-align: center;">---</h4>
@@ -854,9 +851,11 @@
             const viewFam = document.getElementById('view-search-family');
             viewFam.querySelector('h3').innerText = 'Mis Hijos';
             viewFam.querySelector('p').style.display = 'none';
-            document.getElementById('family-search-container').style.display = 'none';
-            const sfButtons = document.getElementById('sf-search-buttons');
-            if (sfButtons) sfButtons.style.display = 'none';
+            // Ocultar búsqueda por texto y por pulsera — el padre ve sus hijos directamente
+            const sfInput = document.getElementById('sf-search');
+            if (sfInput && sfInput.parentElement) sfInput.parentElement.style.display = 'none';
+            const sfNfcBtn = document.getElementById('btn-sf-nfc');
+            if (sfNfcBtn) sfNfcBtn.style.display = 'none';
             
             switchTab('search-family');
             selectPayFamilyForPadre(currentUser.id, currentUser.nombre);
@@ -2009,8 +2008,13 @@
             const data = await res.json();
             const result = Array.isArray(data) ? data[0] : data;
 
-            if(result && result.status === 'success' && result.rol === 'padre') {
+            // Res-UserInfo responde con el objeto directo del usuario (sin wrapper status)
+            if(result && result.rol === 'padre') {
                 selectPayFamilyForPadre(result.id, result.nombre);
+            } else if(result && result.rol) {
+                showMsg('search-family', 'error', `⚠️ La pulsera pertenece a ${result.nombre} (${result.rol}), no a un Padre de Familia.`);
+                soundError();
+                setTimeout(() => { showMsg('search-family', '', ''); }, 5000);
             } else {
                 showMsg('search-family', 'error', '⚠️ La pulsera no pertenece a un Padre de Familia registrado.');
                 soundError();
