@@ -1997,7 +1997,7 @@
     // ==========================================
     async function scanPadreNFC() {
         showMsg('search-family', 'info', 'Esperando lectura de pulsera...');
-        const uid = await readNFC();
+        const uid = await getUidFromNFC();
         if(!uid) {
             showMsg('search-family', '', '');
             return;
@@ -2025,8 +2025,11 @@
 
     function toggleSfSearch() {
         const c = document.getElementById('family-search-container');
-        c.style.display = c.style.display === 'none' ? 'block' : 'none';
-        if (c.style.display === 'block') document.getElementById('sf-search').focus();
+        const isHidden = c.offsetParent === null || c.style.display === 'none' || c.style.display === '';
+        c.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            document.getElementById('sf-search').focus();
+        }
     }
 
     function filterSfFamily() {
