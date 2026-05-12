@@ -591,7 +591,12 @@
             <h3 style="margin-top: 0;">Estado de Cuenta Familiar</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Busca un padre de familia para ver el estado de pago de todos sus hijos.</p>
 
-            <div class="form-group" style="position: relative;">
+            <div id="sf-search-buttons" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn btn-outline" style="flex:1; border-color: #6366f1; color: #6366f1;" onclick="scanPadreNFC()">📲 Por Pulsera</button>
+                <button class="btn btn-outline" style="flex:1; border-color: #f59e0b; color: #f59e0b;" onclick="toggleSfSearch()">🔍 Por Nombre</button>
+            </div>
+
+            <div id="family-search-container" class="form-group" style="position: relative; display:none;">
                 <input type="text" id="sf-search" placeholder="Buscar padre de familia..." oninput="filterSfFamily()" autocomplete="off">
                 <div id="sf-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--bg-card); border:1px solid #334155; border-radius:12px; z-index:100; max-height:200px; overflow-y:auto;"></div>
             </div>
@@ -849,7 +854,9 @@
             const viewFam = document.getElementById('view-search-family');
             viewFam.querySelector('h3').innerText = 'Mis Hijos';
             viewFam.querySelector('p').style.display = 'none';
-            document.getElementById('sf-search').parentElement.style.display = 'none';
+            document.getElementById('family-search-container').style.display = 'none';
+            const sfButtons = document.getElementById('sf-search-buttons');
+            if (sfButtons) sfButtons.style.display = 'none';
             
             switchTab('search-family');
             selectPayFamilyForPadre(currentUser.id, currentUser.nombre);
@@ -1988,6 +1995,40 @@
     // ==========================================
     // ESTADO DE CUENTA FAMILIAR (PADRES / ADMIN)
     // ==========================================
+    async function scanPadreNFC() {
+        showMsg('search-family', 'info', 'Esperando lectura de pulsera...');
+        const uid = await readNFC();
+        if(!uid) {
+            showMsg('search-family', '', '');
+            return;
+        }
+
+        showMsg('search-family', 'info', 'Consultando padre...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-user-info?nfc_uid=${encodeURIComponent(uid)}`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if(result && result.status === 'success' && result.rol === 'padre') {
+                selectPayFamilyForPadre(result.id, result.nombre);
+            } else {
+                showMsg('search-family', 'error', '⚠️ La pulsera no pertenece a un Padre de Familia registrado.');
+                soundError();
+                setTimeout(() => { showMsg('search-family', '', ''); }, 5000);
+            }
+        } catch(e) {
+            showMsg('search-family', 'error', 'Error al consultar pulsera. Intenta de nuevo.');
+            soundError();
+            setTimeout(() => { showMsg('search-family', '', ''); }, 5000);
+        }
+    }
+
+    function toggleSfSearch() {
+        const c = document.getElementById('family-search-container');
+        c.style.display = c.style.display === 'none' ? 'block' : 'none';
+        if (c.style.display === 'block') document.getElementById('sf-search').focus();
+    }
+
     function filterSfFamily() {
         // Limpiar resultados anteriores cada que empiece a escribir
         document.getElementById('sf-results').style.display = 'none';
@@ -2156,7 +2197,7 @@
         const toShow = filtered.slice(0, window._studentsDisplayedCount);
         
         resultsDiv.innerHTML = toShow.map(a => `
-            <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px;">
+            <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px; border: 2px solid ${(a.al_corriente === true || a.al_corriente === 'true' || a.al_corriente === 't') ? '#10b981' : '#ef4444'};">
                 <div class="student-name" style="font-size: 1.2rem;">${a.nombre}</div>
                 <div class="student-cat" style="margin-bottom: 5px;">Categoría: ${a.categoria || a.categoria_nombre || 'N/A'}</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
