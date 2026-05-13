@@ -630,10 +630,10 @@
 
         <!-- VISTA: RE-ASIGNAR -->
         <div id="view-reassign" class="view">
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un alumno pierde su pulsera, búscalo y registra una nueva pulsera.</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Si un usuario pierde su pulsera, búscalo y registra una nueva pulsera. Funciona para Alumnos, Padres, Instructores y Admins.</p>
             <div class="form-group">
-                <label>Buscar Alumno</label>
-                <input type="text" id="reassign-search" placeholder="Escribe el nombre..." oninput="filterStudents('reassign')" autocomplete="off">
+                <label>Buscar Usuario</label>
+                <input type="text" id="reassign-search" placeholder="Escribe el nombre..." oninput="filterReassignUsers()" autocomplete="off">
                 <div id="reassign-dropdown" style="display:none; background:#1e293b; border:1px solid #334155; border-radius:10px; margin-top:6px; max-height:200px; overflow-y:auto;"></div>
                 <input type="hidden" id="reassign-student">
                 <div id="reassign-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(249,115,22,0.1); border:1px solid var(--primary); border-radius:10px; font-weight:700; color:var(--primary);"></div>
@@ -1409,6 +1409,53 @@
         box.style.display = 'block';
     }
 
+    // ==========================================
+    // BUSCADOR RE-ASIGNAR (TODOS LOS USUARIOS)
+    // ==========================================
+    function filterReassignUsers() {
+        const query = document.getElementById('reassign-search').value.trim().toLowerCase();
+        const dropdown = document.getElementById('reassign-dropdown');
+        const hiddenInput = document.getElementById('reassign-student');
+        const selectedBox = document.getElementById('reassign-selected');
+
+        hiddenInput.value = '';
+        selectedBox.style.display = 'none';
+
+        if (!query) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
+
+        const matches = (window._allUsers || []).filter(u => u.nombre.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+
+        const rolColors = { alumno: '#10b981', padre: '#7c3aed', instructor: '#0284c7', admin: '#f59e0b', marketing: '#ec4899' };
+        dropdown.innerHTML = matches.map(u => {
+            const rol = u.rol || 'alumno';
+            const color = rolColors[rol] || '#94a3b8';
+            return `
+            <div onclick="selectReassignUser('${u.id}', '${u.nombre.replace(/'/g, "\\'")}', '${rol}')"
+                 style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s; display:flex; justify-content:space-between; align-items:center;"
+                 onmouseover="this.style.background='rgba(249,115,22,0.15)'" onmouseout="this.style.background=''">
+                <span>${u.nombre}</span>
+                <span style="font-size:0.7rem; background:${color}; color:white; padding:2px 8px; border-radius:6px; text-transform:uppercase; font-weight:800;">${rol}</span>
+            </div>`;
+        }).join('');
+        dropdown.style.display = 'block';
+    }
+
+    function selectReassignUser(id, nombre, rol) {
+        document.getElementById('reassign-student').value = id;
+        document.getElementById('reassign-search').value = nombre;
+        document.getElementById('reassign-dropdown').style.display = 'none';
+        const rolColors = { alumno: '#10b981', padre: '#7c3aed', instructor: '#0284c7', admin: '#f59e0b', marketing: '#ec4899' };
+        const color = rolColors[rol] || '#94a3b8';
+        const box = document.getElementById('reassign-selected');
+        box.innerHTML = `✔ Seleccionado: ${nombre} <span style="font-size:0.7rem; background:${color}; color:white; padding:2px 8px; border-radius:6px; text-transform:uppercase; font-weight:800; margin-left:8px;">${rol}</span>`;
+        box.style.display = 'block';
+    }
+
     window._allPadres = [];
     function filterPadres() {
         const query = document.getElementById('reg-padre-search').value.trim().toLowerCase();
@@ -2144,8 +2191,8 @@
     async function reassignNfc() {
         const _btn = document.querySelector('#view-reassign > button');
         setBtn(_btn, true);
-        const studentId = document.getElementById('reassign-student').value;
-        if(!studentId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un alumno primero.'); setBtn(_btn, false); return; }
+        const userId = document.getElementById('reassign-student').value;
+        if(!userId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un usuario primero.'); setBtn(_btn, false); return; }
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
@@ -2177,7 +2224,7 @@
             const res = await fetch(`${N8N_URL}/ht-reassign`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ alumno_id: studentId, nfc_uid: uid })
+                body: JSON.stringify({ alumno_id: userId, nfc_uid: uid })
             });
             let data;
             try {
@@ -2190,7 +2237,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result && result.status === 'success') {
-                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
+                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente.`);
                 soundSuccess();
                 try { localStorage.removeItem('ht_form_reassign'); } catch(e) {}
                 document.getElementById('reassign-student').value = '';
