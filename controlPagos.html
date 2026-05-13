@@ -995,9 +995,6 @@
             const navFam = document.getElementById('nav-search-family');
             navFam.style.display = 'flex';
             navFam.innerHTML = '🏀 Mis Hijos';
-            navFam.onclick = null; // Prevent tab reset on click
-            navFam.removeAttribute('onclick');
-            navFam.style.cursor = 'default';
             
             const viewFam = document.getElementById('view-search-family');
             viewFam.querySelector('h3').innerText = 'Mis Hijos';
@@ -1009,6 +1006,10 @@
             if (sfNfcBtn) sfNfcBtn.style.display = 'none';
             
             switchTab('search-family');
+            // NOW disable the nav click so it doesn't reset the view on tap
+            navFam.onclick = function(e) { e.preventDefault(); };
+            navFam.setAttribute('onclick', 'return false;');
+            navFam.style.cursor = 'default';
             selectPayFamilyForPadre(currentUser.id, currentUser.nombre);
         } else if(r === 'marketing') {
             const navMkt = document.getElementById('nav-marketing');
