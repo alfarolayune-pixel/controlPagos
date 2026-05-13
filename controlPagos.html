@@ -2764,7 +2764,7 @@
             id: document.getElementById('mkt-edit-id').value || null,
             emoji: document.getElementById('mkt-emoji').value.trim() || '\ud83d\udd17',
             titulo: titulo,
-            url: document.getElementById('mkt-url').value.trim() || null,
+            url: ensureUrl(document.getElementById('mkt-url').value.trim()) || null,
             parent_id: document.getElementById('mkt-parent').value || null,
             orden: parseInt(document.getElementById('mkt-orden').value) || 0
         };
