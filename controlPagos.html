@@ -2507,6 +2507,13 @@
     let _landingLinks = [];
     let _landingUid = null; // UID from URL parameter for auto-login
 
+    // Ensure URL has protocol prefix
+    function ensureUrl(url) {
+        if (!url) return url;
+        if (!/^https?:\/\//i.test(url)) return 'https://' + url;
+        return url;
+    }
+
     function checkUrlForLanding() {
         const params = new URLSearchParams(window.location.search);
         const uid = params.get('uid');
@@ -2555,13 +2562,13 @@
                 </div>
                 <div id="landing-group-${link.id}" class="landing-sublinks">`;
                 kids.forEach(kid => {
-                    html += `<a href="${kid.url}" target="_blank" rel="noopener" class="landing-link landing-sublink">
+                    html += `<a href="${ensureUrl(kid.url)}" target="_blank" rel="noopener" class="landing-link landing-sublink">
                         <span class="landing-link-emoji">${kid.emoji || '\ud83d\udd17'}</span> ${kid.titulo}
                     </a>`;
                 });
                 html += `</div>`;
             } else if (link.url) {
-                html += `<a href="${link.url}" target="_blank" rel="noopener" class="landing-link">
+                html += `<a href="${ensureUrl(link.url)}" target="_blank" rel="noopener" class="landing-link">
                     <span class="landing-link-emoji">${link.emoji || '\ud83d\udd17'}</span> ${link.titulo}
                 </a>`;
             }
@@ -2693,6 +2700,7 @@
                 ${link.url ? `<div class="mkt-url">${link.url}</div>` : '<div class="mkt-url" style="color:#8b5cf6;">Categor\u00eda con sub-links</div>'}
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${link.orden || 0}</div>
                 <div class="mkt-actions">
+                    ${isGroup ? `<button class="mkt-btn-sm" style="color:#8b5cf6; border-color:#8b5cf6;" onclick="addSubLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">➕ Agregar sub-link</button>` : ''}
                     <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${link.id})">✏\ufe0f Editar</button>
                     <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">🗑\ufe0f Eliminar</button>
                 </div>
@@ -2722,6 +2730,14 @@
         document.getElementById('mkt-parent').value = '';
         document.getElementById('mkt-orden').value = '';
         document.querySelector('#mkt-form-container h4').innerHTML = '\u2795 Agregar / Editar Link';
+    }
+
+    function addSubLink(parentId, parentTitle) {
+        clearMktForm();
+        document.getElementById('mkt-parent').value = parentId;
+        document.querySelector('#mkt-form-container h4').innerHTML = '\u2795 Nuevo sub-link en: <span style="color:#8b5cf6;">' + parentTitle + '</span>';
+        document.getElementById('mkt-titulo').focus();
+        document.getElementById('mkt-form-container').scrollIntoView({ behavior: 'smooth' });
     }
 
     function editMktLink(id) {
