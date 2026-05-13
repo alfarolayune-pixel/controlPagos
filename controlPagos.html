@@ -1254,6 +1254,85 @@
     }
 
     // ==========================================
+    // FORM STATE PERSISTENCE (iPhone NFC workaround)
+    // ==========================================
+    function saveFormState(tabName) {
+        const d = {};
+        if (tabName === 'reg') {
+            d.name = document.getElementById('reg-name').value;
+            d.age = document.getElementById('reg-age').value;
+            d.dob = document.getElementById('reg-dob').value;
+            d.cat = document.getElementById('reg-cat').value;
+            d.blood = document.getElementById('reg-blood').value;
+            d.padre = document.getElementById('reg-padre').value;
+            d.emName = document.getElementById('reg-em-name').value;
+            d.emTel = document.getElementById('reg-em-tel').value;
+        } else if (tabName === 'users') {
+            d.name = document.getElementById('usr-name').value;
+            d.rol = document.getElementById('usr-rol').value;
+            d.children = selectedChildren.slice();
+        } else if (tabName === 'reassign') {
+            d.studentId = document.getElementById('reassign-student').value;
+            d.search = document.getElementById('reassign-search').value;
+        }
+        try { localStorage.setItem('ht_form_' + tabName, JSON.stringify(d)); } catch(e) {}
+    }
+
+    function restoreFormState(tabName) {
+        let d;
+        try { d = JSON.parse(localStorage.getItem('ht_form_' + tabName)); } catch(e) {}
+        if (!d) return false;
+
+        if (tabName === 'reg') {
+            document.getElementById('reg-name').value = d.name || '';
+            document.getElementById('reg-age').value = d.age || '';
+            document.getElementById('reg-dob').value = d.dob || '';
+            // Category select — try to set, retry after loadInitialData
+            if (d.cat) {
+                const catSel = document.getElementById('reg-cat');
+                catSel.value = d.cat;
+                if (!catSel.value) {
+                    // Categories not loaded yet, retry in 1.5s
+                    setTimeout(function() { catSel.value = d.cat; }, 1500);
+                }
+            }
+            document.getElementById('reg-blood').value = d.blood || 'O+';
+            document.getElementById('reg-padre').value = d.padre || '';
+            document.getElementById('reg-em-name').value = d.emName || '';
+            document.getElementById('reg-em-tel').value = d.emTel || '';
+        } else if (tabName === 'users') {
+            document.getElementById('usr-name').value = d.name || '';
+            document.getElementById('usr-rol').value = d.rol || 'padre';
+            selectedChildren = d.children || [];
+            checkPadreRol();
+            // Retry rendering children after students load
+            setTimeout(function() { renderUsrChildren(); }, 1500);
+        } else if (tabName === 'reassign') {
+            document.getElementById('reassign-student').value = d.studentId || '';
+            document.getElementById('reassign-search').value = d.search || '';
+            if (d.studentId && d.search) {
+                const box = document.getElementById('reassign-selected');
+                box.textContent = '\u2714 Seleccionado: ' + d.search;
+                box.style.display = 'block';
+            }
+        }
+
+        // Clear saved form data after restore
+        try { localStorage.removeItem('ht_form_' + tabName); } catch(e) {}
+        return true;
+    }
+
+    // Auto-save form data on any input/change in registration tabs
+    document.addEventListener('input', function() {
+        const tab = localStorage.getItem('ht_active_tab');
+        if (tab === 'reg' || tab === 'users' || tab === 'reassign') saveFormState(tab);
+    });
+    document.addEventListener('change', function() {
+        const tab = localStorage.getItem('ht_active_tab');
+        if (tab === 'reg' || tab === 'users' || tab === 'reassign') saveFormState(tab);
+    });
+
+    // ==========================================
     // CARGAR DATOS
     // ==========================================
     async function loadInitialData() {
@@ -1456,6 +1535,7 @@
             if(result && result.status === 'success') {
                 showMsg('users', 'success', `✅ Usuario ${nombre} creado correctamente.`);
                 soundSuccess();
+                try { localStorage.removeItem('ht_form_users'); } catch(e) {}
                 document.getElementById('usr-name').value = '';
                 document.getElementById('usr-rol').selectedIndex = 0;
                 checkPadreRol();
@@ -2030,6 +2110,7 @@
             if(result && result.status === 'success') {
                 showMsg('reg', 'success', `✅ Alumno ${payload.nombre} registrado exitosamente.`);
                 soundSuccess();
+                try { localStorage.removeItem('ht_form_reg'); } catch(e) {}
                 // Limpiar form completo
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-age').value = '';
@@ -2107,6 +2188,7 @@
             if(result && result.status === 'success') {
                 showMsg('reassign', 'success', `✅ Pulsera asignada correctamente al alumno.`);
                 soundSuccess();
+                try { localStorage.removeItem('ht_form_reassign'); } catch(e) {}
                 document.getElementById('reassign-student').value = '';
                 document.getElementById('reassign-search').value = '';
                 document.getElementById('reassign-selected').style.display = 'none';
@@ -2926,15 +3008,18 @@
                         'hist':          function() { startHistory(); },
                         'user-info':     function() { scanUserInfo(); },
                         'search-family': function() { scanPadreNFC(); },
-                        'baja-user':     function() { deleteUserNFC(); }
+                        'baja-user':     function() { deleteUserNFC(); },
+                        // Form tabs: restore data + show message (UID stays pending for manual button click)
+                        'reg':           function() { restoreFormState('reg'); showMsg('reg', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el bot\u00f3n para registrar.'); },
+                        'users':         function() { restoreFormState('users'); showMsg('users', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el bot\u00f3n para registrar.'); },
+                        'reassign':      function() { restoreFormState('reassign'); showMsg('reassign', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el bot\u00f3n para reasignar.'); }
                     };
                     if (scanActions[savedTab]) {
                         switchTab(savedTab);
                         // Small delay so the view is visible before triggering
                         setTimeout(function() { scanActions[savedTab](); }, 300);
                     } else {
-                        // Tab doesn't have a scan action (reg, reassign, etc.)
-                        // Default to access check
+                        // Unknown tab — default to access check
                         switchTab('access');
                         setTimeout(function() { scanAccess(); }, 300);
                     }
