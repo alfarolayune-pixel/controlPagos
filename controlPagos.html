@@ -795,6 +795,8 @@
         if (activeTab) activeTab.classList.add('active');
         const viewEl = document.getElementById('view-' + t);
         if (viewEl) viewEl.classList.add('active');
+        // Save active tab for iPhone NFC session restore
+        try { localStorage.setItem('ht_active_tab', t); } catch(e) {}
         
         // Reset states
         document.getElementById('access-result').style.display = 'none';
@@ -914,6 +916,7 @@
 
     let currentUser = null;
     let basePayAmount = 0;
+    let _pendingNfcUid = null; // UID from URL for iPhone NFC workaround
     // ==========================================
     // LOGIN
     // ==========================================
@@ -940,6 +943,10 @@
             
             if(result && result.status === 'success') {
                 currentUser = result; // Debe incluir {rol: 'admin', nombre: 'Joel', id: 'uuid'}
+                // Store the login UID so we can distinguish own bracelet from student bracelets
+                if (!currentUser.nfc_uid) currentUser.nfc_uid = uid;
+                // Persist session to localStorage for iPhone NFC workaround
+                try { localStorage.setItem('ht_session', JSON.stringify(currentUser)); } catch(e) {}
                 document.getElementById('lock-screen').classList.add('hidden');
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('btn-logout').style.display = 'block';
@@ -1221,6 +1228,13 @@
     // NFC SCAN LÓGICA (Genérica)
     // ==========================================
     async function getUidFromNFC() {
+        // iPhone NFC workaround: if a UID was injected via URL, consume it once
+        if (_pendingNfcUid) {
+            const uid = _pendingNfcUid;
+            _pendingNfcUid = null; // consume — one-time use
+            soundRead();
+            return uid;
+        }
         if ("NDEFReader" in window) {
             try {
                 const ndef = new NDEFReader();
@@ -1231,7 +1245,6 @@
                 });
             } catch (error) {
                 console.error("NFC Error", error);
-                // NFC no disponible o apagado — retornar null para que el llamador muestre el error
                 return null;
             }
         } else {
@@ -2113,7 +2126,9 @@
 
     function logout() {
         if(confirm("¿Estás seguro que deseas cerrar sesión? Todos los datos temporalmente cacheados se cerrarán.")) {
-            window.location.reload();
+            // Clear persisted session
+            try { localStorage.removeItem('ht_session'); localStorage.removeItem('ht_active_tab'); } catch(e) {}
+            window.location.href = window.location.pathname; // Clean reload without URL params
         }
     }
 
@@ -2652,6 +2667,10 @@
 
             if (result && result.status === 'success') {
                 currentUser = result;
+                // Store the login UID so we can distinguish own bracelet from student bracelets
+                if (!currentUser.nfc_uid) currentUser.nfc_uid = _landingUid;
+                // Persist session to localStorage for iPhone NFC workaround
+                try { localStorage.setItem('ht_session', JSON.stringify(currentUser)); } catch(e) {}
                 // Hide landing, hide lock screen, show app
                 document.getElementById('landing-screen').style.display = 'none';
                 document.getElementById('lock-screen').classList.add('hidden');
@@ -2867,6 +2886,66 @@
     // PAGE LOAD: Check for UID in URL
     // ==========================================
     window.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const urlUid = params.get('uid') ? params.get('uid').toUpperCase() : null;
+
+        // ── iPhone NFC Session Restore ──
+        // If there's a saved session AND a UID in the URL, check if it's a
+        // returning scan (bracelet tap while already logged in)
+        let savedSession = null;
+        try { savedSession = JSON.parse(localStorage.getItem('ht_session')); } catch(e) {}
+
+        if (savedSession && urlUid) {
+            // Determine if the UID belongs to the logged-in user or is a different bracelet
+            const isOwnUid = savedSession.nfc_uid && urlUid === savedSession.nfc_uid.toUpperCase();
+
+            if (!isOwnUid) {
+                // ── It's a DIFFERENT bracelet → restore session & auto-dispatch scan ──
+                currentUser = savedSession;
+                _pendingNfcUid = urlUid; // inject for getUidFromNFC() to consume
+
+                // Hide lock screen, show app
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('landing-screen').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'block';
+
+                loadInitialData();
+                applyPermissions();
+
+                // Clean URL to prevent re-triggering on manual reload
+                try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+
+                // Wait for data to load, then auto-trigger the scan for the active tab
+                const savedTab = localStorage.getItem('ht_active_tab') || 'access';
+                setTimeout(function() {
+                    // Map tab → scan function
+                    const scanActions = {
+                        'access':        function() { scanAccess(); },
+                        'pay':           function() { scanForPayment(); },
+                        'hist':          function() { startHistory(); },
+                        'user-info':     function() { scanUserInfo(); },
+                        'search-family': function() { scanPadreNFC(); },
+                        'baja-user':     function() { deleteUserNFC(); }
+                    };
+                    if (scanActions[savedTab]) {
+                        switchTab(savedTab);
+                        // Small delay so the view is visible before triggering
+                        setTimeout(function() { scanActions[savedTab](); }, 300);
+                    } else {
+                        // Tab doesn't have a scan action (reg, reassign, etc.)
+                        // Default to access check
+                        switchTab('access');
+                        setTimeout(function() { scanAccess(); }, 300);
+                    }
+                }, 800);
+
+                return; // Skip normal landing/login flow
+            }
+            // If it's the user's own UID, fall through to normal landing page
+        }
+
+        // ── Normal flow: landing page or login screen ──
         checkUrlForLanding();
     });
 
