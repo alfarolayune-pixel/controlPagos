@@ -248,9 +248,93 @@
             background: rgba(59, 130, 246, 0.1) !important;
         }
 
+        /* ====== LANDING PAGE (Linktree) ====== */
+        #landing-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(145deg, #1c1917 0%, #381a05 50%, #1c1917 100%);
+            z-index: 10000; display: none; flex-direction: column; align-items: center;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+        .landing-container {
+            width: 100%; max-width: 440px; padding: 30px 20px 40px;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        .landing-avatar {
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+            border: 3px solid var(--primary); box-shadow: 0 8px 25px rgba(230,81,0,0.4);
+            margin-bottom: 15px; animation: landingPulse 3s infinite ease-in-out;
+        }
+        @keyframes landingPulse {
+            0%,100% { box-shadow: 0 8px 25px rgba(230,81,0,0.4); }
+            50% { box-shadow: 0 8px 35px rgba(230,81,0,0.7); }
+        }
+        .landing-title { font-size: 1.6rem; font-weight: 800; color: #ffedd5; text-align: center; margin: 0 0 5px; }
+        .landing-subtitle { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 30px; }
+        .landing-links-box { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .landing-link {
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            padding: 16px 20px; background: rgba(255,255,255,0.07); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: #f5f5f4;
+            font-weight: 700; font-size: 1rem; text-decoration: none; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1); text-align: center; font-family: 'Outfit', sans-serif;
+        }
+        .landing-link:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .landing-link:active { transform: scale(0.98); }
+        .landing-link-system {
+            background: linear-gradient(135deg, var(--primary), #ef6c00); border: none; margin-top: 10px;
+        }
+        .landing-link-system:hover { background: linear-gradient(135deg, #ef6c00, #ff8f00); box-shadow: 0 8px 25px rgba(230,81,0,0.4); }
+        .landing-group-hdr { position: relative; }
+        .landing-group-hdr::after {
+            content: '▼'; font-size: 0.7rem; position: absolute; right: 20px; top: 50%;
+            transform: translateY(-50%); transition: transform 0.3s; color: var(--text-muted);
+        }
+        .landing-group-hdr.expanded::after { transform: translateY(-50%) rotate(180deg); }
+        .landing-sublinks { display: none; flex-direction: column; gap: 8px; padding-left: 20px; margin-top: -4px; animation: fadeIn 0.3s ease; }
+        .landing-sublinks.show { display: flex; }
+        .landing-sublink { padding: 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; font-size: 0.9rem; font-weight: 600; }
+        .landing-footer { margin-top: auto; padding-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.7; }
+
+        /* ====== MARKETING MODULE ====== */
+        .mkt-card { background: var(--bg-body); border: 1px solid #44403c; border-radius: 12px; padding: 15px; margin-bottom: 10px; transition: border-color 0.2s; }
+        .mkt-card:hover { border-color: var(--primary); }
+        .mkt-card.is-group { border-left: 3px solid #8b5cf6; }
+        .mkt-card.is-child { margin-left: 25px; border-left: 3px solid #6366f1; }
+        .mkt-title { font-weight: 700; font-size: 1.05rem; color: #f5f5f4; display: flex; align-items: center; gap: 8px; }
+        .mkt-url { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; word-break: break-all; }
+        .mkt-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .mkt-btn-sm {
+            padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; border: 1px solid; background: transparent; font-family: inherit; transition: all 0.2s;
+        }
+        .mkt-btn-edit { color: #f59e0b; border-color: #f59e0b; }
+        .mkt-btn-edit:hover { background: rgba(245,158,11,0.1); }
+        .mkt-btn-del { color: #ef4444; border-color: #ef4444; }
+        .mkt-btn-del:hover { background: rgba(239,68,68,0.1); }
+        .mkt-form { background: rgba(0,0,0,0.2); padding: 18px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 20px; }
+
     </style>
 </head>
 <body>
+
+<!-- LANDING PAGE (LINKTREE) -->
+<div id="landing-screen">
+    <div class="landing-container">
+        <img src="./Logo_Castores.jpeg" alt="Castores" class="landing-avatar">
+        <h1 class="landing-title">Castores Nungaray</h1>
+        <p class="landing-subtitle">Escuela de Basquetbol</p>
+        <div id="landing-links-box" class="landing-links-box">
+            <div style="text-align:center; color:var(--text-muted); padding:20px;">Cargando links...</div>
+        </div>
+        <div class="landing-footer">
+            <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:2px; font-weight:600;">Powered by</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="./Logo_TechTap.jpeg" alt="TechTap" style="height:30px; border-radius:6px;">
+                <strong style="font-size:1.1rem; color:#f5f5f4;">TechTap</strong>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- PANTALLA DE AUTENTICACION -->
 <div id="lock-screen">
@@ -300,7 +384,7 @@
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">🗑️👥 Baja General</div>
         <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar</div>
         <div class="nav-item" id="nav-debtors" onclick="switchTab('debtors')" style="display:none; color: #ea580c;">⚠️ Deudores</div>
-        
+        <div class="nav-item" id="nav-marketing" onclick="switchTab('marketing')" style="display:none; color: #ec4899;">📎 Links</div>
     </div>
 
     <div class="content">
@@ -501,6 +585,7 @@
                 <select id="usr-rol" onchange="checkPadreRol()">
                     <option value="padre">Padre de Familia</option>
                     <option value="instructor">Instructor</option>
+                    <option value="marketing">Marketing</option>
                     <option value="admin">Administrador</option>
                 </select>
             </div>
@@ -605,6 +690,53 @@
             <div id="status-search-family" class="status-msg"></div>
         </div>
 
+        <!-- VISTA: MARKETING (LINKS) -->
+        <div id="view-marketing" class="view">
+            <h3 style="margin-top:0;">Gestión de Links</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Configura los links que se mostrarán al escanear cualquier pulsera. Se verán como un Linktree.</p>
+
+            <button class="btn btn-outline" style="margin-bottom:20px; border-color:#ec4899; color:#ec4899;" onclick="previewLanding()">👁️ Vista Previa</button>
+
+            <div id="mkt-form-container" class="mkt-form">
+                <h4 style="margin:0 0 15px; color:#ec4899;">➕ Agregar / Editar Link</h4>
+                <input type="hidden" id="mkt-edit-id">
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:0.3;">
+                        <label>Emoji</label>
+                        <input type="text" id="mkt-emoji" placeholder="🔗" maxlength="4" style="text-align:center; font-size:1.3rem;">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Título</label>
+                        <input type="text" id="mkt-titulo" placeholder="Ej: Instagram">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>URL <span style="color:var(--text-muted); font-weight:400;">(dejar vacío si es un grupo/categoría)</span></label>
+                    <input type="text" id="mkt-url" placeholder="https://...">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Categoría Padre</label>
+                        <select id="mkt-parent">
+                            <option value="">— Link principal (raíz) —</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:0.4;">
+                        <label>Orden</label>
+                        <input type="number" id="mkt-orden" placeholder="1" min="0">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn" style="flex:1; background:#ec4899;" onclick="saveMarketingLink()">💾 Guardar Link</button>
+                    <button class="btn btn-outline" style="flex:0.5;" onclick="clearMktForm()">🧹 Limpiar</button>
+                </div>
+            </div>
+
+            <h4 style="color:var(--text-muted); margin-bottom:10px;">Links Configurados</h4>
+            <div id="mkt-links-list"></div>
+            <div id="status-marketing" class="status-msg"></div>
+        </div>
+
     </div>
 
         
@@ -683,6 +815,7 @@
         showMsg('debtors', '', '');
         showMsg('search-family', '', '');
         showMsg('user-info', '', '');
+        showMsg('marketing', '', '');
         
         if (t === 'students') fetchAllStudents();
         
@@ -709,6 +842,9 @@
         }
         if (t === 'debtors') {
             fetchDebtors();
+        }
+        if (t === 'marketing') {
+            fetchMarketingLinks();
         }
     }
 
@@ -832,6 +968,8 @@
             document.getElementById('access-desc').innerText = 'Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.';
             
             document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
+            // Marketing nav is only for marketing users, hide it for admin
+            document.getElementById('nav-marketing').style.display = 'none';
             switchTab('access');
         } else if(r === 'instructor') {
             const navAcc = document.getElementById('nav-access');
@@ -859,6 +997,11 @@
             
             switchTab('search-family');
             selectPayFamilyForPadre(currentUser.id, currentUser.nombre);
+        } else if(r === 'marketing') {
+            const navMkt = document.getElementById('nav-marketing');
+            navMkt.style.display = 'flex';
+            navMkt.innerHTML = '📎 Gestión de Links';
+            switchTab('marketing');
         }
     }
 
@@ -2357,6 +2500,291 @@
         }
         setBtn(btn, false);
     }
+
+    // ==========================================
+    // LANDING PAGE (LINKTREE-STYLE)
+    // ==========================================
+    let _landingLinks = [];
+
+    function checkUrlForLanding() {
+        const params = new URLSearchParams(window.location.search);
+        const uid = params.get('uid');
+        if (uid) {
+            showLandingPage(uid);
+        }
+    }
+
+    function showLandingPage(uid) {
+        document.getElementById('lock-screen').style.display = 'none';
+        document.getElementById('landing-screen').style.display = 'flex';
+        fetchLandingLinks(uid);
+    }
+
+    async function fetchLandingLinks(uid) {
+        try {
+            const res = await fetch(`${N8N_URL}/ht-marketing-links`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            if (result && result.links) {
+                _landingLinks = result.links;
+            }
+        } catch(e) {
+            console.warn('No se pudieron cargar los links de marketing:', e);
+            _landingLinks = [];
+        }
+        renderLandingLinks(uid);
+    }
+
+    function renderLandingLinks(uid) {
+        const box = document.getElementById('landing-links-box');
+        let html = '';
+
+        // Separate root links and children
+        const roots = _landingLinks.filter(l => !l.parent_id).sort((a,b) => (a.orden||0)-(b.orden||0));
+        const children = _landingLinks.filter(l => l.parent_id);
+
+        roots.forEach(link => {
+            const kids = children.filter(c => c.parent_id === link.id).sort((a,b) => (a.orden||0)-(b.orden||0));
+            const isGroup = !link.url && kids.length > 0;
+
+            if (isGroup) {
+                html += `<div class="landing-link landing-group-hdr" onclick="toggleLandingGroup(${link.id})">
+                    <span class="landing-link-emoji">${link.emoji || '\ud83d\udd17'}</span> ${link.titulo}
+                </div>
+                <div id="landing-group-${link.id}" class="landing-sublinks">`;
+                kids.forEach(kid => {
+                    html += `<a href="${kid.url}" target="_blank" rel="noopener" class="landing-link landing-sublink">
+                        <span class="landing-link-emoji">${kid.emoji || '\ud83d\udd17'}</span> ${kid.titulo}
+                    </a>`;
+                });
+                html += `</div>`;
+            } else if (link.url) {
+                html += `<a href="${link.url}" target="_blank" rel="noopener" class="landing-link">
+                    <span class="landing-link-emoji">${link.emoji || '\ud83d\udd17'}</span> ${link.titulo}
+                </a>`;
+            }
+        });
+
+        // Always add the system access link at the bottom
+        const systemUrl = window.location.origin + window.location.pathname;
+        html += `<a href="${systemUrl}" class="landing-link landing-link-system">
+            <span class="landing-link-emoji">\ud83c\udfc0</span> Acceder al Sistema
+        </a>`;
+
+        if (roots.length === 0) {
+            html = `<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:0.9rem;">
+                A\u00fan no se han configurado links.
+            </div>` + html;
+        }
+
+        box.innerHTML = html;
+    }
+
+    function toggleLandingGroup(id) {
+        const sublinks = document.getElementById('landing-group-' + id);
+        const header = sublinks.previousElementSibling;
+        if (sublinks.classList.contains('show')) {
+            sublinks.classList.remove('show');
+            header.classList.remove('expanded');
+        } else {
+            sublinks.classList.add('show');
+            header.classList.add('expanded');
+        }
+    }
+
+    // ==========================================
+    // MARKETING MODULE (CRUD)
+    // ==========================================
+    let _mktLinks = [];
+
+    async function fetchMarketingLinks() {
+        showMsg('marketing', 'info', 'Cargando links...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-marketing-links`);
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+            if (result && result.links) {
+                _mktLinks = result.links;
+                renderMarketingList();
+                refreshParentSelect();
+                showMsg('marketing', '', '');
+            } else {
+                _mktLinks = [];
+                renderMarketingList();
+                refreshParentSelect();
+                showMsg('marketing', '', '');
+            }
+        } catch(e) {
+            showMsg('marketing', 'error', 'Error al cargar links. Verifica el webhook ht-marketing-links.');
+        }
+    }
+
+    function refreshParentSelect() {
+        const sel = document.getElementById('mkt-parent');
+        const currentVal = sel.value;
+        const groups = _mktLinks.filter(l => !l.url && !l.parent_id);
+        sel.innerHTML = '<option value="">\u2014 Link principal (ra\u00edz) \u2014</option>' +
+            groups.map(g => `<option value="${g.id}">${g.emoji || '\ud83d\udcc1'} ${g.titulo}</option>`).join('');
+        sel.value = currentVal || '';
+    }
+
+    function renderMarketingList() {
+        const list = document.getElementById('mkt-links-list');
+        if (_mktLinks.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">No hay links configurados a\u00fan. Agrega el primero arriba.</div>';
+            return;
+        }
+
+        const roots = _mktLinks.filter(l => !l.parent_id).sort((a,b) => (a.orden||0)-(b.orden||0));
+        const children = _mktLinks.filter(l => l.parent_id);
+        let html = '';
+
+        roots.forEach(link => {
+            const isGroup = !link.url;
+            const kids = children.filter(c => c.parent_id === link.id).sort((a,b) => (a.orden||0)-(b.orden||0));
+
+            html += `<div class="mkt-card ${isGroup ? 'is-group' : ''}">
+                <div class="mkt-title">${link.emoji || '\ud83d\udd17'} ${link.titulo} ${isGroup ? '<span style="font-size:0.75rem; background:#8b5cf6; color:white; padding:2px 8px; border-radius:6px; margin-left:5px;">GRUPO</span>' : ''}</div>
+                ${link.url ? `<div class="mkt-url">${link.url}</div>` : '<div class="mkt-url" style="color:#8b5cf6;">Categor\u00eda con sub-links</div>'}
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${link.orden || 0}</div>
+                <div class="mkt-actions">
+                    <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${link.id})">✏\ufe0f Editar</button>
+                    <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">🗑\ufe0f Eliminar</button>
+                </div>
+            </div>`;
+
+            kids.forEach(kid => {
+                html += `<div class="mkt-card is-child">
+                    <div class="mkt-title">${kid.emoji || '\ud83d\udd17'} ${kid.titulo}</div>
+                    ${kid.url ? `<div class="mkt-url">${kid.url}</div>` : ''}
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${kid.orden || 0}</div>
+                    <div class="mkt-actions">
+                        <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${kid.id})">✏\ufe0f Editar</button>
+                        <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${kid.id}, '${kid.titulo.replace(/'/g,"\\'")}')">🗑\ufe0f Eliminar</button>
+                    </div>
+                </div>`;
+            });
+        });
+
+        list.innerHTML = html;
+    }
+
+    function clearMktForm() {
+        document.getElementById('mkt-edit-id').value = '';
+        document.getElementById('mkt-emoji').value = '';
+        document.getElementById('mkt-titulo').value = '';
+        document.getElementById('mkt-url').value = '';
+        document.getElementById('mkt-parent').value = '';
+        document.getElementById('mkt-orden').value = '';
+        document.querySelector('#mkt-form-container h4').innerHTML = '\u2795 Agregar / Editar Link';
+    }
+
+    function editMktLink(id) {
+        const link = _mktLinks.find(l => l.id === id);
+        if (!link) return;
+        document.getElementById('mkt-edit-id').value = link.id;
+        document.getElementById('mkt-emoji').value = link.emoji || '';
+        document.getElementById('mkt-titulo').value = link.titulo || '';
+        document.getElementById('mkt-url').value = link.url || '';
+        document.getElementById('mkt-parent').value = link.parent_id || '';
+        document.getElementById('mkt-orden').value = link.orden || 0;
+        document.querySelector('#mkt-form-container h4').innerHTML = '\u270f\ufe0f Editando: ' + link.titulo;
+        document.getElementById('mkt-form-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveMarketingLink() {
+        const titulo = document.getElementById('mkt-titulo').value.trim();
+        if (!titulo) {
+            showMsg('marketing', 'error', 'El t\u00edtulo es obligatorio.');
+            return;
+        }
+
+        const payload = {
+            id: document.getElementById('mkt-edit-id').value || null,
+            emoji: document.getElementById('mkt-emoji').value.trim() || '\ud83d\udd17',
+            titulo: titulo,
+            url: document.getElementById('mkt-url').value.trim() || null,
+            parent_id: document.getElementById('mkt-parent').value || null,
+            orden: parseInt(document.getElementById('mkt-orden').value) || 0
+        };
+
+        showMsg('marketing', 'info', 'Guardando link...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-marketing-save-link`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (result && result.status === 'success') {
+                showMsg('marketing', 'success', '\u2705 Link guardado correctamente.');
+                soundSuccess();
+                clearMktForm();
+                fetchMarketingLinks();
+            } else {
+                showMsg('marketing', 'error', '\u274c Error al guardar: ' + (result?.message || 'Error desconocido'));
+                soundError();
+            }
+        } catch(e) {
+            showMsg('marketing', 'error', 'Error de conexi\u00f3n al guardar el link.');
+            soundError();
+        }
+    }
+
+    async function deleteMktLink(id, titulo) {
+        if (!confirm('\u00bfEliminar el link "' + titulo + '"? Si es un grupo, se eliminar\u00e1n tambi\u00e9n sus sub-links.')) return;
+
+        showMsg('marketing', 'info', 'Eliminando...');
+        try {
+            const res = await fetch(`${N8N_URL}/ht-marketing-delete-link`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            const data = await res.json();
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (result && result.status === 'success') {
+                showMsg('marketing', 'success', '\u2705 Link eliminado.');
+                soundSuccess();
+                fetchMarketingLinks();
+            } else {
+                showMsg('marketing', 'error', '\u274c No se pudo eliminar: ' + (result?.message || ''));
+                soundError();
+            }
+        } catch(e) {
+            showMsg('marketing', 'error', 'Error de conexi\u00f3n al eliminar.');
+            soundError();
+        }
+    }
+
+    function previewLanding() {
+        _landingLinks = _mktLinks;
+        document.getElementById('landing-screen').style.display = 'flex';
+        renderLandingLinks(null);
+        // Add a close button for preview mode
+        const container = document.querySelector('.landing-container');
+        if (!document.getElementById('landing-close-btn')) {
+            const closeBtn = document.createElement('button');
+            closeBtn.id = 'landing-close-btn';
+            closeBtn.className = 'btn btn-outline';
+            closeBtn.style.cssText = 'margin-top:20px; max-width:200px; border-color:#ef4444; color:#ef4444;';
+            closeBtn.innerHTML = '\u274c Cerrar Vista Previa';
+            closeBtn.onclick = function() {
+                document.getElementById('landing-screen').style.display = 'none';
+            };
+            container.appendChild(closeBtn);
+        }
+    }
+
+    // ==========================================
+    // PAGE LOAD: Check for UID in URL
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', function() {
+        checkUrlForLanding();
+    });
 
 </script>
 </body>
