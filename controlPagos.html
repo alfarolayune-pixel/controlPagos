@@ -2505,12 +2505,14 @@
     // LANDING PAGE (LINKTREE-STYLE)
     // ==========================================
     let _landingLinks = [];
+    let _landingUid = null; // UID from URL parameter for auto-login
 
     function checkUrlForLanding() {
         const params = new URLSearchParams(window.location.search);
         const uid = params.get('uid');
         if (uid) {
-            showLandingPage(uid);
+            _landingUid = uid.toUpperCase(); // Ensure uppercase
+            showLandingPage(_landingUid);
         }
     }
 
@@ -2566,10 +2568,11 @@
         });
 
         // Always add the system access link at the bottom
-        const systemUrl = window.location.origin + window.location.pathname;
-        html += `<a href="${systemUrl}" class="landing-link landing-link-system">
+        // Use auto-login with the UID from URL (no second NFC scan needed - critical for iPhone)
+        html += `<div class="landing-link landing-link-system" onclick="loginFromLanding()">
             <span class="landing-link-emoji">\ud83c\udfc0</span> Acceder al Sistema
-        </a>`;
+        </div>
+        <div id="status-landing" style="text-align:center; margin-top:10px; font-size:0.9rem;"></div>`;
 
         if (roots.length === 0) {
             html = `<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:0.9rem;">
@@ -2589,6 +2592,48 @@
         } else {
             sublinks.classList.add('show');
             header.classList.add('expanded');
+        }
+    }
+
+    // ==========================================
+    // AUTO-LOGIN FROM LANDING (iPhone fix)
+    // ==========================================
+    async function loginFromLanding() {
+        if (!_landingUid) {
+            // No UID from URL - fallback to normal lock screen
+            document.getElementById('landing-screen').style.display = 'none';
+            document.getElementById('lock-screen').style.display = 'flex';
+            return;
+        }
+
+        const statusEl = document.getElementById('status-landing');
+        if (statusEl) statusEl.innerHTML = '<span style="color:#f59e0b;">Validando acceso...</span>';
+
+        try {
+            const res = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(_landingUid)}`);
+            let data;
+            try {
+                data = await res.json();
+            } catch(err) {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">⚠️ Esta pulsera no tiene permisos de acceso al sistema.</span>';
+                return;
+            }
+            const result = Array.isArray(data) ? data[0] : data;
+
+            if (result && result.status === 'success') {
+                currentUser = result;
+                // Hide landing, hide lock screen, show app
+                document.getElementById('landing-screen').style.display = 'none';
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'block';
+                loadInitialData();
+                applyPermissions();
+            } else {
+                if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">⚠️ ' + (result?.message || 'Esta pulsera no tiene acceso al sistema.') + '</span>';
+            }
+        } catch(e) {
+            if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">Error de conexión. Intenta de nuevo.</span>';
         }
     }
 
