@@ -798,6 +798,9 @@
         
         // Reset states
         document.getElementById('access-result').style.display = 'none';
+        // Reset payment border styling on the student card
+        const _accCard = document.getElementById('access-result')?.querySelector('.student-card');
+        if (_accCard) { _accCard.style.border = '1px solid #44403c'; _accCard.style.boxShadow = ''; }
         document.getElementById('pay-details').style.display = 'none';
         document.getElementById('family-search-container').style.display = 'none';
         if (document.getElementById('history-box')) document.getElementById('history-box').style.display = 'none';
@@ -1515,13 +1518,33 @@
                 document.getElementById('acc-em-box').style.display = 'inline';
             }
 
+            // --- Payment status border + badge (applies to ALL roles) ---
+            const studentCard = document.getElementById('access-result').querySelector('.student-card');
+            if(result.al_corriente === true) {
+                studentCard.style.border = '2px solid var(--success)';
+                studentCard.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.15)';
+            } else {
+                studentCard.style.border = '2px solid var(--danger)';
+                studentCard.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.15)';
+            }
+
             if(r === 'instructor') {
-                document.getElementById('acc-badge').style.display = 'none';
+                // Show payment status label + badge for instructor
+                document.getElementById('acc-badge').style.display = 'inline-block';
                 document.getElementById('acc-status-msg').style.display = 'none';
                 document.getElementById('acc-lastpay-box').style.display = 'none';
                 document.getElementById('acc-instructor-buttons').style.display = 'flex';
                 document.getElementById('acc-maps-buttons').style.display = 'flex';
-                soundSuccess(); // Instructors always hear success just for validating identity
+
+                if(result.al_corriente === true) {
+                    soundSuccess();
+                    document.getElementById('acc-badge').className = "badge-status badge-ok";
+                    document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
+                } else {
+                    soundError();
+                    document.getElementById('acc-badge').className = "badge-status badge-debt";
+                    document.getElementById('acc-badge').innerText = "❌ ADEUDA";
+                }
             } else {
                 document.getElementById('acc-badge').style.display = 'inline-block';
                 document.getElementById('acc-status-msg').style.display = 'block';
