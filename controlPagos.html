@@ -2282,12 +2282,14 @@
             const res = await fetch(`${N8N_URL}/ht-user-info?nfc_uid=${encodeURIComponent(uid)}`);
             let data;
             try { data = await res.json(); } catch(err) {
+                document.getElementById('ui-result').style.display = 'none';
                 showMsg('user-info', 'error', '🔒 Pulsera no registrada en el sistema.');
                 soundError(); return;
             }
             const result = Array.isArray(data) ? data[0] : data;
             
             if(!res.ok || !result || result.status === 'not_found' || !result.nombre) {
+                document.getElementById('ui-result').style.display = 'none';
                 showMsg('user-info', 'error', '🔒 Pulsera no registrada en el sistema.');
                 soundError(); return;
             }
@@ -2298,6 +2300,7 @@
             showMsg('user-info', '', '');
             soundSuccess();
         } catch(e) {
+            document.getElementById('ui-result').style.display = 'none';
             showMsg('user-info', 'error', 'No se encontraron datos o hubo un error de conexión al consultar pulsera.');
             soundError();
         } finally {
@@ -2418,7 +2421,7 @@
                 result.hijos_pendientes.forEach(h => {
                     txt += `<div class="student-card" style="border: 2px solid #ef4444; margin-top:0;">
                         <div class="student-name" style="font-size: 1.3rem;">${h.nombre}</div>
-                        <div style="color: #ef4444; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">O Pago Pendiente</div>
+                        <div style="color: #ef4444; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">⚠️ Pago Pendiente</div>
                         <div style="color:var(--text-muted); font-size:1.1rem; margin-top: 10px;">Costo Mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</div>
                     </div>`;
                 });
@@ -2525,7 +2528,7 @@
                     Emergencia: ${a.contacto_emergencia_nombre || 'N/A'} (${a.contacto_emergencia_telefono || 'N/A'})<br>
                     Sangre: ${a.tipo_sangre || 'N/A'}
                 </div>
-                <button class="btn btn-outline" style="padding: 8px; font-size: 0.9rem;" onclick="editStudent('${a.id}')">o️ Editar Información</button>
+                <button class="btn btn-outline" style="padding: 8px; font-size: 0.9rem;" onclick="editStudent('${a.id}')">✏️ Editar Información</button>
                 
                 <div id="stu-edit-${a.id}" style="display:none; margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
                     <div class="form-group">
@@ -2561,8 +2564,8 @@
                         </select>
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn btn-success" style="flex:1;" id="btn-save-${a.id}" onclick="saveStudentEdit('${a.id}')">Y' Guardar</button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="cancelStudentEdit('${a.id}')">O Cancelar</button>
+                        <button class="btn btn-success" style="flex:1;" id="btn-save-${a.id}" onclick="saveStudentEdit('${a.id}')">💾 Guardar</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="cancelStudentEdit('${a.id}')">✕ Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -2571,7 +2574,7 @@
         if (filtered.length > window._studentsDisplayedCount) {
             resultsDiv.innerHTML += `
                 <div style="text-align: center; margin-top: 10px; margin-bottom: 20px;">
-                    <button class="btn btn-outline" style="max-width: 250px; margin: 0 auto; border-color: var(--primary); color: var(--primary);" onclick="loadMoreStudents()">?️ Mostrar más alumnos</button>
+                    <button class="btn btn-outline" style="max-width: 250px; margin: 0 auto; border-color: var(--primary); color: var(--primary);" onclick="loadMoreStudents()">👇 Mostrar más alumnos</button>
                 </div>
             `;
         }
@@ -2887,8 +2890,8 @@
                     ${kid.url ? `<div class="mkt-url">${kid.url}</div>` : ''}
                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${kid.orden || 0}</div>
                     <div class="mkt-actions">
-                        <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${kid.id})">o\ufe0f Editar</button>
-                        <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${kid.id}, '${kid.titulo.replace(/'/g,"\\'")}')">Y-'\ufe0f Eliminar</button>
+                        <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${kid.id})">✏️ Editar</button>
+                        <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${kid.id}, '${kid.titulo.replace(/'/g,"\\'")}')">❌ Eliminar</button>
                     </div>
                 </div>`;
             });
