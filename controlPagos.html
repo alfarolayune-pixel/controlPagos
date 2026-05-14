@@ -347,7 +347,7 @@
     <p style="color: var(--text-muted); margin-bottom: 30px;">Ingresa el PIN de seguridad</p>
     
     <div style="width: 100%; max-width: 250px;">
-        <button class="btn btn-success" onclick="login()">\ud83d\udcf2 Leer Pulsera para Ingresar</button>
+        <button class="btn btn-success" onclick="login()">📲 Leer Pulsera para Ingresar</button>
     </div>
     <div id="status-login" class="status-msg"></div>
     
@@ -377,8 +377,8 @@
         <div class="nav-item" id="nav-pay" onclick="switchTab('pay')">💰 Cobrar Mes</div>
         <div class="nav-item" id="nav-hist" onclick="switchTab('hist')">📃 Historial</div>
         <div class="nav-item" id="nav-search-family" onclick="switchTab('search-family')" style="display:none; color: #10b981;">👨‍👩‍👧 Familias / Pagos</div>
-        <div class="nav-item" id="nav-user-info" onclick="switchTab('user-info')" style="display:none; color: #0284c7;">\ud83d\udcf2 Info Pulsera</div>
-        <div class="nav-item" id="nav-reg" onclick="switchTab('reg')" style="display:none;">\ud83d\udcf2 Alta Alumno</div>
+        <div class="nav-item" id="nav-user-info" onclick="switchTab('user-info')" style="display:none; color: #0284c7;">📲 Info Pulsera</div>
+        <div class="nav-item" id="nav-reg" onclick="switchTab('reg')" style="display:none;">📲 Alta Alumno</div>
         <div class="nav-item" id="nav-users" onclick="switchTab('users')" style="color: #7c3aed; display:none;">👤 Alta Usuario</div>
         <div class="nav-item" id="nav-students" onclick="switchTab('students')" style="color: #f59e0b; display:none;">📋 Alumnos</div>
         <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')" style="color: #ef4444; display:none;">❌ Baja General</div>
@@ -409,7 +409,7 @@
                         <option value="">Todas las categorías</option>
                     </select>
                 </div>
-                <button class="btn btn-outline" style="margin-top:15px;" onclick="clearStudentsSearch()">Y Limpiar Búsqueda</button>
+                <button class="btn btn-outline" style="margin-top:15px;" onclick="clearStudentsSearch()">🔄 Limpiar Búsqueda</button>
             </div>
 
             <div id="students-results" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;"></div>
@@ -419,10 +419,10 @@
         <!-- VISTA: LECTOR ACCESO -->
         <div id="view-access" class="view active">
             <div style="text-align: center; padding: 20px 0;">
-                <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">\ud83d\udcf2</div>
+                <div style="font-size: 4rem; margin-bottom: 15px; animation: pulse 2s infinite;">📲</div>
                 <h3 id="access-title" style="margin:0 0 10px;">Control de Acceso</h3>
                 <p id="access-desc" style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera del alumno para validar su vigencia. Tienen hasta el día 5 para pagar el mes corriente.</p>
-                <button class="btn" onclick="scanAccess()" style="margin-top: 20px;">\ud83d\udcf2 Leer Pulsera (NFC)</button>
+                <button class="btn" onclick="scanAccess()" style="margin-top: 20px;">📲 Leer Pulsera (NFC)</button>
             </div>
             
             <!-- Resultado del escaneo -->
@@ -440,13 +440,13 @@
                     </div>
                     
                     <div style="display:none; flex-direction:column; gap:10px; margin-top:15px;" id="acc-instructor-buttons">
-                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#3b82f6; color:#3b82f6;" onclick="window.open('tel:' + document.getElementById('acc-em-tel').innerText, '_self')">Y"z Llamar Emergencia</button>
-                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://wa.me/52' + document.getElementById('acc-em-tel').innerText.replace(/\D/g,''), '_blank')">Y' WhatsApp Emergencia</button>
+                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#3b82f6; color:#3b82f6;" onclick="window.open('tel:' + document.getElementById('acc-em-tel').innerText, '_self')">📞 Llamar Emergencia</button>
+                        <button class="btn btn-outline" style="padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://wa.me/52' + document.getElementById('acc-em-tel').innerText.replace(/\D/g,''), '_blank')">💬 WhatsApp Emergencia</button>
                     </div>
 
                     <div style="display:flex; gap:10px; margin-top:15px;" id="acc-maps-buttons">
-                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#ef4444; color:#ef4444;" onclick="window.open('https://www.google.com/maps/search/hospitales+cercanos', '_blank')">Y Hospitales</button>
-                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://www.google.com/maps/search/farmacias+cercanas', '_blank')">Y'S Farmacias</button>
+                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#ef4444; color:#ef4444;" onclick="window.open('https://www.google.com/maps/search/hospitales+cercanos', '_blank')">🏥 Hospitales</button>
+                        <button class="btn btn-outline" style="flex:1; padding:8px; font-size:0.8rem; border-color:#10b981; color:#10b981;" onclick="window.open('https://www.google.com/maps/search/farmacias+cercanas', '_blank')">💊 Farmacias</button>
                     </div>
                 </div>
             </div>
@@ -459,8 +459,8 @@
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee la pulsera para pago individual o busca un padre de familia para pago de hermanos.</p>
             
             <div style="display: flex; gap: 10px;">
-                <button class="btn btn-outline" style="flex:1;" onclick="scanForPayment()">\ud83d\udcf2 Individual (NFC)</button>
-                <button class="btn btn-outline" style="flex:1; border-color:#8b5cf6; color:#8b5cf6;" onclick="toggleFamilyPay()">Y'?Y'?Y' Familiar (Buscar)</button>
+                <button class="btn btn-outline" style="flex:1;" onclick="scanForPayment()">📲 Individual (NFC)</button>
+                <button class="btn btn-outline" style="flex:1; border-color:#8b5cf6; color:#8b5cf6;" onclick="toggleFamilyPay()">👨‍👩‍👧 Familiar (Buscar)</button>
             </div>
 
             <!-- Contenedor Búsqueda Familiar -->
@@ -489,8 +489,8 @@
                     <div style="font-size: 1rem; color: #cbd5e1; margin-bottom: 15px;">
                         Cobrando a partir de mes: <strong id="pay-month-lbl" style="color: white;">---</strong>
                     </div>
-                    <button class="btn btn-success" onclick="executePayment()" id="btn-execute-pay">o. Confirmar Pago</button>
-                    <button class="btn btn-outline" style="margin-top: 10px; border-color: #64748b; color: #94a3b8;" onclick="cancelPay()">O Cancelar</button>
+                    <button class="btn btn-success" onclick="executePayment()" id="btn-execute-pay">✅ Confirmar Pago</button>
+                    <button class="btn btn-outline" style="margin-top: 10px; border-color: #64748b; color: #94a3b8;" onclick="cancelPay()">✕ Cancelar</button>
                     <input type="hidden" id="pay-uid">
                     <input type="hidden" id="pay-st-id">
                     <input type="hidden" id="pay-month">
@@ -502,7 +502,7 @@
 
         <!-- VISTA: ALTA ALUMNO -->
         <div id="view-hist" class="view">
-            <button class="btn" onclick="startHistory()">Y"S Leer Pulsera y Ver Pagos</button>
+            <button class="btn" onclick="startHistory()">📃 Leer Pulsera y Ver Pagos</button>
             <div id="status-hist" class="status-msg"></div>
 
             <div id="history-box" style="display:none; margin-top: 20px;">
@@ -554,7 +554,7 @@
                     <input type="hidden" id="reg-padre">
                     <div id="reg-padre-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(79,70,229,0.1); border:1px solid #4f46e5; border-radius:10px; font-weight:700; color:white; justify-content:space-between; align-items:center;">
                         <span id="reg-padre-selected-name"></span>
-                        <span onclick="clearPadre()" style="color:#ef4444; cursor:pointer;" title="Quitar">O</span>
+                        <span onclick="clearPadre()" style="color:#ef4444; cursor:pointer;" title="Quitar">✖</span>
                     </div>
                 </div>
             </div>
@@ -568,7 +568,7 @@
                     <input type="tel" id="reg-em-tel" placeholder="Ej: 5512345678">
                 </div>
             </div>
-            <button class="btn" onclick="registerStudent()">\ud83d\udcf2 Leer Pulsera y Guardar</button>
+            <button class="btn" onclick="registerStudent()">📲 Leer Pulsera y Guardar</button>
             <div id="status-reg" class="status-msg"></div>
         </div>
 
@@ -598,7 +598,7 @@
                 <div id="usr-child-list" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
             </div>
 
-            <button class="btn" style="background:#4f46e5;" onclick="registerUser()">\ud83d\udcf2 Leer Pulsera y Guardar</button>
+            <button class="btn" style="background:#4f46e5;" onclick="registerUser()">📲 Leer Pulsera y Guardar</button>
             <div id="status-users" class="status-msg"></div>
         </div>
 
@@ -608,8 +608,8 @@
             <p style="color: var(--text-muted); font-size: 0.9rem;">Acerca la pulsera o busca el nombre del usuario (Alumno, Padre, Instructor o Admin) para darlo de baja.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button id="btn-baja-nfc" class="btn btn-outline" style="flex:1; border-color: #ef4444; color: #ef4444;" onclick="deleteUserNFC()">\ud83d\udcf2 Por Pulsera</button>
-                <button id="btn-baja-nombre" class="btn btn-outline" style="flex:1; border-color: #f59e0b; color: #f59e0b;" onclick="toggleBajaSearch()">\ud83d\udcf2 Por Nombre</button>
+                <button id="btn-baja-nfc" class="btn btn-outline" style="flex:1; border-color: #ef4444; color: #ef4444;" onclick="deleteUserNFC()">📲 Por Pulsera</button>
+                <button id="btn-baja-nombre" class="btn btn-outline" style="flex:1; border-color: #f59e0b; color: #f59e0b;" onclick="toggleBajaSearch()">📲 Por Nombre</button>
             </div>
 
             <div id="baja-search-container" style="display:none; margin-top:10px; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid #334155;">
@@ -620,9 +620,9 @@
                 <input type="hidden" id="baja-selected-name">
                 <div id="baja-selected-box" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:10px; font-weight:700; color:#ef4444; justify-content:space-between; align-items:center;">
                     <span id="baja-selected-text"></span>
-                    <span onclick="clearBajaSelection()" style="color:#ef4444; cursor:pointer;" title="Quitar">O</span>
+                    <span onclick="clearBajaSelection()" style="color:#ef4444; cursor:pointer;" title="Quitar">✖</span>
                 </div>
-                <button class="btn" style="background:#ef4444; margin-top: 15px;" onclick="deleteUserByName()" id="btn-execute-baja-name">Y-'️ Confirmar Baja</button>
+                <button class="btn" style="background:#ef4444; margin-top: 15px;" onclick="deleteUserByName()" id="btn-execute-baja-name">❌ Confirmar Baja</button>
             </div>
 
             <div id="status-baja-user" class="status-msg"></div>
@@ -638,7 +638,7 @@
                 <input type="hidden" id="reassign-student">
                 <div id="reassign-selected" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(249,115,22,0.1); border:1px solid var(--primary); border-radius:10px; font-weight:700; color:var(--primary);"></div>
             </div>
-            <button class="btn btn-outline" onclick="reassignNfc()">Y"" Asignar Nueva Pulsera</button>
+            <button class="btn btn-outline" onclick="reassignNfc()">🔄 Asignar Nueva Pulsera</button>
             <div id="status-reassign" class="status-msg"></div>
         </div>
 
@@ -660,7 +660,7 @@
         <div id="view-user-info" class="view">
             <h3 style="margin-top: 0;">Identificar Pulsera</h3>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Lee una pulsera para ver a qué usuario (alumno, padre, instructor o admin) pertenece.</p>
-            <button class="btn" onclick="scanUserInfo()">\ud83d\udcf2 Leer Pulsera (NFC)</button>
+            <button class="btn" onclick="scanUserInfo()">📲 Leer Pulsera (NFC)</button>
 
             <div id="ui-result" style="display:none; margin-top: 20px;">
                 <div class="student-card">
@@ -681,7 +681,7 @@
                 <div id="sf-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--bg-card); border:1px solid #334155; border-radius:12px; z-index:100; max-height:200px; overflow-y:auto;"></div>
             </div>
 
-            <button id="btn-sf-nfc" class="btn btn-outline" style="width:100%; margin-top:12px; border-color: #6366f1; color: #6366f1;" onclick="scanPadreNFC()">\ud83d\udcf2 Buscar por Pulsera (NFC)</button>
+            <button id="btn-sf-nfc" class="btn btn-outline" style="width:100%; margin-top:12px; border-color: #6366f1; color: #6366f1;" onclick="scanPadreNFC()">📲 Buscar por Pulsera (NFC)</button>
 
             <div id="sf-results" style="display:none; margin-top: 20px;">
                 <h4 id="sf-padre-name" style="color: var(--text-muted); margin-bottom: 15px; font-size: 1.1rem; text-align: center;">---</h4>
@@ -695,15 +695,15 @@
             <h3 style="margin-top:0;">Gestión de Links</h3>
             <p style="color:var(--text-muted); font-size:0.9rem;">Configura los links que se mostrarán al escanear cualquier pulsera. Se verán como un Linktree.</p>
 
-            <button class="btn btn-outline" style="margin-bottom:20px; border-color:#ec4899; color:#ec4899;" onclick="previewLanding()">Y'️ Vista Previa</button>
+            <button class="btn btn-outline" style="margin-bottom:20px; border-color:#ec4899; color:#ec4899;" onclick="previewLanding()">👁️ Vista Previa</button>
 
             <div id="mkt-form-container" class="mkt-form">
-                <h4 style="margin:0 0 15px; color:#ec4899;">z. Agregar / Editar Link</h4>
+                <h4 style="margin:0 0 15px; color:#ec4899;">✏️ Agregar / Editar Link</h4>
                 <input type="hidden" id="mkt-edit-id">
                 <div style="display:flex; gap:10px;">
                     <div class="form-group" style="flex:0.3;">
                         <label>Emoji</label>
-                        <input type="text" id="mkt-emoji" placeholder="Y"-" maxlength="4" style="text-align:center; font-size:1.3rem;">
+                        <input type="text" id="mkt-emoji" placeholder="🔗" maxlength="4" style="text-align:center; font-size:1.3rem;">
                     </div>
                     <div class="form-group" style="flex:1;">
                         <label>Título</label>
@@ -718,7 +718,7 @@
                     <div class="form-group" style="flex:1;">
                         <label>Categoría Padre</label>
                         <select id="mkt-parent">
-                            <option value="">?" Link principal (raíz) ?"</option>
+                            <option value="">— Link principal (raíz) —</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex:0.4;">
@@ -727,8 +727,8 @@
                     </div>
                 </div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn" style="flex:1; background:#ec4899;" onclick="saveMarketingLink()">Y' Guardar Link</button>
-                    <button class="btn btn-outline" style="flex:0.5;" onclick="clearMktForm()">Y Limpiar</button>
+                    <button class="btn" style="flex:1; background:#ec4899;" onclick="saveMarketingLink()">💾 Guardar Link</button>
+                    <button class="btn btn-outline" style="flex:0.5;" onclick="clearMktForm()">🗑️ Limpiar</button>
                 </div>
             </div>
 
@@ -1068,7 +1068,7 @@
                 <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
                 <div style="font-size:0.95rem; color:#f8fafc; margin-top:8px;">Costo Mensualidad: <strong>$${parseFloat(d.costo_mensualidad || 0).toFixed(2)}</strong></div>
                 <div style="font-size:0.95rem; color:#f8fafc; margin-top:4px;">sltimo pago: <strong>${d.ultimo_mes || 'Nunca'}</strong></div>
-                <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">s️</div>
+                <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">🔒</div>
             </div>
         `).join('');
     }
@@ -1097,7 +1097,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('baja-user', 'error', 's️ La pulsera escaneada no pertenece a ningún usuario registrado.');
+                showMsg('baja-user', 'error', '🔒 La pulsera escaneada no pertenece a ningún usuario registrado.');
                 soundError();
                 return;
             }
@@ -1201,7 +1201,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('baja-user', 'error', 's️ Error al procesar la baja. El usuario podría no existir.');
+                showMsg('baja-user', 'error', '🔒 Error al procesar la baja. El usuario podría no existir.');
                 clearBajaSelection();
                 soundError();
                 return;
@@ -1578,7 +1578,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('users', 'error', 's️ Ocurrió un error en el servidor al intentar crear el usuario.');
+                showMsg('users', 'error', '🔒 Ocurrió un error en el servidor al intentar crear el usuario.');
                 soundError();
                 return;
             }
@@ -1791,7 +1791,7 @@
             document.getElementById('pay-year').value = result.anio_cobro;
 
             if(result.ya_pagado === true) {
-                showMsg('pay', 'warning', 's️ Este mes ya está pagado. No se recomienda volver a cobrar.');
+                showMsg('pay', 'warning', '🔒 Este mes ya está pagado. No se recomienda volver a cobrar.');
                 document.getElementById('pay-month-lbl').innerText += " (YA PAGADO)";
             }
 
@@ -1842,7 +1842,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('pay', 'error', 's️ Error del servidor al registrar el pago.');
+                showMsg('pay', 'error', '🔒 Error del servidor al registrar el pago.');
                 soundError();
                 return;
             }
@@ -1917,7 +1917,7 @@
                 data = textRes ? JSON.parse(textRes) : { status: 'success', hijos_pendientes: [], hijos_al_corriente: [] };
             } catch(err) {
                 console.error("Error parseando respuesta de n8n:", textRes);
-                showMsg('pay', 'error', `s️ Error: n8n regresó: ${textRes.substring(0, 60)}`);
+                showMsg('pay', 'error', `🔒 Error: n8n regresó: ${textRes.substring(0, 60)}`);
                 document.getElementById('pay-family-search').value = '';
                 document.getElementById('pay-padre-id').value = '';
                 soundError();
@@ -1965,7 +1965,7 @@
 
         } catch(e) {
             console.error(e);
-            showMsg('pay', 'error', 's️ No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
+            showMsg('pay', 'error', '🔒 No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
             document.getElementById('pay-family-search').value = '';
             document.getElementById('pay-padre-id').value = '';
             soundError();
@@ -2152,7 +2152,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('reg', 'error', 's️ Error del servidor al registrar el alumno.');
+                showMsg('reg', 'error', '🔒 Error del servidor al registrar el alumno.');
                 soundError();
                 return;
             }
@@ -2230,7 +2230,7 @@
             try {
                 data = await res.json();
             } catch(err) {
-                showMsg('reassign', 'error', 's️ Error del servidor al reasignar la pulsera.');
+                showMsg('reassign', 'error', '🔒 Error del servidor al reasignar la pulsera.');
                 soundError();
                 return;
             }
@@ -2282,13 +2282,13 @@
             const res = await fetch(`${N8N_URL}/ht-user-info?nfc_uid=${encodeURIComponent(uid)}`);
             let data;
             try { data = await res.json(); } catch(err) {
-                showMsg('user-info', 'error', 's️ Pulsera no registrada en el sistema.');
+                showMsg('user-info', 'error', '🔒 Pulsera no registrada en el sistema.');
                 soundError(); return;
             }
             const result = Array.isArray(data) ? data[0] : data;
             
             if(!res.ok || !result || result.status === 'not_found' || !result.nombre) {
-                showMsg('user-info', 'error', 's️ Pulsera no registrada en el sistema.');
+                showMsg('user-info', 'error', '🔒 Pulsera no registrada en el sistema.');
                 soundError(); return;
             }
 
@@ -2326,11 +2326,11 @@
             if(result && result.rol === 'padre') {
                 selectPayFamilyForPadre(result.id, result.nombre);
             } else if(result && result.rol) {
-                showMsg('search-family', 'error', `s️ La pulsera pertenece a ${result.nombre} (${result.rol}), no a un Padre de Familia.`);
+                showMsg('search-family', 'error', `🔒 La pulsera pertenece a ${result.nombre} (${result.rol}), no a un Padre de Familia.`);
                 soundError();
                 setTimeout(() => { showMsg('search-family', '', ''); }, 5000);
             } else {
-                showMsg('search-family', 'error', 's️ La pulsera no pertenece a un Padre de Familia registrado.');
+                showMsg('search-family', 'error', '🔒 La pulsera no pertenece a un Padre de Familia registrado.');
                 soundError();
                 setTimeout(() => { showMsg('search-family', '', ''); }, 5000);
             }
@@ -2387,7 +2387,7 @@
                 data = textRes ? JSON.parse(textRes) : { status: 'success', hijos_pendientes: [], hijos_al_corriente: [] };
             } catch(err) {
                 console.error("Error parseando respuesta de n8n:", textRes);
-                showMsg('search-family', 'error', `s️ Error: n8n regresó: ${textRes.substring(0, 60)}`);
+                showMsg('search-family', 'error', `🔒 Error: n8n regresó: ${textRes.substring(0, 60)}`);
                 document.getElementById('sf-search').value = '';
                 soundError(); 
                 return;
@@ -2447,7 +2447,7 @@
 
         } catch(e) {
             console.error(e);
-            showMsg('search-family', 'error', 's️ No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
+            showMsg('search-family', 'error', '🔒 No fue posible cargar los datos. Es posible que los alumnos ya estén al corriente o hubo un error de conexión.');
             document.getElementById('sf-search').value = '';
             soundError();
         }
@@ -2875,9 +2875,9 @@
                 ${link.url ? `<div class="mkt-url">${link.url}</div>` : '<div class="mkt-url" style="color:#8b5cf6;">Categor\u00eda con sub-links</div>'}
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${link.orden || 0}</div>
                 <div class="mkt-actions">
-                    ${isGroup ? `<button class="mkt-btn-sm" style="color:#8b5cf6; border-color:#8b5cf6;" onclick="addSubLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">z. Agregar sub-link</button>` : ''}
-                    <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${link.id})">o\ufe0f Editar</button>
-                    <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">Y-'\ufe0f Eliminar</button>
+                    ${isGroup ? `<button class="mkt-btn-sm" style="color:#8b5cf6; border-color:#8b5cf6;" onclick="addSubLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">➕ Agregar sub-link</button>` : ''}
+                    <button class="mkt-btn-sm mkt-btn-edit" onclick="editMktLink(${link.id})">✏️ Editar</button>
+                    <button class="mkt-btn-sm mkt-btn-del" onclick="deleteMktLink(${link.id}, '${link.titulo.replace(/'/g,"\\'")}')">❌ Eliminar</button>
                 </div>
             </div>`;
 
