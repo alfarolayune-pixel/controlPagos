@@ -3036,10 +3036,44 @@
             }
 
             // ── DIFFERENT UID detected while a session exists ──
-            // CRITICAL FIX: Do NOT blindly restore the old session role.
-            // First, check if this new UID belongs to a system user (admin/instructor/padre).
-            // If it does ?' re-login as that user (correct role).
-            // If it doesn't ?' it's a student bracelet, use second-bracelet scan path.
+            // Check if the active tab expects to scan ANY bracelet type.
+            // These tabs use the scanned UID as INPUT, not as a login attempt.
+            const savedTab = localStorage.getItem('ht_active_tab') || 'access';
+            const scanAnyTabs = ['user-info', 'baja-user', 'search-family', 'reassign'];
+
+            if (scanAnyTabs.includes(savedTab)) {
+                // ── Active tab handles any bracelet ── skip auth, dispatch scan directly
+                currentUser = savedSession;
+                _pendingNfcUid = urlUid;
+
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('landing-screen').style.display = 'none';
+                document.getElementById('btn-logout').style.display = 'block';
+
+                loadInitialData();
+                applyPermissions();
+
+                try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+
+                setTimeout(function() {
+                    var scanActions = {
+                        'user-info':     function() { scanUserInfo(); },
+                        'search-family': function() { scanPadreNFC(); },
+                        'baja-user':     function() { deleteUserNFC(); },
+                        'reassign':      function() { restoreFormState('reassign'); showMsg('reassign', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para reasignar.'); }
+                    };
+                    switchTab(savedTab);
+                    setTimeout(function() { scanActions[savedTab](); }, 300);
+                }, 800);
+
+                return;
+            }
+
+            // ── For student-only tabs (access, pay, hist, reg, users): ──
+            // Check if the new UID belongs to a system user (admin/instructor/padre).
+            // If it does → show landing page (someone else is taking over).
+            // If it doesn't → it's a student bracelet, dispatch scan.
             (async function() {
                 try {
                     const authRes = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(urlUid)}`);
