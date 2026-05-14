@@ -3048,17 +3048,11 @@
                     const authResult = Array.isArray(authData) ? authData[0] : authData;
 
                     if (authResult && authResult.status === 'success' && authResult.rol) {
-                        // ── This UID belongs to a SYSTEM USER ?' log in as that user ──
-                        currentUser = authResult;
-                        if (!currentUser.nfc_uid) currentUser.nfc_uid = urlUid;
-                        try { localStorage.setItem('ht_session', JSON.stringify(currentUser)); } catch(e) {}
-
-                        document.getElementById('lock-screen').classList.add('hidden');
-                        document.getElementById('lock-screen').style.display = 'none';
-                        document.getElementById('landing-screen').style.display = 'none';
-                        document.getElementById('btn-logout').style.display = 'block';
-                        loadInitialData();
-                        applyPermissions();
+                        // ── This UID belongs to a SYSTEM USER ──
+                        // Show the landing page first (marketing links), NOT direct login.
+                        // The user clicks "Acceder al Sistema" to actually enter.
+                        _landingUid = urlUid;
+                        showLandingPage(urlUid);
                         try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
                         return;
                     }
