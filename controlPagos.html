@@ -434,7 +434,7 @@
                     <div id="acc-status-msg" style="margin-top:10px; font-weight:600; font-size:0.9rem;"></div>
                     
                     <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);" id="acc-info-box">
-                        <span id="acc-lastpay-box">sltimo pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br></span>
+                        <span id="acc-lastpay-box">Último pago: <strong id="acc-lastpay" style="color: white;">---</strong><br><br></span>
                         <span id="acc-blood-box">Sangre: <strong id="acc-blood" style="color: #ef4444;">---</strong><br></span>
                         <span id="acc-em-box">Emergencia: <strong id="acc-em-name" style="color: white;">---</strong> (<span id="acc-em-tel">---</span>)</span>
                     </div>
@@ -1067,7 +1067,7 @@
                 <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
                 <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
                 <div style="font-size:0.95rem; color:#f8fafc; margin-top:8px;">Costo Mensualidad: <strong>$${parseFloat(d.costo_mensualidad || 0).toFixed(2)}</strong></div>
-                <div style="font-size:0.95rem; color:#f8fafc; margin-top:4px;">sltimo pago: <strong>${d.ultimo_mes || 'Nunca'}</strong></div>
+                <div style="font-size:0.95rem; color:#f8fafc; margin-top:4px;">Último pago: <strong>${d.ultimo_mes || 'Nunca'}</strong></div>
                 <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">🔒</div>
             </div>
         `).join('');
