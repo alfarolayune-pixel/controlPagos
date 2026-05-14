@@ -1683,11 +1683,11 @@
                 if(result.al_corriente === true) {
                     soundSuccess();
                     document.getElementById('acc-badge').className = "badge-status badge-ok";
-                    document.getElementById('acc-badge').innerText = "o. AL CORRIENTE";
+                    document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
                 } else {
                     soundError();
                     document.getElementById('acc-badge').className = "badge-status badge-debt";
-                    document.getElementById('acc-badge').innerText = "O ADEUDA";
+                    document.getElementById('acc-badge').innerText = "❌ ADEUDA";
                 }
             } else {
                 document.getElementById('acc-badge').style.display = 'inline-block';
@@ -1699,13 +1699,13 @@
                 if(result.al_corriente === true) {
                     soundSuccess();
                     document.getElementById('acc-badge').className = "badge-status badge-ok";
-                    document.getElementById('acc-badge').innerText = "o. AL CORRIENTE";
+                    document.getElementById('acc-badge').innerText = "✅ AL CORRIENTE";
                     document.getElementById('acc-status-msg').innerText = "El alumno está autorizado para entrenar.";
                     document.getElementById('acc-status-msg').style.color = "var(--success)";
                 } else {
                     soundError();
                     document.getElementById('acc-badge').className = "badge-status badge-debt";
-                    document.getElementById('acc-badge').innerText = "O ADEUDA";
+                    document.getElementById('acc-badge').innerText = "❌ ADEUDA";
                     document.getElementById('acc-status-msg').innerText = result.motivo || "Mes actual no pagado y límite excedido.";
                     document.getElementById('acc-status-msg').style.color = "var(--danger)";
                 }
@@ -1854,7 +1854,7 @@
                 document.getElementById('pay-mode').value = "1";
                 soundSuccess();
             } else {
-                showMsg('pay', 'error', 'O Hubo un problema al procesar el pago: ' + (result?.message || 'Error desconocido'));
+                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || 'Error desconocido'));
                 soundError();
             }
         } catch(e) {
@@ -1862,7 +1862,7 @@
             soundError();
         } finally {
             btn.disabled = false;
-            btn.innerText = "o. Confirmar Pago";
+            btn.innerText = "✅ Confirmar Pago";
         }
     }
 
@@ -2003,7 +2003,7 @@
                 document.getElementById('pay-mode').value = "1";
                 soundSuccess();
             } else {
-                showMsg('pay', 'error', 'O Hubo un problema al procesar el pago: ' + (result?.message || ''));
+                showMsg('pay', 'error', '❌ Hubo un problema al procesar el pago: ' + (result?.message || ''));
                 soundError();
             }
         } catch(e) {
@@ -2011,7 +2011,7 @@
             soundError();
         } finally {
             btn.disabled = false;
-            btn.innerText = "o. Confirmar Pago";
+            btn.innerText = "✅ Confirmar Pago";
         }
     }
 
@@ -2431,14 +2431,14 @@
                 result.hijos_al_corriente.forEach(h => {
                     txt += `<div class="student-card" style="border: 2px solid #10b981; margin-top:0;">
                         <div class="student-name" style="font-size: 1.3rem;">${h.nombre}</div>
-                        <div style="color: #10b981; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">o. Al Corriente</div>
+                        <div style="color: #10b981; font-weight: bold; margin-top: 5px; font-size: 1.1rem;">✅ Al Corriente</div>
                         <div style="color:var(--text-muted); font-size:1.1rem; margin-top: 10px;">Costo Mensualidad: $${formatPrice(h.costo_mensualidad || 0)}</div>
                     </div>`;
                 });
             }
 
             if(!txt) {
-                txt = `<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">o. Todos los hijos están al corriente de sus pagos.</div>`;
+                txt = `<div style="text-align:center; padding: 15px; color: var(--success); font-weight: bold; background: rgba(16,185,129,0.1); border-radius: 8px;">✅ Todos los hijos están al corriente de sus pagos.</div>`;
             }
             
             listEl.innerHTML = txt;
@@ -2663,7 +2663,7 @@
                 filterStudentsModule(); // re-render
                 setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
             } else {
-                showMsg('students', 'error', 'O Error al guardar: ' + (result?.message || 'Revisa el webhook de n8n.'));
+                showMsg('students', 'error', '❌ Error al guardar: ' + (result?.message || 'Revisa el webhook de n8n.'));
                 soundError();
                 setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
             }
