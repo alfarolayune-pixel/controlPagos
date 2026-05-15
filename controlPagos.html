@@ -1707,16 +1707,22 @@
                     document.getElementById('reg-dob').value = d.dob || '';
                     // Category select — try to set, retry until loadInitialData resolves
                     if (d.cat) {
+                        window._pendingRegCat = d.cat; // Save for loadInitialData
                         const catSel = document.getElementById('reg-cat');
                         catSel.value = d.cat;
                         if (!catSel.value) {
-                            // Categories not loaded yet, retry multiple times
+                            // Categories not loaded yet, retry until loadInitialData resolves
                             var _catRetries = 0;
                             var _catInterval = setInterval(function () {
                                 catSel.value = d.cat;
                                 _catRetries++;
-                                if (catSel.value || _catRetries >= 4) clearInterval(_catInterval);
-                            }, 1500);
+                                if (catSel.value || _catRetries >= 8) {
+                                    clearInterval(_catInterval);
+                                    window._pendingRegCat = null;
+                                }
+                            }, 1000);
+                        } else {
+                            window._pendingRegCat = null;
                         }
                     }
                     document.getElementById('reg-blood').value = d.blood || 'O+';
@@ -1782,6 +1788,11 @@
                         catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
                         const stuCatSelect = document.getElementById('students-search-cat');
                         if (stuCatSelect) stuCatSelect.innerHTML = '<option value="">Todas las categorías</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                        // Restore pending category from saved form state (iPhone NFC flow)
+                        if (window._pendingRegCat) {
+                            catSelect.value = window._pendingRegCat;
+                            window._pendingRegCat = null;
+                        }
                     }
 
                     // Guardar lista de alumnos en variable global para el buscador
@@ -2565,7 +2576,7 @@
                     return;
                 }
 
-                showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
+                showMsg('reg', 'info', _pendingNfcUid ? 'Procesando registro...' : 'Acerque una pulsera nueva (o tarjeta)...');
                 saveFormState('reg');
                 const _hadPending = !!_pendingNfcUid; // iPhone: UID already available
                 const uid = await getUidFromNFC();
@@ -2630,6 +2641,8 @@
                         document.getElementById('reg-em-name').value = '';
                         document.getElementById('reg-em-tel').value = '';
                         if (typeof clearPadre === 'function') clearPadre();
+                        // Restore button text to original
+                        _btn.innerHTML = '📲 Leer Pulsera y Guardar';
                     } else {
                         // Muestra el mensaje real del servidor (conflict, error, etc.)
                         const errMsg = result?.message || 'Error desconocido. Intenta de nuevo.';
@@ -3548,9 +3561,9 @@
                                 'user-info': function () { scanUserInfo(); },
                                 'search-family': function () { scanPadreNFC(); },
                                 'baja-user': function () { deleteUserNFC(); },
-                                'reassign': function () { restoreFormState('reassign'); showMsg('reassign', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para reasignar.'); },
-                                'users': function () { restoreFormState('users'); showMsg('users', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para registrar.'); },
-                                'reg': function () { restoreFormState('reg'); showMsg('reg', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para registrar.'); },
+                                'reassign': function () { restoreFormState('reassign'); showMsg('reassign', 'success', '✅ Pulsera leída. Verifica la selección y presiona "Reasignar".'); },
+                                'users': function () { restoreFormState('users'); showMsg('users', 'success', '✅ Pulsera leída. Verifica los datos y presiona "Guardar Usuario".'); var _usrBtn = document.querySelector('#view-users > button'); if (_usrBtn) _usrBtn.innerHTML = '💾 Guardar Usuario'; },
+                                'reg': function () { restoreFormState('reg'); showMsg('reg', 'success', '✅ Pulsera leída correctamente. Verifica los datos y presiona "Guardar Alumno".'); var _regBtn = document.querySelector('#view-reg > button'); if (_regBtn) _regBtn.innerHTML = '💾 Guardar Alumno'; },
                                 'access': function () { scanAccess(); },
                                 'pay': function () { scanForPayment(); },
                                 'hist': function () { startHistory(); }
