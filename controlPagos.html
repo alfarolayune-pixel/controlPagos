@@ -926,7 +926,7 @@
         showMsg('login', 'info', 'Esperando NFC...');
         initAudio(); // Permiso de audio al click
         const uid = await getUidFromNFC();
-        if (!uid) { showMsg('login', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if (!uid) { showMsg('login', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('login', 'info', 'Validando...');
         try {
@@ -959,7 +959,7 @@
             }
         } catch(e) {
             console.error(e);
-            showMsg('login', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('login', 'error', 'Error de conexión con el servidor. Verifica tu red e intenta de nuevo.');
             setBtn(_btnLogin, false);
             soundError();
         } finally {
@@ -1042,7 +1042,7 @@
                 showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
             }
         } catch(e) {
-            showMsg('debtors', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('debtors', 'error', 'Error de conexión al cargar la lista de deudores.');
         }
     }
 
@@ -1112,7 +1112,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('baja-user', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('baja-user', 'error', 'Error de conexión al procesar la baja por pulsera.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1219,7 +1219,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('baja-user', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('baja-user', 'error', 'Error de conexión al procesar la baja por nombre.');
             clearBajaSelection();
             soundError();
         } finally {
@@ -1547,7 +1547,7 @@
         
         showMsg('users', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('users', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); return; }
+        if(!uid) { showMsg('users', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
         
         showMsg('users', 'info', 'Validando disponibilidad de pulsera...');
         try {
@@ -1598,7 +1598,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('users', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('users', 'error', 'Error de conexión al crear el usuario. Verifica tu red.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1613,7 +1613,7 @@
         setBtn(_btn, true);
         showMsg('access', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('access', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
+        if(!uid) { showMsg('access', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('access', 'info', 'Validando en servidor...');
         
@@ -1712,7 +1712,7 @@
             }
         } catch(e) {
             console.error('Error en scanAccess:', e);
-            showMsg('access', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('access', 'error', 'Error de conexión al verificar el acceso del alumno.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1748,7 +1748,7 @@
         
         showMsg('pay', 'info', 'Acerque la pulsera...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('pay', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
+        if(!uid) { showMsg('pay', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('pay', 'info', 'Obteniendo perfil para cobro...');
         
@@ -1797,7 +1797,7 @@
 
         } catch(e) {
             console.error('Error en scanForPayment:', e);
-            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('pay', 'error', 'Error de conexión al consultar datos de pago del alumno.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -1858,7 +1858,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión al procesar el pago.');
+            showMsg('pay', 'error', 'Error de conexión al registrar el pago. Intenta de nuevo.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -2007,7 +2007,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('pay', 'error', 'No se encontraron datos o hubo un error de conexión al procesar el pago grupal.');
+            showMsg('pay', 'error', 'Error de conexión al registrar el pago familiar. Intenta de nuevo.');
             soundError();
         } finally {
             btn.disabled = false;
@@ -2025,7 +2025,7 @@
         document.getElementById('history-box').style.display = 'none';
 
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('hist', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
+        if(!uid) { showMsg('hist', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
         showMsg('hist', 'info', 'Consultando historial de pagos...');
         
@@ -2078,7 +2078,7 @@
             soundSuccess();
 
         } catch (e) {
-            showMsg('hist', 'error', 'No se encontraron datos o hubo un error de conexión.');
+            showMsg('hist', 'error', 'Error de conexión al consultar el historial de pagos.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -2115,10 +2115,16 @@
             setBtn(_btn, false);
             return;
         }
+
+        if(!payload.padre_id) {
+            showMsg('reg', 'error', 'Selecciona un Padre de Familia antes de registrar al alumno.');
+            setBtn(_btn, false);
+            return;
+        }
         
         showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reg', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
+        if(!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
         
         showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
         try {
@@ -2178,7 +2184,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reg', 'error', 'No se encontraron datos o hubo un error de conexión al registrar alumno.');
+            showMsg('reg', 'error', 'Error de conexión al registrar el alumno. Verifica tu red e intenta de nuevo.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -2196,7 +2202,7 @@
 
         showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
         const uid = await getUidFromNFC();
-        if(!uid) { showMsg('reassign', 'error', 'No se detectóó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
+        if(!uid) { showMsg('reassign', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
         showMsg('reassign', 'info', 'Validando disponibilidad de la nueva pulsera...');
         try {
@@ -2248,7 +2254,7 @@
                 soundError();
             }
         } catch(e) {
-            showMsg('reassign', 'error', 'No se encontraron datos o hubo un error de conexión al reasignar la pulsera.');
+            showMsg('reassign', 'error', 'Error de conexión al reasignar la pulsera. Verifica tu red.');
             soundError();
         } finally {
             setBtn(_btn, false);
@@ -2301,7 +2307,7 @@
             soundSuccess();
         } catch(e) {
             document.getElementById('ui-result').style.display = 'none';
-            showMsg('user-info', 'error', 'No se encontraron datos o hubo un error de conexión al consultar pulsera.');
+            showMsg('user-info', 'error', 'Error de conexión al consultar la pulsera. Verifica tu red.');
             soundError();
         } finally {
             setBtn(_btn, false);
