@@ -2567,26 +2567,35 @@
 
                 showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
                 saveFormState('reg');
+                const _hadPending = !!_pendingNfcUid; // iPhone: UID already available
                 const uid = await getUidFromNFC();
                 if (!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
-                showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
-                try {
-                    const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`);
-                    if (valRes.ok) {
-                        const valText = await valRes.text();
-                        if (valText) {
-                            const valData = JSON.parse(valText);
-                            const valResult = Array.isArray(valData) ? valData[0] : valData;
-                            if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                                showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
-                                soundError();
-                                return;
+                // Only validate bracelet availability via ht-access on Android (live NFC read).
+                // On iPhone, the UID came from URL dispatch — ht-register already has duplicate protection.
+                if (!_hadPending) {
+                    showMsg('reg', 'info', 'Validando disponibilidad de pulsera...');
+                    try {
+                        const _ac = new AbortController();
+                        const _to = setTimeout(function () { _ac.abort(); }, 5000);
+                        const valRes = await fetch(`${N8N_URL}/ht-access?nfc_uid=${encodeURIComponent(uid)}`, { signal: _ac.signal });
+                        clearTimeout(_to);
+                        if (valRes.ok) {
+                            const valText = await valRes.text();
+                            if (valText) {
+                                const valData = JSON.parse(valText);
+                                const valResult = Array.isArray(valData) ? valData[0] : valData;
+                                if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
+                                    showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
+                                    soundError();
+                                    setBtn(_btn, false);
+                                    return;
+                                }
                             }
                         }
+                    } catch (e) {
+                        console.warn('Validación de pulsera nueva generó error, continuando...', e);
                     }
-                } catch (e) {
-                    console.warn('Validación de pulsera nueva generó error, continuando...', e);
                 }
 
                 payload.nfc_uid = uid;
