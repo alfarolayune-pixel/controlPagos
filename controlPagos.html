@@ -3493,19 +3493,41 @@
                     const isOwnUid = savedSession.nfc_uid && urlUid === savedSession.nfc_uid.toUpperCase();
 
                     if (isOwnUid) {
-                        // Own bracelet tapped again ?" go to landing page
+                        // Own bracelet tapped again — go to landing page
                         checkUrlForLanding();
                         return;
                     }
 
                     // ── DIFFERENT UID detected while a session exists ──
-                    // Check if the active tab expects to scan ANY bracelet type.
-                    // These tabs use the scanned UID as INPUT, not as a login attempt.
+                    // ALWAYS check ht-auth first to determine if this is a system user or student.
                     const savedTab = localStorage.getItem('ht_active_tab') || 'access';
-                    const scanAnyTabs = ['user-info', 'baja-user', 'search-family', 'reassign', 'users', 'reg', 'access', 'pay', 'hist'];
 
-                    if (scanAnyTabs.includes(savedTab)) {
-                        // ── Active tab handles any bracelet ── skip auth, dispatch scan directly
+                    (async function () {
+                        try {
+                            // Quick auth check — does this UID belong to a system user?
+                            var _authAc = new AbortController();
+                            var _authTo = setTimeout(function () { _authAc.abort(); }, 5000);
+                            const authRes = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(urlUid)}`, { signal: _authAc.signal });
+                            clearTimeout(_authTo);
+                            let authData = null;
+                            try { authData = await authRes.json(); } catch (e) { }
+                            const authResult = Array.isArray(authData) ? authData[0] : authData;
+
+                            if (authResult && authResult.status === 'success' && authResult.rol) {
+                                // ── This UID belongs to a SYSTEM USER (admin/instructor/padre) ──
+                                // Show landing page so they can log in with their own role
+                                _landingUid = urlUid;
+                                showLandingPage(urlUid);
+                                try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
+                                return;
+                            }
+                        } catch (e) {
+                            // Auth check failed (timeout/network) — assume student bracelet
+                            console.warn('Auth check timeout, assuming student bracelet:', e);
+                        }
+
+                        // ── UID is NOT a system user → student bracelet ──
+                        // Restore the existing session and dispatch scan to active tab
                         currentUser = savedSession;
                         _pendingNfcUid = urlUid;
 
@@ -3531,87 +3553,14 @@
                                 'pay': function () { scanForPayment(); },
                                 'hist': function () { startHistory(); }
                             };
-                            switchTab(savedTab);
-                            setTimeout(function () { scanActions[savedTab](); }, 300);
-                        }, 800);
-
-                        return;
-                    }
-
-                    // ── For student-only tabs (access, pay, hist, reg, users): ──
-                    // Check if the new UID belongs to a system user (admin/instructor/padre).
-                    // If it does → show landing page (someone else is taking over).
-                    // If it doesn't → it's a student bracelet, dispatch scan.
-                    (async function () {
-                        try {
-                            const authRes = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(urlUid)}`);
-                            let authData = null;
-                            try { authData = await authRes.json(); } catch (e) { }
-                            const authResult = Array.isArray(authData) ? authData[0] : authData;
-
-                            if (authResult && authResult.status === 'success' && authResult.rol) {
-                                // ── This UID belongs to a SYSTEM USER ──
-                                // Show the landing page first (marketing links), NOT direct login.
-                                // The user clicks "Acceder al Sistema" to actually enter.
-                                _landingUid = urlUid;
-                                showLandingPage(urlUid);
-                                try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
-                                return;
+                            if (scanActions[savedTab]) {
+                                switchTab(savedTab);
+                                setTimeout(function () { scanActions[savedTab](); }, 300);
+                            } else {
+                                switchTab('access');
+                                setTimeout(function () { scanAccess(); }, 300);
                             }
-
-                            // ── UID is NOT a system user ?' it's a student bracelet ──
-                            // Restore the existing session and dispatch scan
-                            currentUser = savedSession;
-                            _pendingNfcUid = urlUid;
-
-                            document.getElementById('lock-screen').classList.add('hidden');
-                            document.getElementById('lock-screen').style.display = 'none';
-                            document.getElementById('landing-screen').style.display = 'none';
-                            document.getElementById('btn-logout').style.display = 'block';
-
-                            loadInitialData();
-                            applyPermissions();
-
-                            try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
-
-                            const savedTab = localStorage.getItem('ht_active_tab') || 'access';
-                            setTimeout(function () {
-                                const scanActions = {
-                                    'access': function () { scanAccess(); },
-                                    'pay': function () { scanForPayment(); },
-                                    'hist': function () { startHistory(); },
-                                    'user-info': function () { scanUserInfo(); },
-                                    'search-family': function () { scanPadreNFC(); },
-                                    'baja-user': function () { deleteUserNFC(); },
-                                    'reg': function () { restoreFormState('reg'); showMsg('reg', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para registrar.'); },
-                                    'users': function () { restoreFormState('users'); showMsg('users', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para registrar.'); },
-                                    'reassign': function () { restoreFormState('reassign'); showMsg('reassign', 'success', '\ud83d\udcf2 Pulsera detectada. Verifica los datos y presiona el botón para reasignar.'); }
-                                };
-                                if (scanActions[savedTab]) {
-                                    switchTab(savedTab);
-                                    setTimeout(function () { scanActions[savedTab](); }, 300);
-                                } else {
-                                    switchTab('access');
-                                    setTimeout(function () { scanAccess(); }, 300);
-                                }
-                            }, 800);
-
-                        } catch (e) {
-                            // Network error ?" fall back to restoring session with scan
-                            console.warn('Auth check failed on page load, falling back to saved session:', e);
-                            currentUser = savedSession;
-                            _pendingNfcUid = urlUid;
-                            document.getElementById('lock-screen').classList.add('hidden');
-                            document.getElementById('lock-screen').style.display = 'none';
-                            document.getElementById('landing-screen').style.display = 'none';
-                            document.getElementById('btn-logout').style.display = 'block';
-                            loadInitialData();
-                            applyPermissions();
-                            try { window.history.replaceState({}, '', window.location.pathname); } catch (e2) { }
-                            const savedTab = localStorage.getItem('ht_active_tab') || 'access';
-                            switchTab(savedTab);
-                            setTimeout(function () { scanAccess(); }, 1000);
-                        }
+                        }, 800);
                     })();
 
                     return; // async function handles everything
