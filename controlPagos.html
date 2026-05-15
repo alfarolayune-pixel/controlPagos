@@ -616,6 +616,17 @@
             border: 1px solid #334155;
             margin-bottom: 20px;
         }
+
+        .field-error {
+            border: 2px solid #ef4444 !important;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4) !important;
+            animation: fieldPulse 1s ease-in-out 2;
+        }
+
+        @keyframes fieldPulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.7); }
+        }
     </style>
 </head>
 
@@ -1671,6 +1682,7 @@
                     d.cat = document.getElementById('reg-cat').value;
                     d.blood = document.getElementById('reg-blood').value;
                     d.padre = document.getElementById('reg-padre').value;
+                    d.padreName = document.getElementById('reg-padre-selected-name').textContent || '';
                     d.emName = document.getElementById('reg-em-name').value;
                     d.emTel = document.getElementById('reg-em-tel').value;
                 } else if (tabName === 'users') {
@@ -1704,6 +1716,11 @@
                     }
                     document.getElementById('reg-blood').value = d.blood || 'O+';
                     document.getElementById('reg-padre').value = d.padre || '';
+                    if (d.padre && d.padreName) {
+                        document.getElementById('reg-padre-selected-name').textContent = d.padreName;
+                        document.getElementById('reg-padre-selected').style.display = 'flex';
+                        document.getElementById('reg-padre-search').style.display = 'none';
+                    }
                     document.getElementById('reg-em-name').value = d.emName || '';
                     document.getElementById('reg-em-tel').value = d.emTel || '';
                 } else if (tabName === 'users') {
@@ -1729,11 +1746,13 @@
             }
 
             // Auto-save form data on any input/change in registration tabs
-            document.addEventListener('input', function () {
+            document.addEventListener('input', function (e) {
+                if (e.target.classList.contains('field-error')) e.target.classList.remove('field-error');
                 const tab = localStorage.getItem('ht_active_tab');
                 if (tab === 'reg' || tab === 'users' || tab === 'reassign') saveFormState(tab);
             });
-            document.addEventListener('change', function () {
+            document.addEventListener('change', function (e) {
+                if (e.target.classList.contains('field-error')) e.target.classList.remove('field-error');
                 const tab = localStorage.getItem('ht_active_tab');
                 if (tab === 'reg' || tab === 'users' || tab === 'reassign') saveFormState(tab);
             });
@@ -2495,6 +2514,10 @@
             async function registerStudent() {
                 const _btn = document.querySelector('#view-reg > button');
                 setBtn(_btn, true);
+
+                // Clear previous field error highlights
+                document.querySelectorAll('#view-reg .field-error').forEach(el => el.classList.remove('field-error'));
+
                 const payload = {
                     nombre: document.getElementById('reg-name').value,
                     edad: parseInt(document.getElementById('reg-age').value) || 0,
@@ -2506,26 +2529,26 @@
                     contacto_emergencia_tel: document.getElementById('reg-em-tel').value
                 };
 
-                if (!payload.nombre || !payload.edad || !payload.categoria_id) {
-                    showMsg('reg', 'error', 'Por favor, completa los datos básicos.');
-                    setBtn(_btn, false);
-                    return;
-                }
+                // Validate required fields and highlight missing ones
+                const missing = [];
+                if (!payload.nombre) { missing.push('Nombre'); document.getElementById('reg-name').classList.add('field-error'); }
+                if (!payload.fecha_nacimiento) { missing.push('Fecha de Nacimiento'); document.getElementById('reg-dob').classList.add('field-error'); }
+                if (!payload.categoria_id) { missing.push('Categoría'); document.getElementById('reg-cat').classList.add('field-error'); }
+                if (!payload.contacto_emergencia_nombre) { missing.push('Contacto Emergencia'); document.getElementById('reg-em-name').classList.add('field-error'); }
 
                 const telClean = payload.contacto_emergencia_tel.replace(/\D/g, '');
-                if (telClean.length !== 10) {
-                    showMsg('reg', 'error', 'El número de teléfono de emergencia debe tener exactamente 10 dígitos.');
-                    setBtn(_btn, false);
-                    return;
-                }
+                if (telClean.length !== 10) { missing.push('Teléfono Emergencia (10 dígitos)'); document.getElementById('reg-em-tel').classList.add('field-error'); }
 
-                if (!payload.padre_id) {
-                    showMsg('reg', 'error', 'Selecciona un Padre de Familia antes de registrar al alumno.');
+                if (!payload.padre_id) { missing.push('Padre de Familia'); document.getElementById('reg-padre-search').classList.add('field-error'); }
+
+                if (missing.length > 0) {
+                    showMsg('reg', 'error', '⚠️ Campos obligatorios faltantes: ' + missing.join(', '));
                     setBtn(_btn, false);
                     return;
                 }
 
                 showMsg('reg', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
+                saveFormState('reg');
                 const uid = await getUidFromNFC();
                 if (!uid) { showMsg('reg', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
