@@ -1705,13 +1705,18 @@
                     document.getElementById('reg-name').value = d.name || '';
                     document.getElementById('reg-age').value = d.age || '';
                     document.getElementById('reg-dob').value = d.dob || '';
-                    // Category select ?" try to set, retry after loadInitialData
+                    // Category select — try to set, retry until loadInitialData resolves
                     if (d.cat) {
                         const catSel = document.getElementById('reg-cat');
                         catSel.value = d.cat;
                         if (!catSel.value) {
-                            // Categories not loaded yet, retry in 1.5s
-                            setTimeout(function () { catSel.value = d.cat; }, 1500);
+                            // Categories not loaded yet, retry multiple times
+                            var _catRetries = 0;
+                            var _catInterval = setInterval(function () {
+                                catSel.value = d.cat;
+                                _catRetries++;
+                                if (catSel.value || _catRetries >= 4) clearInterval(_catInterval);
+                            }, 1500);
                         }
                     }
                     document.getElementById('reg-blood').value = d.blood || 'O+';
@@ -1760,11 +1765,17 @@
             // ==========================================
             // CARGAR DATOS
             // ==========================================
-            async function loadInitialData() {
+            let _loadingData = false;
+            async function loadInitialData(_retries) {
+                if (_loadingData) return; // Prevent concurrent requests to ht-categories
+                _loadingData = true;
+                var retries = _retries || 0;
                 try {
                     const res = await fetch(`${N8N_URL}/ht-categories`);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
                     const data = await res.json();
                     const result = Array.isArray(data) ? data[0] : data;
+                    if (!result || !result.categorias) throw new Error('Respuesta vacía');
 
                     const catSelect = document.getElementById('reg-cat');
                     if (result.categorias) {
@@ -1784,7 +1795,14 @@
                     // Consolidar todos los usuarios para la vista de bajas
                     window._allUsers = result.usuarios || [...(result.alumnos || []), ...(result.padres || [])];
                 } catch (e) {
-                    console.log("Aún no conectado a n8n o error:", e);
+                    console.log("Error cargando datos (intento " + (retries + 1) + "):", e);
+                    if (retries < 2) {
+                        _loadingData = false;
+                        await new Promise(r => setTimeout(r, 1500));
+                        return loadInitialData(retries + 1);
+                    }
+                } finally {
+                    _loadingData = false;
                 }
             }
 
