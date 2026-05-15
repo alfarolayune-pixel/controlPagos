@@ -1558,7 +1558,7 @@
                     const valData = JSON.parse(valText);
                     const valResult = Array.isArray(valData) ? valData[0] : valData;
                     if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('users', 'error', `O Esta pulsera ya está asignada a: ${valResult.nombre}`);
+                        showMsg('users', 'error', `❌ Esta pulsera ya está asignada a: ${valResult.nombre}`);
                         soundError();
                         return;
                     }
@@ -1584,7 +1584,7 @@
             }
             const result = Array.isArray(data) ? data[0] : data;
             if(result && result.status === 'success') {
-                showMsg('users', 'success', `o. Usuario ${nombre} creado correctamente.`);
+                showMsg('users', 'success', `✅ Usuario ${nombre} creado correctamente.`);
                 soundSuccess();
                 try { localStorage.removeItem('ht_form_users'); } catch(e) {}
                 document.getElementById('usr-name').value = '';
@@ -1849,7 +1849,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result && result.status === 'success') {
-                showMsg('pay', 'success', `o. Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
+                showMsg('pay', 'success', `✅ Pago registrado correctamente (${nMeses[payload.mes-1]}).`);
                 document.getElementById('pay-details').style.display = 'none';
                 document.getElementById('pay-mode').value = "1";
                 soundSuccess();
@@ -1997,7 +1997,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result && result.status === 'success') {
-                showMsg('pay', 'success', `o. Pago familiar registrado correctamente (${nMeses[payload.mes-1]}).`);
+                showMsg('pay', 'success', `✅ Pago familiar registrado correctamente (${nMeses[payload.mes-1]}).`);
                 document.getElementById('pay-details').style.display = 'none';
                 document.getElementById('family-search-container').style.display = 'none';
                 document.getElementById('pay-mode').value = "1";
@@ -2129,7 +2129,7 @@
                     const valData = JSON.parse(valText);
                     const valResult = Array.isArray(valData) ? valData[0] : valData;
                     if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reg', 'error', `O Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
+                        showMsg('reg', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}`);
                         soundError();
                         return;
                     }
@@ -2159,7 +2159,7 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result && result.status === 'success') {
-                showMsg('reg', 'success', `o. Alumno ${payload.nombre} registrado exitosamente.`);
+                showMsg('reg', 'success', `✅ Alumno ${payload.nombre} registrado exitosamente.`);
                 soundSuccess();
                 try { localStorage.removeItem('ht_form_reg'); } catch(e) {}
                 // Limpiar form completo
@@ -2174,7 +2174,7 @@
             } else {
                 // Muestra el mensaje real del servidor (conflict, error, etc.)
                 const errMsg = result?.message || 'Error desconocido. Intenta de nuevo.';
-                showMsg('reg', 'error', `O ${errMsg}`);
+                showMsg('reg', 'error', `❌ ${errMsg}`);
                 soundError();
             }
         } catch(e) {
@@ -2207,7 +2207,7 @@
                     const valData = JSON.parse(valText);
                     const valResult = Array.isArray(valData) ? valData[0] : valData;
                     if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
-                        showMsg('reassign', 'error', `O Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
+                        showMsg('reassign', 'error', `❌ Esta pulsera ya está asignada al alumno: ${valResult.nombre}. Usa una pulsera nueva o sin asignar.`);
                         soundError();
                         setBtn(_btn, false);
                         return;
@@ -2237,14 +2237,14 @@
             const result = Array.isArray(data) ? data[0] : data;
 
             if(result && result.status === 'success') {
-                showMsg('reassign', 'success', `o. Pulsera asignada correctamente.`);
+                showMsg('reassign', 'success', `✅ Pulsera asignada correctamente.`);
                 soundSuccess();
                 try { localStorage.removeItem('ht_form_reassign'); } catch(e) {}
                 document.getElementById('reassign-student').value = '';
                 document.getElementById('reassign-search').value = '';
                 document.getElementById('reassign-selected').style.display = 'none';
             } else {
-                showMsg('reassign', 'error', `O No se pudo reasignar: ${result?.message || 'Error desconocido'}`);
+                showMsg('reassign', 'error', `❌ No se pudo reasignar: ${result?.message || 'Error desconocido'}`);
                 soundError();
             }
         } catch(e) {
