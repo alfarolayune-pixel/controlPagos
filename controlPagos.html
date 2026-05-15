@@ -3499,35 +3499,38 @@
                     }
 
                     // ── DIFFERENT UID detected while a session exists ──
-                    // ALWAYS check ht-auth first to determine if this is a system user or student.
+                    // Check if this UID belongs to a system user or a student.
+                    // ht-auth now always responds (alwaysOutputData enabled in n8n).
                     const savedTab = localStorage.getItem('ht_active_tab') || 'access';
 
                     (async function () {
+                        var isSystemUser = false;
                         try {
-                            // Quick auth check — does this UID belong to a system user?
                             var _authAc = new AbortController();
                             var _authTo = setTimeout(function () { _authAc.abort(); }, 5000);
-                            const authRes = await fetch(`${N8N_URL}/ht-auth?nfc_uid=${encodeURIComponent(urlUid)}`, { signal: _authAc.signal });
+                            var authRes = await fetch(N8N_URL + '/ht-auth?nfc_uid=' + encodeURIComponent(urlUid), { signal: _authAc.signal });
                             clearTimeout(_authTo);
-                            let authData = null;
+                            var authData = null;
                             try { authData = await authRes.json(); } catch (e) { }
-                            const authResult = Array.isArray(authData) ? authData[0] : authData;
-
+                            var authResult = Array.isArray(authData) ? authData[0] : authData;
                             if (authResult && authResult.status === 'success' && authResult.rol) {
-                                // ── This UID belongs to a SYSTEM USER (admin/instructor/padre) ──
-                                // Show landing page so they can log in with their own role
-                                _landingUid = urlUid;
-                                showLandingPage(urlUid);
-                                try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
-                                return;
+                                isSystemUser = true;
                             }
                         } catch (e) {
-                            // Auth check failed (timeout/network) — assume student bracelet
-                            console.warn('Auth check timeout, assuming student bracelet:', e);
+                            console.warn('Auth check failed:', e);
                         }
 
-                        // ── UID is NOT a system user → student bracelet ──
-                        // Restore the existing session and dispatch scan to active tab
+                        if (isSystemUser) {
+                            // System user — clear session and show landing for proper login
+                            try { localStorage.removeItem('ht_session'); } catch (e) { }
+                            currentUser = null;
+                            _landingUid = urlUid;
+                            showLandingPage(urlUid);
+                            try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
+                            return;
+                        }
+
+                        // Student bracelet — restore session and dispatch to active tab
                         currentUser = savedSession;
                         _pendingNfcUid = urlUid;
 
@@ -3538,7 +3541,6 @@
 
                         loadInitialData();
                         applyPermissions();
-
                         try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
 
                         setTimeout(function () {
@@ -3563,7 +3565,7 @@
                         }, 800);
                     })();
 
-                    return; // async function handles everything
+                    return;
                 }
 
                 // ── Normal flow: landing page or login screen ──
