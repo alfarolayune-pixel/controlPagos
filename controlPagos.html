@@ -624,8 +624,15 @@
         }
 
         @keyframes fieldPulse {
-            0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-            50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.7); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
+            }
         }
     </style>
 </head>
@@ -1665,7 +1672,8 @@
                         return null;
                     }
                 } else {
-                    // Dispositivo sin soporte NFC o protocolo no seguro
+                    // iPhone / dispositivo sin Web NFC: guiar al usuario a escanear físicamente
+                    alert('📲 Para leer la pulsera en iPhone:\n\n' + 'Acerca la pulsera a la parte superior del teléfono.\n\n' + 'iOS abrirá automáticamente el lector NFC.');
                     return null;
                 }
             }
@@ -1787,7 +1795,7 @@
                     if (result.categorias) {
                         const currentCatVal = catSelect.value;
                         catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
-                        
+
                         const stuCatSelect = document.getElementById('students-search-cat');
                         if (stuCatSelect) {
                             const currentStuCatVal = stuCatSelect.value;
@@ -3543,13 +3551,19 @@
                         }
 
                         if (isSystemUser) {
-                            // System user — clear session and show landing for proper login
-                            try { localStorage.removeItem('ht_session'); } catch (e) { }
-                            currentUser = null;
-                            _landingUid = urlUid;
-                            showLandingPage(urlUid);
-                            try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
-                            return;
+                            // Special case: if Admin is on Familias/Pagos tab and scans a padre bracelet,
+                            // do NOT treat it as a new login — dispatch to scanPadreNFC instead
+                            if (savedTab === 'search-family' && authResult && authResult.rol === 'padre') {
+                                isSystemUser = false; // fall through to student-bracelet path below
+                            } else {
+                                // System user — clear session and show landing for proper login
+                                try { localStorage.removeItem('ht_session'); } catch (e) { }
+                                currentUser = null;
+                                _landingUid = urlUid;
+                                showLandingPage(urlUid);
+                                try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
+                                return;
+                            }
                         }
 
                         // Student bracelet — restore session and dispatch to active tab
