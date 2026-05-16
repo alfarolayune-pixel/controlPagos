@@ -1563,7 +1563,7 @@
                     dropdown.style.display = 'block'; return;
                 }
                 dropdown.innerHTML = matches.map(u => `
-            <div onclick="selectBajaUser('${u.id || ''}', '${u.nombre.replace(/'/g, "\\'")}')"
+            <div onclick="selectBajaUser('${u.nfc_uid || u.id || ''}', '${u.nombre.replace(/'/g, "\\'")}')"
                  style="padding:12px 16px; cursor:pointer; border-bottom:1px solid #334155; font-weight:600; transition:background 0.15s;"
                  onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background=''">
                 ${u.nombre}
@@ -1618,7 +1618,7 @@
                 try {
                     const res = await fetch(`${N8N_URL}/ht-baja-user`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ nombre: nombre, id: uid })
+                        body: JSON.stringify({ nfc_uid: uid, nombre: nombre })
                     });
                     let data;
                     try {
