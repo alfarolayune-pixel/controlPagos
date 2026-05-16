@@ -3551,9 +3551,12 @@
                         }
 
                         if (isSystemUser) {
-                            // Special case: if Admin is on Familias/Pagos tab and scans a padre bracelet,
-                            // do NOT treat it as a new login — dispatch to scanPadreNFC instead
-                            if (savedTab === 'search-family' && authResult && authResult.rol === 'padre') {
+                            // Special cases: tabs that need to identify ANY bracelet type
+                            // should NOT treat system-user bracelets as a new login
+                            if (
+                                (savedTab === 'search-family' && authResult && authResult.rol === 'padre') ||
+                                (savedTab === 'user-info')
+                            ) {
                                 isSystemUser = false; // fall through to student-bracelet path below
                             } else {
                                 // System user — clear session and show landing for proper login
