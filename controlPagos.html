@@ -1177,17 +1177,20 @@
             }
 
             function playTone(freq, type, duration, vol = 0.1) {
-                initAudio();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
+                try {
+                    initAudio();
+                    if (!audioCtx || audioCtx.state === 'suspended') return; // iOS: no user gesture yet
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) { /* iOS AudioContext not ready */ }
             }
 
             // Sonido lectura NFC
@@ -3555,7 +3558,8 @@
                             // should NOT treat system-user bracelets as a new login
                             if (
                                 (savedTab === 'search-family' && authResult && authResult.rol === 'padre') ||
-                                (savedTab === 'user-info')
+                                (savedTab === 'user-info') ||
+                                (savedTab === 'hist')
                             ) {
                                 isSystemUser = false; // fall through to student-bracelet path below
                             } else {
@@ -3583,6 +3587,7 @@
                         try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
 
                         setTimeout(function () {
+                            initAudio(); // Prepare AudioContext for iPhone auto-dispatch sounds
                             var scanActions = {
                                 'user-info': function () { scanUserInfo(); },
                                 'search-family': function () { scanPadreNFC(); },
