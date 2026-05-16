@@ -1924,6 +1924,7 @@
                 const box = document.getElementById('reassign-selected');
                 box.innerHTML = `✅ Seleccionado: ${nombre} <span style="font-size:0.7rem; background:${color}; color:white; padding:2px 8px; border-radius:6px; text-transform:uppercase; font-weight:800; margin-left:8px;">${rol}</span>`;
                 box.style.display = 'block';
+                saveFormState('reassign'); // Persist selection for iPhone NFC workaround
             }
 
             window._allPadres = [];
@@ -2687,6 +2688,7 @@
                 if (!userId) { showMsg('reassign', 'error', 'Por favor, busca y selecciona un usuario primero.'); setBtn(_btn, false); return; }
 
                 showMsg('reassign', 'info', 'Acerque la nueva pulsera NFC...');
+                saveFormState('reassign'); // Persist form before iPhone NFC redirect
                 const uid = await getUidFromNFC();
                 if (!uid) { showMsg('reassign', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
