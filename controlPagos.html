@@ -1785,13 +1785,22 @@
 
                     const catSelect = document.getElementById('reg-cat');
                     if (result.categorias) {
+                        const currentCatVal = catSelect.value;
                         catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                        
                         const stuCatSelect = document.getElementById('students-search-cat');
-                        if (stuCatSelect) stuCatSelect.innerHTML = '<option value="">Todas las categorías</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                        if (stuCatSelect) {
+                            const currentStuCatVal = stuCatSelect.value;
+                            stuCatSelect.innerHTML = '<option value="">Todas las categorías</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                            if (currentStuCatVal) stuCatSelect.value = currentStuCatVal;
+                        }
+
                         // Restore pending category from saved form state (iPhone NFC flow)
                         if (window._pendingRegCat) {
                             catSelect.value = window._pendingRegCat;
                             window._pendingRegCat = null;
+                        } else if (currentCatVal) {
+                            catSelect.value = currentCatVal;
                         }
                     }
 
