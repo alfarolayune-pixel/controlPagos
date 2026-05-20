@@ -748,9 +748,9 @@
                             onkeyup="filterStudentsModule()">
                     </div>
                     <div class="form-group" style="margin-top: 15px;">
-                        <label>Buscar por Categoría</label>
+                        <label>Buscar por Entrenador</label>
                         <select id="students-search-cat" onchange="filterStudentsModule()">
-                            <option value="">Todas las categorías</option>
+                            <option value="">Todos los entrenadores</option>
                         </select>
                     </div>
                     <button class="btn btn-outline" style="margin-top:15px;" onclick="clearStudentsSearch()">🔄 Limpiar
@@ -906,7 +906,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Categoría</label>
+                    <label>Entrenador</label>
                     <select id="reg-cat">
                         <option value="">Cargando...</option>
                     </select>
@@ -1053,7 +1053,7 @@
                 <p style="color: var(--text-muted); font-size: 0.9rem;">Alumnos que no han pagado el mes en curso.</p>
                 <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <select id="debtors-filter-cat" onchange="renderDebtors()" style="flex: 1;">
-                        <option value="">Todas las Categorías</option>
+                        <option value="">Todos los Entrenadores</option>
                     </select>
                     <input type="text" id="debtors-search" placeholder="Buscar por nombre..." oninput="renderDebtors()"
                         autocomplete="off" style="flex: 2;">
@@ -1130,12 +1130,12 @@
                     </div>
                     <div class="form-group">
                         <label>URL <span style="color:var(--text-muted); font-weight:400;">(dejar vacío si es un
-                                grupo/categoría)</span></label>
+                                grupo/entrenador)</span></label>
                         <input type="text" id="mkt-url" placeholder="https://...">
                     </div>
                     <div style="display:flex; gap:10px;">
                         <div class="form-group" style="flex:1;">
-                            <label>Categoría Padre</label>
+                            <label>Entrenador Padre</label>
                             <select id="mkt-parent">
                                 <option value="">— Link principal (raíz) —</option>
                             </select>
@@ -1459,7 +1459,7 @@
                         const select = document.getElementById('debtors-filter-cat');
                         const currentVal = select.value;
                         const cats = [...new Set(allDebtors.map(d => d.categoria).filter(c => c))];
-                        select.innerHTML = '<option value="">Todas las Categorías</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                        select.innerHTML = '<option value="">Todos los Entrenadores</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
                         select.value = currentVal || '';
                     } else {
                         showMsg('debtors', 'error', 'No se pudieron cargar los deudores.');
@@ -1488,7 +1488,7 @@
                 list.innerHTML = filtered.map(d => `
             <div style="background:var(--bg-body); padding:16px; border-radius:12px; border:1px solid #ef4444; position:relative;">
                 <div style="font-weight:bold; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${d.nombre}</div>
-                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin categoría'}</div>
+                <div style="font-size:0.85rem; color:#94a3b8;">${d.categoria || 'Sin entrenador'}</div>
                 <div style="font-size:0.95rem; color:#f8fafc; margin-top:8px;">Costo Mensualidad: <strong>$${parseFloat(d.costo_mensualidad || 0).toFixed(2)}</strong></div>
                 <div style="font-size:0.95rem; color:#f8fafc; margin-top:4px;">Último pago: <strong>${d.ultimo_mes || 'Nunca'}</strong></div>
                 <div style="position:absolute; top:16px; right:16px; font-size:1.2rem;">🔒</div>
@@ -1805,12 +1805,12 @@
                     const catSelect = document.getElementById('reg-cat');
                     if (result.categorias) {
                         const currentCatVal = catSelect.value;
-                        catSelect.innerHTML = '<option value="">Seleccione Categoría...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                        catSelect.innerHTML = '<option value="">Seleccione Entrenador...</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
 
                         const stuCatSelect = document.getElementById('students-search-cat');
                         if (stuCatSelect) {
                             const currentStuCatVal = stuCatSelect.value;
-                            stuCatSelect.innerHTML = '<option value="">Todas las categorías</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+                            stuCatSelect.innerHTML = '<option value="">Todos los entrenadores</option>' + result.categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
                             if (currentStuCatVal) stuCatSelect.value = currentStuCatVal;
                         }
 
@@ -2122,7 +2122,7 @@
 
                     document.getElementById('access-result').style.display = 'block';
                     document.getElementById('acc-name').innerText = result.nombre;
-                    document.getElementById('acc-cat').innerText = `Categoría: ${result.categoria}`;
+                    document.getElementById('acc-cat').innerText = `Entrenador: ${result.categoria}`;
 
                     // Populating additional info
                     document.getElementById('acc-lastpay').innerText = result.ultimo_pago || '---';
@@ -2591,7 +2591,7 @@
                 const missing = [];
                 if (!payload.nombre) { missing.push('Nombre'); document.getElementById('reg-name').classList.add('field-error'); }
                 if (!payload.fecha_nacimiento) { missing.push('Fecha de Nacimiento'); document.getElementById('reg-dob').classList.add('field-error'); }
-                if (!payload.categoria_id) { missing.push('Categoría'); document.getElementById('reg-cat').classList.add('field-error'); }
+                if (!payload.categoria_id) { missing.push('Entrenador'); document.getElementById('reg-cat').classList.add('field-error'); }
                 if (!payload.contacto_emergencia_nombre) { missing.push('Contacto Emergencia'); document.getElementById('reg-em-name').classList.add('field-error'); }
 
                 const telClean = payload.contacto_emergencia_tel.replace(/\D/g, '');
@@ -3026,7 +3026,7 @@
                 resultsDiv.innerHTML = toShow.map(a => `
             <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px; border: 2px solid ${(a.al_corriente === true || a.al_corriente === 'true' || a.al_corriente === 't') ? '#10b981' : '#ef4444'};">
                 <div class="student-name" style="font-size: 1.2rem;">${a.nombre}</div>
-                <div class="student-cat" style="margin-bottom: 5px;">Categoría: ${a.categoria || a.categoria_nombre || 'N/A'}</div>
+                <div class="student-cat" style="margin-bottom: 5px;">Entrenador: ${a.categoria || a.categoria_nombre || 'N/A'}</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
                     Emergencia: ${a.contacto_emergencia_nombre || 'N/A'} (${a.contacto_emergencia_telefono || 'N/A'})<br>
                     Sangre: ${a.tipo_sangre || 'N/A'}
@@ -3039,9 +3039,9 @@
                         <input type="text" id="edit-name-${a.id}" value="${a.nombre}">
                     </div>
                     <div class="form-group" style="margin-top: 10px;">
-                        <label>Categoría</label>
+                        <label>Entrenador</label>
                         <select id="edit-cat-${a.id}">
-                            ${document.getElementById('reg-cat').innerHTML.replace('Seleccione Categoría...', '')}
+                            ${document.getElementById('reg-cat').innerHTML.replace('Seleccione Entrenador...', '')}
                         </select>
                     </div>
                     <div class="form-group" style="margin-top: 10px;">
@@ -3118,7 +3118,7 @@
                 const blood = document.getElementById(`edit-blood-${id}`).value;
 
                 if (!nombre || !cat) {
-                    showMsg('students', 'error', 'Nombre y categoría son obligatorios.');
+                    showMsg('students', 'error', 'Nombre y entrenador son obligatorios.');
                     setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
                     setBtn(btn, false);
                     return;
@@ -3378,7 +3378,7 @@
 
                     html += `<div class="mkt-card ${isGroup ? 'is-group' : ''}">
                 <div class="mkt-title">${link.emoji || '\ud83d\udd17'} ${link.titulo} ${isGroup ? '<span style="font-size:0.75rem; background:#8b5cf6; color:white; padding:2px 8px; border-radius:6px; margin-left:5px;">GRUPO</span>' : ''}</div>
-                ${link.url ? `<div class="mkt-url">${link.url}</div>` : '<div class="mkt-url" style="color:#8b5cf6;">Categor\u00eda con sub-links</div>'}
+                ${link.url ? `<div class="mkt-url">${link.url}</div>` : '<div class="mkt-url" style="color:#8b5cf6;">Entrenador con sub-links</div>'}
                 <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Orden: ${link.orden || 0}</div>
                 <div class="mkt-actions">
                     ${isGroup ? `<button class="mkt-btn-sm" style="color:#8b5cf6; border-color:#8b5cf6;" onclick="addSubLink(${link.id}, '${link.titulo.replace(/'/g, "\\'")}')">➕ Agregar sub-link</button>` : ''}
