@@ -716,6 +716,8 @@
                 Alta Usuario</div>
             <div class="nav-item" id="nav-students" onclick="switchTab('students')"
                 style="color: #f59e0b; display:none;">📋 Alumnos</div>
+            <div class="nav-item" id="nav-padres" onclick="switchTab('padres')"
+                style="color: #22d3ee; display:none;">👨‍👩‍👧 Padres</div>
             <div class="nav-item" id="nav-baja-user" onclick="switchTab('baja-user')"
                 style="color: #ef4444; display:none;">❌ Baja General</div>
             <div class="nav-item" id="nav-reassign" onclick="switchTab('reassign')" style="display:none;">🔄 Re-asignar
@@ -760,6 +762,30 @@
                 <div id="students-results" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
                 </div>
                 <div id="status-students" class="status-msg"></div>
+            </div>
+            <!-- VISTA: PADRES (ADMIN ONLY) -->
+            <div id="view-padres" class="view">
+                <div style="text-align: center;">
+                    <h3 style="margin:0 0 10px;">Gestión de Padres de Familia</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Edita el teléfono y correo de contacto de los padres registrados.</p>
+                    <div id="padres-total-count"
+                        style="margin-top: 10px; font-weight: bold; color: #22d3ee; font-size: 1.1rem;">Total Padres: Cargando...</div>
+                </div>
+
+                <div
+                    style="margin-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                    <div class="form-group">
+                        <label>Buscar por Nombre</label>
+                        <input type="text" id="padres-search-name" placeholder="Escribe el nombre del padre..."
+                            onkeyup="filterPadresModule()">
+                    </div>
+                    <button class="btn btn-outline" style="margin-top:15px;" onclick="clearPadresSearch()">🔄 Limpiar
+                        Búsqueda</button>
+                </div>
+
+                <div id="padres-results" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+                </div>
+                <div id="status-padres" class="status-msg"></div>
             </div>
 
             <!-- VISTA: LECTOR ACCESO -->
@@ -972,8 +998,22 @@
                     </select>
                 </div>
 
+                <!-- Campos exclusivos de Padre de Familia -->
+                <div id="padre-contact-section"
+                    style="display:none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #44403c;">
+                    <div style="font-size:0.8rem; color:var(--primary); font-weight:700; margin-bottom:10px; letter-spacing:0.05em;">📞 DATOS DE CONTACTO DEL PADRE</div>
+                    <div class="form-group">
+                        <label>Teléfono (10 dígitos)</label>
+                        <input type="tel" id="usr-tel" placeholder="Ej: 4921234567" maxlength="10" inputmode="numeric">
+                    </div>
+                    <div class="form-group" style="margin-top:10px;">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="usr-email" placeholder="Ej: juan@gmail.com" inputmode="email">
+                    </div>
+                </div>
+
                 <div id="padre-children-section"
-                    style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #44403c;">
+                    style="display:none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #44403c;">
                     <label>Asignar Hijos al Padre</label>
                     <input type="text" id="usr-child-search" placeholder="Buscar alumno..."
                         oninput="filterUsrChildren()" autocomplete="off">
@@ -1274,6 +1314,12 @@
                 if (t === 'marketing') {
                     fetchMarketingLinks();
                 }
+                if (t === 'students') {
+                    fetchAllStudents();
+                }
+                if (t === 'padres') {
+                    fetchAllPadres();
+                }
             }
 
             const msgTimeouts = {};
@@ -1403,6 +1449,8 @@
                     document.querySelectorAll('.nav-item').forEach(el => el.style.display = 'flex');
                     // Marketing nav is only for marketing users, hide it for admin
                     document.getElementById('nav-marketing').style.display = 'none';
+                    // Padres tab is admin-only
+                    document.getElementById('nav-padres').style.display = 'flex';
                     switchTab('access');
                 } else if (r === 'instructor') {
                     const navAcc = document.getElementById('nav-access');
@@ -1972,10 +2020,14 @@
             let selectedChildren = [];
             function checkPadreRol() {
                 const rol = document.getElementById('usr-rol').value;
-                document.getElementById('padre-children-section').style.display = (rol === 'padre') ? 'block' : 'none';
-                if (rol !== 'padre') {
+                const isPadre = (rol === 'padre');
+                document.getElementById('padre-contact-section').style.display = isPadre ? 'block' : 'none';
+                document.getElementById('padre-children-section').style.display = isPadre ? 'block' : 'none';
+                if (!isPadre) {
                     selectedChildren = [];
                     document.getElementById('usr-child-list').innerHTML = '';
+                    document.getElementById('usr-tel').value = '';
+                    document.getElementById('usr-email').value = '';
                 }
             }
             function filterUsrChildren() {
@@ -2019,15 +2071,29 @@
             async function registerUser() {
                 const _btn = document.querySelector('#view-users > button');
                 setBtn(_btn, true);
-                const nombre = document.getElementById('usr-name').value;
+                const nombre = document.getElementById('usr-name').value.trim();
                 const rol = document.getElementById('usr-rol').value;
 
-                if (!nombre) { showMsg('users', 'error', 'Completa el nombre.'); return; }
+                if (!nombre) { showMsg('users', 'error', 'Completa el nombre.'); setBtn(_btn, false); return; }
+
+                // Validar campos obligatorios de Padre de Familia
+                if (rol === 'padre') {
+                    const tel = document.getElementById('usr-tel').value.replace(/\D/g, '');
+                    const email = document.getElementById('usr-email').value.trim();
+                    if (tel.length !== 10) {
+                        showMsg('users', 'error', '⚠️ El teléfono del padre debe tener exactamente 10 dígitos.');
+                        setBtn(_btn, false); return;
+                    }
+                    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        showMsg('users', 'error', '⚠️ Ingresa un correo electrónico válido para el padre.');
+                        setBtn(_btn, false); return;
+                    }
+                }
 
                 showMsg('users', 'info', 'Acerque una pulsera nueva (o tarjeta)...');
                 saveFormState('users');
                 const uid = await getUidFromNFC();
-                if (!uid) { showMsg('users', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); return; }
+                if (!uid) { showMsg('users', 'error', 'No se detectó la pulsera. Acércala de nuevo.'); setBtn(_btn, false); return; }
 
                 showMsg('users', 'info', 'Validando disponibilidad de pulsera...');
                 try {
@@ -2040,7 +2106,7 @@
                             if (valResult && valResult.status !== 'not_found' && valResult.nombre) {
                                 showMsg('users', 'error', `❌ Esta pulsera ya está asignada a: ${valResult.nombre}`);
                                 soundError();
-                                return;
+                                setBtn(_btn, false); return;
                             }
                         }
                     }
@@ -2048,11 +2114,18 @@
                     console.warn('Validación de pulsera nueva generó error, continuando...', e);
                 }
 
+                // Construir payload — teléfono y email solo si es padre
+                const payload = { nombre, rol, nfc_uid: uid, hijos_ids: selectedChildren };
+                if (rol === 'padre') {
+                    payload.telefono = document.getElementById('usr-tel').value.replace(/\D/g, '');
+                    payload.email = document.getElementById('usr-email').value.trim();
+                }
+
                 showMsg('users', 'info', 'Creando usuario...');
                 try {
                     const res = await fetch(`${N8N_URL}/ht-register-user`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ nombre, rol, nfc_uid: uid, hijos_ids: selectedChildren })
+                        body: JSON.stringify(payload)
                     });
                     let data;
                     try {
@@ -2069,6 +2142,8 @@
                         try { localStorage.removeItem('ht_form_users'); } catch (e) { }
                         document.getElementById('usr-name').value = '';
                         document.getElementById('usr-rol').selectedIndex = 0;
+                        document.getElementById('usr-tel').value = '';
+                        document.getElementById('usr-email').value = '';
                         checkPadreRol();
                         document.getElementById('usr-child-search').value = '';
                         selectedChildren = []; renderUsrChildren();
@@ -3181,6 +3256,128 @@
                     setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
                 }
                 setBtn(btn, false);
+            }
+
+            // ==========================================
+            // MÓDULO GESTIÓN DE PADRES (ADMIN)
+            // ==========================================
+            async function fetchAllPadres() {
+                showMsg('padres', 'info', 'Cargando lista de padres...');
+                try {
+                    const res = await fetch(`${N8N_URL}/ht-categories`);
+                    const data = await res.json();
+                    const result = Array.isArray(data) ? data[0] : data;
+                    if (result && result.padres) {
+                        window._allPadresList = result.padres;
+                        const totalEl = document.getElementById('padres-total-count');
+                        if (totalEl) totalEl.innerText = `Total Padres: ${result.padres.length}`;
+                        filterPadresModule();
+                        showMsg('padres', '', '');
+                    } else {
+                        showMsg('padres', 'error', 'Error al procesar la lista de padres.');
+                    }
+                } catch (e) {
+                    showMsg('padres', 'error', 'No se pudieron cargar los padres. Verifica tu conexión.');
+                }
+            }
+
+            function filterPadresModule() {
+                const nameQuery = (document.getElementById('padres-search-name').value || '').trim().toLowerCase();
+                const resultsDiv = document.getElementById('padres-results');
+                let filtered = window._allPadresList || [];
+                if (nameQuery) {
+                    filtered = filtered.filter(p => p.nombre && p.nombre.toLowerCase().includes(nameQuery));
+                }
+                if (filtered.length === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">No se encontraron padres</div>';
+                    return;
+                }
+                resultsDiv.innerHTML = filtered.map(p => `
+            <div class="student-card" id="pad-card-${p.id}" style="text-align: left; position: relative; padding: 15px; border: 2px solid #22d3ee33;">
+                <div class="student-name" style="font-size: 1.2rem;">${p.nombre}</div>
+                <div class="student-cat" style="margin-bottom: 5px; font-size:0.85rem; color:var(--text-muted);">
+                    Tel: ${p.telefono || '<em>Sin capturar</em>'} &nbsp;|&nbsp; Email: ${p.email || '<em>Sin capturar</em>'}
+                </div>
+                <button class="btn btn-outline" style="padding: 8px; font-size: 0.9rem;" onclick="editPadre('${p.id}')">✏️ Editar Contacto</button>
+                <div id="pad-edit-${p.id}" style="display:none; margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+                    <div class="form-group">
+                        <label>Teléfono (10 dígitos)</label>
+                        <input type="tel" id="pad-tel-${p.id}" value="${p.telefono || ''}" maxlength="10" inputmode="numeric" placeholder="Ej: 4921234567">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="pad-email-${p.id}" value="${p.email || ''}" placeholder="Ej: juan@gmail.com">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-success" style="flex:1;" id="btn-pad-save-${p.id}" onclick="savePadreEdit('${p.id}')">💾 Guardar</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="cancelPadreEdit('${p.id}')">✕ Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+            }
+
+            function editPadre(id) {
+                document.getElementById(`pad-edit-${id}`).style.display = 'block';
+            }
+
+            function cancelPadreEdit(id) {
+                document.getElementById(`pad-edit-${id}`).style.display = 'none';
+            }
+
+            async function savePadreEdit(id) {
+                const btn = document.getElementById(`btn-pad-save-${id}`);
+                setBtn(btn, true);
+
+                const tel = document.getElementById(`pad-tel-${id}`).value.replace(/\D/g, '');
+                const email = document.getElementById(`pad-email-${id}`).value.trim();
+
+                if (tel.length !== 10) {
+                    showMsg('padres', 'error', '⚠️ El teléfono debe tener exactamente 10 dígitos.');
+                    setTimeout(() => document.getElementById('status-padres').style.display = 'none', 4000);
+                    setBtn(btn, false); return;
+                }
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showMsg('padres', 'error', '⚠️ Ingresa un correo electrónico válido.');
+                    setTimeout(() => document.getElementById('status-padres').style.display = 'none', 4000);
+                    setBtn(btn, false); return;
+                }
+
+                showMsg('padres', 'info', 'Guardando cambios...');
+                try {
+                    const res = await fetch(`${N8N_URL}/ht-update-user`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: id, telefono: tel, email: email })
+                    });
+                    const textRes = await res.text();
+                    let data;
+                    try { data = JSON.parse(textRes); } catch (e) { data = { status: 'error', message: textRes.substring(0, 50) }; }
+                    const result = Array.isArray(data) ? data[0] : data;
+                    if (result && result.status === 'success') {
+                        showMsg('padres', 'success', '✅ Datos de contacto actualizados correctamente.');
+                        soundSuccess();
+                        // Update local cache
+                        const p = (window._allPadresList || []).find(x => x.id === id);
+                        if (p) { p.telefono = tel; p.email = email; }
+                        filterPadresModule();
+                        setTimeout(() => document.getElementById('status-padres').style.display = 'none', 5000);
+                    } else {
+                        showMsg('padres', 'error', '❌ Error al guardar: ' + (result?.message || 'Revisa el webhook de n8n.'));
+                        soundError();
+                        setTimeout(() => document.getElementById('status-padres').style.display = 'none', 5000);
+                    }
+                } catch (e) {
+                    showMsg('padres', 'error', 'Error de red al actualizar información.');
+                    soundError();
+                    setTimeout(() => document.getElementById('status-padres').style.display = 'none', 5000);
+                }
+                setBtn(btn, false);
+            }
+
+            function clearPadresSearch() {
+                document.getElementById('padres-search-name').value = '';
+                document.getElementById('padres-results').innerHTML = '';
+                showMsg('padres', '', '');
             }
 
             // ==========================================
