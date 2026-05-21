@@ -2761,6 +2761,11 @@
 
             function logout() {
                 if (confirm("¿Estás seguro que deseas cerrar sesión? Todos los datos temporalmente cacheados se cerrarán.")) {
+                    // Mark logout explicitly in sessionStorage BEFORE clearing localStorage.
+                    // This flag survives the page reload within the same browser tab and
+                    // prevents DOMContentLoaded from restoring a stale session if the next
+                    // user scans their bracelet very quickly after logout.
+                    try { sessionStorage.setItem('ht_logged_out', '1'); } catch (e) { }
                     // Clear persisted session
                     try { localStorage.removeItem('ht_session'); localStorage.removeItem('ht_active_tab'); } catch (e) { }
                     window.location.href = window.location.pathname; // Clean reload without URL params
@@ -3529,8 +3534,23 @@
                 const urlUid = params.get('uid') ? params.get('uid').toUpperCase() : null;
 
                 // ── iPhone NFC: UID in URL ──
+                // Check if the user explicitly logged out just before this load.
+                // If so, ignore any saved session in localStorage — the previous user
+                // must not bleed into the next user's login.
+                let wasLoggedOut = false;
+                try {
+                    wasLoggedOut = sessionStorage.getItem('ht_logged_out') === '1';
+                    if (wasLoggedOut) {
+                        sessionStorage.removeItem('ht_logged_out'); // consume flag once
+                        localStorage.removeItem('ht_session');       // ensure it is gone
+                        localStorage.removeItem('ht_active_tab');
+                    }
+                } catch (e) { }
+
                 let savedSession = null;
-                try { savedSession = JSON.parse(localStorage.getItem('ht_session')); } catch (e) { }
+                if (!wasLoggedOut) {
+                    try { savedSession = JSON.parse(localStorage.getItem('ht_session')); } catch (e) { }
+                }
 
                 if (savedSession && urlUid) {
                     const isOwnUid = savedSession.nfc_uid && urlUid === savedSession.nfc_uid.toUpperCase();
@@ -3548,6 +3568,8 @@
 
                     (async function () {
                         var isSystemUser = false;
+                        var authResult = null;
+                        var authCheckFailed = false;
                         try {
                             var _authAc = new AbortController();
                             var _authTo = setTimeout(function () { _authAc.abort(); }, 5000);
@@ -3555,12 +3577,27 @@
                             clearTimeout(_authTo);
                             var authData = null;
                             try { authData = await authRes.json(); } catch (e) { }
-                            var authResult = Array.isArray(authData) ? authData[0] : authData;
+                            authResult = Array.isArray(authData) ? authData[0] : authData;
                             if (authResult && authResult.status === 'success' && authResult.rol) {
                                 isSystemUser = true;
                             }
                         } catch (e) {
-                            console.warn('Auth check failed:', e);
+                            // Network error or timeout: we cannot safely assume the bracelet
+                            // belongs to a student of the current session. Clear session and
+                            // show the standard login screen so the user authenticates fresh.
+                            console.warn('Auth check failed, forcing clean login:', e);
+                            authCheckFailed = true;
+                        }
+
+                        if (authCheckFailed) {
+                            // Cannot determine bracelet owner — force a clean login to prevent
+                            // the previous user's session from leaking to the new user.
+                            try { localStorage.removeItem('ht_session'); localStorage.removeItem('ht_active_tab'); } catch (e) { }
+                            currentUser = null;
+                            document.getElementById('lock-screen').classList.remove('hidden');
+                            document.getElementById('lock-screen').style.display = 'flex';
+                            try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { }
+                            return;
                         }
 
                         if (isSystemUser) {
