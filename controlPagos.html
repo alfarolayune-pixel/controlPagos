@@ -3463,7 +3463,8 @@
                             stu.contacto_emergencia_telefono = emTel;
                             stu.tipo_sangre = blood;
                             stu.becado = isBecado;
-                            stu.costo_mensualidad = isBecado ? costoBecado : stu.costo_mensualidad;
+                            // Si retiraron beca, el backend recalculó el costo, usar el costo nuevo reportado por n8n
+                            stu.costo_mensualidad = isBecado ? costoBecado : (result.new_cost || stu.costo_mensualidad);
                             const catObj = Array.from(document.getElementById('reg-cat').options).find(o => o.value === cat);
                             if (catObj) stu.categoria_nombre = catObj.text;
                         }
