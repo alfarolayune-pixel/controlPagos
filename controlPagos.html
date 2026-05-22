@@ -634,6 +634,92 @@
                 box-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
             }
         }
+
+        /* ====== BECADO TOGGLE ====== */
+        .becado-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .becado-toggle-row.active {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: #f59e0b;
+        }
+        .becado-toggle-label {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #f5f5f4;
+            flex: 1;
+        }
+        .becado-toggle-label small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .becado-switch {
+            width: 48px;
+            height: 26px;
+            border-radius: 13px;
+            background: #44403c;
+            position: relative;
+            flex-shrink: 0;
+            transition: background 0.25s;
+        }
+        .becado-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #a8a29e;
+            transition: left 0.25s, background 0.25s;
+        }
+        .becado-toggle-row.active .becado-switch {
+            background: #f59e0b;
+        }
+        .becado-toggle-row.active .becado-switch::after {
+            left: 25px;
+            background: white;
+        }
+        .becado-costo-box {
+            display: none;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            animation: fadeIn 0.3s ease;
+        }
+        .becado-costo-box.show {
+            display: block;
+        }
+        .becado-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
     </style>
 </head>
 
@@ -976,6 +1062,30 @@
                         <input type="tel" id="reg-em-tel" placeholder="Ej: 5512345678">
                     </div>
                 </div>
+
+                <!-- BECADO TOGGLE -->
+                <div class="becado-toggle-row" id="reg-becado-row" onclick="toggleBecado('reg')" role="checkbox" aria-checked="false">
+                    <div class="becado-toggle-label">
+                        🎓 Alumno Becado
+                        <small>Activa si el alumno tiene beca. El costo de mensualidad se captura manualmente.</small>
+                    </div>
+                    <div class="becado-switch" id="reg-becado-switch"></div>
+                    <input type="hidden" id="reg-becado" value="false">
+                </div>
+
+                <!-- COSTO MANUAL (solo visible si es Becado) -->
+                <div class="becado-costo-box" id="reg-costo-box">
+                    <label style="color: #f59e0b; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">💰 Costo de Mensualidad (Becado)</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.2rem; font-weight: 800; color: #f59e0b;">$</span>
+                        <input type="number" id="reg-costo-becado" placeholder="Ej: 350" min="0" step="1"
+                            inputmode="numeric"
+                            style="flex:1; border-color: rgba(245,158,11,0.4);"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    <p style="margin: 6px 0 0; font-size: 0.78rem; color: var(--text-muted);">Ingresa el costo acordado en pesos (entero, sin decimales).</p>
+                </div>
+
                 <button class="btn" onclick="registerStudent()">📲 Leer Pulsera y Guardar</button>
                 <div id="status-reg" class="status-msg"></div>
             </div>
@@ -1293,6 +1403,8 @@
                         el.value = '';
                     }
                 });
+                // Reset becado toggle to default (false) when switching tabs
+                _setBecadoState('reg', false);
                 document.querySelectorAll('.view select').forEach(el => {
                     el.selectedIndex = 0;
                 });
@@ -1752,6 +1864,8 @@
                     d.padreName = document.getElementById('reg-padre-selected-name').textContent || '';
                     d.emName = document.getElementById('reg-em-name').value;
                     d.emTel = document.getElementById('reg-em-tel').value;
+                    d.becado = document.getElementById('reg-becado').value;
+                    d.costoBecado = document.getElementById('reg-costo-becado').value;
                 } else if (tabName === 'users') {
                     d.name = document.getElementById('usr-name').value;
                     d.rol = document.getElementById('usr-rol').value;
@@ -1801,6 +1915,10 @@
                     }
                     document.getElementById('reg-em-name').value = d.emName || '';
                     document.getElementById('reg-em-tel').value = d.emTel || '';
+                    // Restore becado state
+                    const becadoVal = d.becado === 'true';
+                    _setBecadoState('reg', becadoVal);
+                    if (becadoVal) document.getElementById('reg-costo-becado').value = d.costoBecado || '';
                 } else if (tabName === 'users') {
                     document.getElementById('usr-name').value = d.name || '';
                     document.getElementById('usr-rol').value = d.rol || 'padre';
@@ -2644,12 +2762,48 @@
             // ==========================================
             // ALTA ALUMNO Y ASIGNAR BANDA
             // ==========================================
+            // ==========================================
+            // BECADO HELPERS
+            // ==========================================
+            function _setBecadoState(prefix, isBecado) {
+                const row = document.getElementById(prefix + '-becado-row');
+                const hidden = document.getElementById(prefix + '-becado');
+                const costoBox = document.getElementById(prefix + '-costo-box');
+                if (!row || !hidden) return;
+                if (isBecado) {
+                    row.classList.add('active');
+                    row.setAttribute('aria-checked', 'true');
+                    hidden.value = 'true';
+                    if (costoBox) costoBox.classList.add('show');
+                } else {
+                    row.classList.remove('active');
+                    row.setAttribute('aria-checked', 'false');
+                    hidden.value = 'false';
+                    if (costoBox) costoBox.classList.remove('show');
+                    const costoInput = document.getElementById(prefix + '-costo-becado');
+                    if (costoInput) costoInput.value = '';
+                }
+            }
+
+            function toggleBecado(prefix) {
+                const hidden = document.getElementById(prefix + '-becado');
+                if (!hidden) return;
+                _setBecadoState(prefix, hidden.value !== 'true');
+                // Trigger form-state save for iPhone NFC workaround
+                const tab = localStorage.getItem('ht_active_tab');
+                if (tab === prefix) saveFormState(tab);
+            }
+
             async function registerStudent() {
                 const _btn = document.querySelector('#view-reg > button');
                 setBtn(_btn, true);
 
                 // Clear previous field error highlights
                 document.querySelectorAll('#view-reg .field-error').forEach(el => el.classList.remove('field-error'));
+
+                const isBecado = document.getElementById('reg-becado').value === 'true';
+                const rawCosto = document.getElementById('reg-costo-becado').value.replace(/[^0-9]/g, '');
+                const costoBecado = isBecado ? (parseInt(rawCosto) || 0) : null;
 
                 const payload = {
                     nombre: document.getElementById('reg-name').value,
@@ -2659,8 +2813,12 @@
                     tipo_sangre: document.getElementById('reg-blood').value,
                     padre_id: document.getElementById('reg-padre').value || null,
                     contacto_emergencia_nombre: document.getElementById('reg-em-name').value,
-                    contacto_emergencia_tel: document.getElementById('reg-em-tel').value
+                    contacto_emergencia_tel: document.getElementById('reg-em-tel').value,
+                    becado: isBecado
                 };
+
+                // Solo incluir costo_mensualidad en el payload si es becado
+                if (isBecado) payload.costo_mensualidad = costoBecado;
 
                 // Validate required fields and highlight missing ones
                 const missing = [];
@@ -2673,6 +2831,12 @@
                 if (telClean.length !== 10) { missing.push('Teléfono Emergencia (10 dígitos)'); document.getElementById('reg-em-tel').classList.add('field-error'); }
 
                 if (!payload.padre_id) { missing.push('Padre de Familia'); document.getElementById('reg-padre-search').classList.add('field-error'); }
+
+                // Validar costo si es becado
+                if (isBecado && (isNaN(costoBecado) || costoBecado <= 0)) {
+                    missing.push('Costo de Mensualidad (Becado)');
+                    document.getElementById('reg-costo-becado').classList.add('field-error');
+                }
 
                 if (missing.length > 0) {
                     showMsg('reg', 'error', '⚠️ Campos obligatorios faltantes: ' + missing.join(', '));
@@ -2744,6 +2908,7 @@
                         document.getElementById('reg-blood').selectedIndex = 0;
                         document.getElementById('reg-em-name').value = '';
                         document.getElementById('reg-em-tel').value = '';
+                        _setBecadoState('reg', false); // Reset becado toggle
                         if (typeof clearPadre === 'function') clearPadre();
                         // Restore button text to original
                         _btn.innerHTML = '📲 Leer Pulsera y Guardar';
@@ -3103,13 +3268,15 @@
                 // Mostrar paginado
                 const toShow = filtered.slice(0, window._studentsDisplayedCount);
 
-                resultsDiv.innerHTML = toShow.map(a => `
+                resultsDiv.innerHTML = toShow.map(a => {
+                    const _isBecado = a.becado === true || a.becado === 'true' || a.becado === 't';
+                    return `
             <div class="student-card" id="stu-card-${a.id}" style="text-align: left; position: relative; padding: 15px; border: 2px solid ${(a.al_corriente === true || a.al_corriente === 'true' || a.al_corriente === 't') ? '#10b981' : '#ef4444'};">
-                <div class="student-name" style="font-size: 1.2rem;">${a.nombre}</div>
+                <div class="student-name" style="font-size: 1.2rem;">${a.nombre}${_isBecado ? '<span class="becado-badge">🎓 Becado</span>' : ''}</div>
                 <div class="student-cat" style="margin-bottom: 5px;">Entrenador: ${a.categoria || a.categoria_nombre || 'N/A'}</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
                     Emergencia: ${a.contacto_emergencia_nombre || 'N/A'} (${a.contacto_emergencia_telefono || 'N/A'})<br>
-                    Sangre: ${a.tipo_sangre || 'N/A'}
+                    Sangre: ${a.tipo_sangre || 'N/A'}${_isBecado ? '<br><span style="color:#f59e0b; font-weight:700;">Costo Beca: $' + (parseInt(a.costo_mensualidad) || 0) + '</span>' : ''}
                 </div>
                 <button class="btn btn-outline" style="padding: 8px; font-size: 0.9rem;" onclick="editStudent('${a.id}')">✏️ Editar Información</button>
                 
@@ -3146,13 +3313,35 @@
                             <option value="N/A" ${!a.tipo_sangre || a.tipo_sangre === 'N/A' ? 'selected' : ''}>N/A</option>
                         </select>
                     </div>
+                    <!-- BECADO TOGGLE (edición) -->
+                    <div class="becado-toggle-row${_isBecado ? ' active' : ''}" id="edit-becado-row-${a.id}"
+                         onclick="toggleBecadoEdit('${a.id}')" role="checkbox" aria-checked="${_isBecado}"
+                         style="margin-top: 14px; margin-bottom: 0;">
+                        <div class="becado-toggle-label">
+                            🎓 Alumno Becado
+                            <small>Activa si el alumno tiene beca. El costo se captura manualmente.</small>
+                        </div>
+                        <div class="becado-switch" id="edit-becado-switch-${a.id}"></div>
+                        <input type="hidden" id="edit-becado-${a.id}" value="${_isBecado}">
+                    </div>
+                    <!-- COSTO MANUAL (edición, solo visible si becado) -->
+                    <div class="becado-costo-box${_isBecado ? ' show' : ''}" id="edit-costo-box-${a.id}" style="margin-top: 10px;">
+                        <label style="color: #f59e0b; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">💰 Costo de Mensualidad (Becado)</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem; font-weight: 800; color: #f59e0b;">$</span>
+                            <input type="number" id="edit-costo-becado-${a.id}" value="${_isBecado ? (parseInt(a.costo_mensualidad) || '') : ''}"
+                                placeholder="Ej: 350" min="0" step="1" inputmode="numeric"
+                                style="flex:1; border-color: rgba(245,158,11,0.4);"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    </div>
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
                         <button class="btn btn-success" style="flex:1;" id="btn-save-${a.id}" onclick="saveStudentEdit('${a.id}')">💾 Guardar</button>
                         <button class="btn btn-outline" style="flex:1;" onclick="cancelStudentEdit('${a.id}')">✕ Cancelar</button>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `; }).join('');
 
                 if (filtered.length > window._studentsDisplayedCount) {
                     resultsDiv.innerHTML += `
@@ -3187,6 +3376,24 @@
                 document.getElementById(`stu-edit-${id}`).style.display = 'none';
             }
 
+            function toggleBecadoEdit(id) {
+                const hidden = document.getElementById(`edit-becado-${id}`);
+                if (!hidden) return;
+                const isBecado = hidden.value !== 'true';
+                const row = document.getElementById(`edit-becado-row-${id}`);
+                const costoBox = document.getElementById(`edit-costo-box-${id}`);
+                hidden.value = isBecado ? 'true' : 'false';
+                if (row) {
+                    row.classList.toggle('active', isBecado);
+                    row.setAttribute('aria-checked', isBecado);
+                }
+                if (costoBox) costoBox.classList.toggle('show', isBecado);
+                if (!isBecado) {
+                    const ci = document.getElementById(`edit-costo-becado-${id}`);
+                    if (ci) ci.value = '';
+                }
+            }
+
             async function saveStudentEdit(id) {
                 const btn = document.getElementById(`btn-save-${id}`);
                 setBtn(btn, true);
@@ -3196,6 +3403,9 @@
                 const emName = document.getElementById(`edit-em-name-${id}`).value.trim();
                 const emTel = document.getElementById(`edit-em-tel-${id}`).value.replace(/\D/g, '');
                 const blood = document.getElementById(`edit-blood-${id}`).value;
+                const isBecado = document.getElementById(`edit-becado-${id}`).value === 'true';
+                const rawEditCosto = (document.getElementById(`edit-costo-becado-${id}`)?.value || '').replace(/[^0-9]/g, '');
+                const costoBecado = isBecado ? (parseInt(rawEditCosto) || 0) : null;
 
                 if (!nombre || !cat) {
                     showMsg('students', 'error', 'Nombre y entrenador son obligatorios.');
@@ -3209,20 +3419,32 @@
                     setBtn(btn, false);
                     return;
                 }
+                if (isBecado && (isNaN(costoBecado) || costoBecado <= 0)) {
+                    showMsg('students', 'error', '⚠️ Debes capturar el costo de mensualidad del alumno becado (monto mayor a 0).');
+                    const ci = document.getElementById(`edit-costo-becado-${id}`);
+                    if (ci) ci.classList.add('field-error');
+                    setTimeout(() => document.getElementById('status-students').style.display = 'none', 5000);
+                    setBtn(btn, false);
+                    return;
+                }
 
                 showMsg('students', 'info', 'Guardando cambios...');
+
+                const updatePayload = {
+                    id: id,
+                    nombre: nombre,
+                    categoria_id: cat,
+                    contacto_emergencia_nombre: emName,
+                    contacto_emergencia_telefono: emTel,
+                    tipo_sangre: blood,
+                    becado: isBecado
+                };
+                if (isBecado) updatePayload.costo_mensualidad = costoBecado;
 
                 try {
                     const res = await fetch(`${N8N_URL}/ht-update-student`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            id: id,
-                            nombre: nombre,
-                            categoria_id: cat,
-                            contacto_emergencia_nombre: emName,
-                            contacto_emergencia_telefono: emTel,
-                            tipo_sangre: blood
-                        })
+                        body: JSON.stringify(updatePayload)
                     });
                     const textRes = await res.text();
                     let data;
@@ -3240,6 +3462,8 @@
                             stu.contacto_emergencia_nombre = emName;
                             stu.contacto_emergencia_telefono = emTel;
                             stu.tipo_sangre = blood;
+                            stu.becado = isBecado;
+                            stu.costo_mensualidad = isBecado ? costoBecado : stu.costo_mensualidad;
                             const catObj = Array.from(document.getElementById('reg-cat').options).find(o => o.value === cat);
                             if (catObj) stu.categoria_nombre = catObj.text;
                         }
