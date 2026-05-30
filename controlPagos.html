@@ -3257,7 +3257,7 @@
                     filtered = filtered.filter(a => a.nombre && a.nombre.toLowerCase().includes(nameQuery));
                 }
                 if (catQuery) {
-                    filtered = filtered.filter(a => a.categoria_id === catQuery || a.categoria === catQuery);
+                    filtered = filtered.filter(a => String(a.categoria_id) === String(catQuery) || a.categoria === catQuery);
                 }
 
                 if (filtered.length === 0) {
