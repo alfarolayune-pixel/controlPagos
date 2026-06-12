@@ -1199,9 +1199,14 @@
 
             <!-- VISTA: DEUDORES -->
             <div id="view-debtors" class="view">
-                <h3 style="margin-top: 0;">Lista de Deudores</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Alumnos que no han pagado el mes en curso.</p>
-                <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div style="text-align: center;">
+                    <h3 style="margin:0 0 10px;">Lista de Deudores</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Alumnos que no han pagado el mes en curso.</p>
+                    <div id="debtors-total-count"
+                        style="margin-top: 10px; font-weight: bold; color: #ef4444; font-size: 1.1rem;">Total Deudores:
+                        Cargando...</div>
+                </div>
+                <div class="form-group" style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 20px;">
                     <select id="debtors-filter-cat" onchange="renderDebtors()" style="flex: 1;">
                         <option value="">Todos los Entrenadores</option>
                     </select>
@@ -1634,6 +1639,10 @@
                 const filterCat = document.getElementById('debtors-filter-cat').value;
                 const search = document.getElementById('debtors-search').value.toLowerCase();
 
+                // Actualizar contador total (siempre muestra el total sin filtros)
+                const totalCountDiv = document.getElementById('debtors-total-count');
+                if (totalCountDiv) totalCountDiv.innerText = `Total Deudores: ${allDebtors.length}`;
+
                 let filtered = allDebtors.filter(d => {
                     const matchCat = filterCat ? d.categoria === filterCat : true;
                     const matchSearch = d.nombre.toLowerCase().includes(search);
@@ -1717,7 +1726,13 @@
                 const query = document.getElementById('baja-search-input').value.trim().toLowerCase();
                 const dropdown = document.getElementById('baja-dropdown');
                 if (!query) { dropdown.style.display = 'none'; return; }
-                const matches = window._allUsers.filter(u => u.nombre.toLowerCase().includes(query));
+                if (!window._allUsers || window._allUsers.length === 0) {
+                    dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Cargando usuarios... intenta de nuevo en un momento.</div>';
+                    dropdown.style.display = 'block';
+                    loadInitialData();
+                    return;
+                }
+                const matches = window._allUsers.filter(u => u.nombre && u.nombre.toLowerCase().includes(query));
                 if (matches.length === 0) {
                     dropdown.innerHTML = '<div style="padding:12px; color:var(--text-muted); text-align:center;">Sin resultados</div>';
                     dropdown.style.display = 'block'; return;
