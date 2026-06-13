@@ -4050,7 +4050,9 @@
                             if (
                                 (savedTab === 'search-family' && authResult && authResult.rol === 'padre') ||
                                 (savedTab === 'user-info') ||
-                                (savedTab === 'hist')
+                                (savedTab === 'hist') ||
+                                (savedTab === 'baja-user') ||   // must delete any user type (padre/instructor/admin)
+                                (savedTab === 'reassign')        // must reassign any bracelet type
                             ) {
                                 isSystemUser = false; // fall through to student-bracelet path below
                             } else {
