@@ -1885,6 +1885,9 @@
                     d.name = document.getElementById('usr-name').value;
                     d.rol = document.getElementById('usr-rol').value;
                     d.children = selectedChildren.slice();
+                    // Persist padre contact fields so they survive iPhone NFC redirect
+                    d.tel = document.getElementById('usr-tel').value;
+                    d.email = document.getElementById('usr-email').value;
                 } else if (tabName === 'reassign') {
                     d.studentId = document.getElementById('reassign-student').value;
                     d.search = document.getElementById('reassign-search').value;
@@ -1938,7 +1941,10 @@
                     document.getElementById('usr-name').value = d.name || '';
                     document.getElementById('usr-rol').value = d.rol || 'padre';
                     selectedChildren = d.children || [];
-                    checkPadreRol();
+                    checkPadreRol(true); // pass _skipClear=true so tel/email are NOT wiped
+                    // Restore padre contact fields after checkPadreRol shows the section
+                    if (d.tel) document.getElementById('usr-tel').value = d.tel;
+                    if (d.email) document.getElementById('usr-email').value = d.email;
                     // Retry rendering children after students load
                     setTimeout(function () { renderUsrChildren(); }, 1500);
                 } else if (tabName === 'reassign') {
@@ -2151,12 +2157,13 @@
             }
 
             let selectedChildren = [];
-            function checkPadreRol() {
+            // _skipClear: when true, skips clearing tel/email (used during form restore after iPhone NFC redirect)
+            function checkPadreRol(_skipClear) {
                 const rol = document.getElementById('usr-rol').value;
                 const isPadre = (rol === 'padre');
                 document.getElementById('padre-contact-section').style.display = isPadre ? 'block' : 'none';
                 document.getElementById('padre-children-section').style.display = isPadre ? 'block' : 'none';
-                if (!isPadre) {
+                if (!isPadre && !_skipClear) {
                     selectedChildren = [];
                     document.getElementById('usr-child-list').innerHTML = '';
                     document.getElementById('usr-tel').value = '';
