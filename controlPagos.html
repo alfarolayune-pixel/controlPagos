@@ -1400,11 +1400,11 @@
                 showMsg('user-info', '', '');
                 showMsg('marketing', '', '');
 
-                if (t === 'students') fetchAllStudents();
+
 
                 // GLOBAL INPUT CLEAR: Reset all form fields to prevent data leaking between sessions
                 document.querySelectorAll('.view input').forEach(el => {
-                    if (el.type === 'text' || el.type === 'number' || el.type === 'date' || el.type === 'tel' || el.type === 'hidden') {
+                    if (el.type === 'text' || el.type === 'number' || el.type === 'date' || el.type === 'tel' || el.type === 'email' || el.type === 'hidden') {
                         el.value = '';
                     }
                 });
